@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import { listProjectAssets } from "@/lib/assets/server";
+import { getAssetStorageProvider } from "@/lib/assets/storage";
 import type {
+  ExportJobRecord,
   GeneratedVideoRecord,
   Project,
-  ProjectAssetRecord,
   ProjectDetail,
   ProjectRecord,
   PromptRecord,
@@ -26,6 +28,54 @@ function mapProject(record: ProjectRecord): Project {
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
+}
+
+async function attachGeneratedVideoDownloadUrls(videos: GeneratedVideoRecord[]) {
+  return Promise.all(
+    videos.map(async (video) => {
+      if (!video.storage_provider || !video.storage_bucket || !video.storage_path) {
+        return video;
+      }
+
+      const provider = getAssetStorageProvider(video.storage_provider);
+      const signedUrl = await provider.createSignedReadUrl({
+        bucket: video.storage_bucket,
+        path: video.storage_path,
+        expiresInSeconds: 60 * 10,
+      });
+
+      return {
+        ...video,
+        file_url: signedUrl,
+      };
+    }),
+  );
+}
+
+async function attachExportJobDownloadUrls(exportJobs: ExportJobRecord[]) {
+  return Promise.all(
+    exportJobs.map(async (job) => {
+      if (
+        !job.output_storage_provider ||
+        !job.output_storage_bucket ||
+        !job.output_storage_path
+      ) {
+        return job;
+      }
+
+      const provider = getAssetStorageProvider(job.output_storage_provider);
+      const signedUrl = await provider.createSignedReadUrl({
+        bucket: job.output_storage_bucket,
+        path: job.output_storage_path,
+        expiresInSeconds: 60 * 10,
+      });
+
+      return {
+        ...job,
+        file_url: signedUrl,
+      };
+    }),
+  );
 }
 
 export async function createProject(input: {
@@ -113,9 +163,9 @@ export async function getProjectDetail(projectId: string, userId: string) {
     scriptResult,
     scenesResult,
     promptsResult,
-    assetsResult,
     renderJobsResult,
     generatedVideosResult,
+    exportJobsResult,
   ] = await Promise.all([
     supabase
       .from("scripts")
@@ -139,15 +189,9 @@ export async function getProjectDetail(projectId: string, userId: string) {
       .order("created_at", { ascending: true })
       .returns<PromptRecord[]>(),
     supabase
-      .from("project_assets")
-      .select("id, project_id, asset_type, file_name, file_url, mime_type, created_at")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false })
-      .returns<ProjectAssetRecord[]>(),
-    supabase
       .from("render_jobs")
       .select(
-        "id, project_id, scene_id, prompt_id, status, provider, provider_job_id, error_message, started_at, completed_at, created_at, updated_at",
+        "id, project_id, user_id, scene_id, prompt_id, source_asset_id, end_asset_id, status, provider, provider_job_id, render_mode, motion_style, credit_cost, prompt_snapshot, provider_operation_name, provider_request, provider_response, output_storage_provider, output_storage_bucket, output_storage_path, output_mime_type, error_message, started_at, completed_at, metadata, created_at, updated_at",
       )
       .eq("project_id", projectId)
       .order("created_at", { ascending: false })
@@ -155,28 +199,43 @@ export async function getProjectDetail(projectId: string, userId: string) {
     supabase
       .from("generated_videos")
       .select(
-        "id, project_id, render_job_id, file_url, thumbnail_url, duration_seconds, status, created_at, updated_at",
+        "id, project_id, user_id, render_job_id, file_url, thumbnail_url, duration_seconds, status, provider, provider_job_id, storage_provider, storage_bucket, storage_path, mime_type, metadata, created_at, updated_at",
       )
       .eq("project_id", projectId)
       .order("created_at", { ascending: false })
       .returns<GeneratedVideoRecord[]>(),
+    supabase
+      .from("export_jobs")
+      .select(
+        "id, project_id, user_id, status, export_ratio, credit_cost, input_video_ids, options, output_storage_provider, output_storage_bucket, output_storage_path, output_mime_type, error_message, started_at, completed_at, metadata, created_at, updated_at",
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false })
+      .returns<ExportJobRecord[]>(),
   ]);
 
   if (scriptResult.error) throw scriptResult.error;
   if (scenesResult.error) throw scenesResult.error;
   if (promptsResult.error) throw promptsResult.error;
-  if (assetsResult.error) throw assetsResult.error;
   if (renderJobsResult.error) throw renderJobsResult.error;
   if (generatedVideosResult.error) throw generatedVideosResult.error;
+  if (exportJobsResult.error) throw exportJobsResult.error;
+
+  const assets = await listProjectAssets(projectId, userId);
+  const generatedVideos = await attachGeneratedVideoDownloadUrls(
+    generatedVideosResult.data,
+  );
+  const exportJobs = await attachExportJobDownloadUrls(exportJobsResult.data);
 
   return {
     project,
     script: scriptResult.data,
     scenes: scenesResult.data,
     prompts: promptsResult.data,
-    assets: assetsResult.data,
+    assets,
     renderJobs: renderJobsResult.data,
-    generatedVideos: generatedVideosResult.data,
+    generatedVideos,
+    exportJobs,
   } satisfies ProjectDetail;
 }
 

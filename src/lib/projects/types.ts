@@ -1,3 +1,6 @@
+import type { ProjectAssetRecord } from "@/lib/assets/types";
+export type { ProjectAssetRecord } from "@/lib/assets/types";
+
 export const PROJECT_PLATFORMS = [
   "TikTok",
   "Reels",
@@ -105,27 +108,32 @@ export type PromptRecord = {
   updated_at: string;
 };
 
-export type ProjectAssetRecord = {
-  id: string;
-  project_id: string;
-  asset_type: string;
-  file_name: string | null;
-  file_url: string | null;
-  mime_type: string | null;
-  created_at: string;
-};
-
 export type RenderJobRecord = {
   id: string;
   project_id: string;
+  user_id: string;
   scene_id: string | null;
   prompt_id: string | null;
-  status: string;
+  source_asset_id: string | null;
+  end_asset_id: string | null;
+  status: "queued" | "processing" | "completed" | "failed";
   provider: string | null;
   provider_job_id: string | null;
+  render_mode: "text_to_video" | "image_to_video" | "start_end_transition";
+  motion_style: string | null;
+  credit_cost: number;
+  prompt_snapshot: string | null;
+  provider_operation_name: string | null;
+  provider_request: Record<string, unknown>;
+  provider_response: Record<string, unknown>;
+  output_storage_provider: string | null;
+  output_storage_bucket: string | null;
+  output_storage_path: string | null;
+  output_mime_type: string | null;
   error_message: string | null;
   started_at: string | null;
   completed_at: string | null;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
@@ -133,13 +141,43 @@ export type RenderJobRecord = {
 export type GeneratedVideoRecord = {
   id: string;
   project_id: string;
+  user_id: string;
   render_job_id: string | null;
   file_url: string | null;
   thumbnail_url: string | null;
   duration_seconds: number | null;
   status: string;
+  provider: string | null;
+  provider_job_id: string | null;
+  storage_provider: string | null;
+  storage_bucket: string | null;
+  storage_path: string | null;
+  mime_type: string | null;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+};
+
+export type ExportJobRecord = {
+  id: string;
+  project_id: string;
+  user_id: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  export_ratio: "9:16" | "1:1" | "16:9";
+  credit_cost: number;
+  input_video_ids: string[];
+  options: Record<string, unknown>;
+  output_storage_provider: string | null;
+  output_storage_bucket: string | null;
+  output_storage_path: string | null;
+  output_mime_type: string | null;
+  error_message: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  file_url?: string | null;
 };
 
 export type ProjectDetail = {
@@ -150,6 +188,7 @@ export type ProjectDetail = {
   assets: ProjectAssetRecord[];
   renderJobs: RenderJobRecord[];
   generatedVideos: GeneratedVideoRecord[];
+  exportJobs: ExportJobRecord[];
 };
 
 export type ProjectTab =

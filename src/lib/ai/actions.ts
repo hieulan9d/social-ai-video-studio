@@ -10,9 +10,8 @@ import {
   updateProject,
   upsertScriptRecord,
 } from "@/lib/projects/server";
+import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { addCredits, deductCredits, refundCredits } from "@/lib/wallet/server";
-
-const SCRIPT_GENERATION_CREDIT_COST = 1;
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -36,10 +35,11 @@ export async function generateScriptAction(formData: FormData) {
   }
 
   const referenceId = `${projectId}:${Date.now()}`;
+  const creditCost = await getFeatureCreditCost("text_generation");
 
   await deductCredits({
     userId: user.id,
-    amount: SCRIPT_GENERATION_CREDIT_COST,
+    amount: creditCost,
     reason: "AI script generation",
     referenceType: "script_generation",
     referenceId,
@@ -123,7 +123,7 @@ export async function generateScriptAction(formData: FormData) {
   } catch (error) {
     await refundCredits({
       userId: user.id,
-      amount: SCRIPT_GENERATION_CREDIT_COST,
+      amount: creditCost,
       reason: "Refund for failed AI script generation",
       referenceType: "script_generation_refund",
       referenceId,

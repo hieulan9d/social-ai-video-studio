@@ -5,9 +5,9 @@ import { requireUserProfile } from "@/lib/auth/server";
 import { getAITextProvider } from "@/lib/ai/providers";
 import type { GeneratedScript } from "@/lib/ai/types";
 import { getProjectDetail, replaceScenesForProject } from "@/lib/projects/server";
+import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { deductCredits, refundCredits } from "@/lib/wallet/server";
 
-const SCENE_GENERATION_CREDIT_COST = 1;
 const DURATION_TOLERANCE_SECONDS = 2;
 
 type EditableScene = {
@@ -77,10 +77,11 @@ export async function generateScenesAction(formData: FormData) {
   }
 
   const referenceId = `${projectId}:scene:${Date.now()}`;
+  const creditCost = await getFeatureCreditCost("scene_generation");
 
   await deductCredits({
     userId: user.id,
-    amount: SCENE_GENERATION_CREDIT_COST,
+    amount: creditCost,
     reason: "AI scene breakdown generation",
     referenceType: "scene_generation",
     referenceId,
@@ -139,7 +140,7 @@ export async function generateScenesAction(formData: FormData) {
   } catch (error) {
     await refundCredits({
       userId: user.id,
-      amount: SCENE_GENERATION_CREDIT_COST,
+      amount: creditCost,
       reason: "Refund for failed AI scene breakdown generation",
       referenceType: "scene_generation_refund",
       referenceId,

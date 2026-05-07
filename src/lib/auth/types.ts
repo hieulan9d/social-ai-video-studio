@@ -4,6 +4,10 @@ export type ProfileRecord = {
   full_name: string | null;
   avatar_url: string | null;
   workspace_name: string | null;
+  role: "user" | "admin";
+  account_status: "active" | "suspended";
+  onboarding_completed_at: string | null;
+  onboarding_metadata: Record<string, unknown>;
 };
 
 export type AuthUserProfile = {
@@ -12,4 +16,8 @@ export type AuthUserProfile = {
   fullName: string | null;
   avatarUrl: string | null;
   workspaceName: string | null;
+  role: "user" | "admin";
+  accountStatus: "active" | "suspended";
+  onboardingCompletedAt: string | null;
+  onboardingMetadata: Record<string, unknown>;
 };

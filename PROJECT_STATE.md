@@ -23,14 +23,21 @@ Completed phases:
 \- Phase 7: Scene generator
 
 \- Phase 8: Veo prompt generator
+\- Phase 9: Asset upload system
+\- Phase 10: Text-to-video render with Google Veo API
+\- Phase 11: Image-to-video mode
+\- Phase 12: Start image + end image transition mode
+\- Phase 13: Video export engine
+\- Admin dashboard
+\- Dynamic feature pricing system
+\- MVP launch polish: onboarding, optimized landing page, loading/error states, analytics, pricing page, and legal pages
 
 
 
 Next phases:
 
-\- Phase 9: Asset upload system
-
-\- Phase 10: Text-to-video render with Google Veo API
+\- Phase 14: Queue worker automation and retry policy
+\- Legal review and production analytics dashboard hardening
 
 
 

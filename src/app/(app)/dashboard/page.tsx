@@ -1,17 +1,23 @@
-import { BarChart3, Clock3, Coins, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BarChart3, CheckCircle2, Clock3, Coins, Sparkles } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { getProjects } from "@/lib/projects/server";
 import { getUserWallet } from "@/lib/wallet/server";
 
 export default async function DashboardPage() {
   const user = await requireUserProfile();
-  const wallet = await getUserWallet(user.id);
+  const [wallet, projects] = await Promise.all([
+    getUserWallet(user.id),
+    getProjects(user.id),
+  ]);
+  const recentProjects = projects.slice(0, 3);
   const stats = [
     {
       title: "Active projects",
-      value: "12",
-      note: "Across ecommerce, beauty, and local campaigns",
+      value: projects.length.toString(),
+      note: "Private projects owned by this workspace",
       icon: BarChart3,
     },
     {
@@ -22,8 +28,8 @@ export default async function DashboardPage() {
     },
     {
       title: "Queued renders",
-      value: "06",
-      note: "Placeholder pipeline cards waiting for AI integration",
+      value: "Live",
+      note: "Render and export state is tracked on each project",
       icon: Clock3,
     },
   ];
@@ -33,8 +39,34 @@ export default async function DashboardPage() {
       <PageHeader
         eyebrow="Workspace overview"
         title="Dashboard"
-        description="A clean control center for project intake, credits, render tracking, and upcoming AI workflows."
+        description="A control center for project intake, credits, render tracking, and launch operations."
       />
+
+      {!user.onboardingCompletedAt ? (
+        <SurfaceCard>
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-elevated)] text-[var(--accent)]">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Finish onboarding</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
+                  Set your launch goals, then jump into the first project with the
+                  right workflow context.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/onboarding"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
+            >
+              Continue setup
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </SurfaceCard>
+      ) : null}
 
       <div className="grid gap-5 xl:grid-cols-3">
         {stats.map((item) => (
@@ -61,7 +93,7 @@ export default async function DashboardPage() {
             <div>
               <h2 className="text-xl font-semibold">Recent projects</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Placeholder cards for the teams and campaigns using this workspace.
+                Latest project activity in this workspace.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
@@ -70,38 +102,40 @@ export default async function DashboardPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            {[
-              {
-                title: "Herbal Care Launch",
-                status: "Drafting scenes",
-                type: "Healthcare ad",
-              },
-              {
-                title: "Spa Membership Push",
-                status: "Prompt board ready",
-                type: "Local business",
-              },
-              {
-                title: "Vitamin C Drop",
-                status: "Waiting for render engine",
-                type: "Beauty campaign",
-              },
-            ].map((project) => (
-              <div
-                key={project.title}
-                className="flex flex-col justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5 md:flex-row md:items-center"
-              >
-                <div>
-                  <p className="text-base font-medium">{project.title}</p>
-                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                    {project.type}
-                  </p>
-                </div>
-                <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
-                  {project.status}
-                </span>
+            {recentProjects.length > 0 ? (
+              recentProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className="flex flex-col justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5 md:flex-row md:items-center"
+                >
+                  <div>
+                    <p className="text-base font-medium">{project.title}</p>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      {project.platform} / {project.videoType.replaceAll("_", " ")}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
+                    {project.status.replaceAll("_", " ")}
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+                <p className="font-medium">No projects yet</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                  Create the first project to start script, scene, prompt, render,
+                  and export workflows.
+                </p>
+                <Link
+                  href="/projects/new"
+                  className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
+                >
+                  Create project
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
-            ))}
+            )}
           </div>
         </SurfaceCard>
 
@@ -113,17 +147,17 @@ export default async function DashboardPage() {
             <div>
               <h2 className="text-xl font-semibold">Build status</h2>
               <p className="text-sm text-[var(--muted-foreground)]">
-                AI generation is intentionally deferred in this MVP foundation.
+                Launch readiness across the production pipeline.
               </p>
             </div>
           </div>
 
           <div className="mt-6 space-y-4">
             {[
-              "App routing and shell are ready",
-              "Supabase auth and wallet helpers are configured",
-              "Project, wallet, and settings screens are scaffolded",
-              "Render queue UI is ready for backend wiring",
+              "Auth, wallet, payments, and admin controls are ready",
+              "Asset upload and storage abstraction are wired",
+              "Text-to-video, image-to-video, and transition jobs are tracked",
+              "Export engine creates downloadable final video records",
             ].map((item) => (
               <div
                 key={item}

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AssetManager } from "@/components/projects/asset-manager";
+import { ExportPanel } from "@/components/projects/export-panel";
 import { ProjectDeleteButton } from "@/components/projects/project-delete-button";
 import { PromptEditor } from "@/components/projects/prompt-editor";
+import { RenderPanel } from "@/components/projects/render-panel";
 import { SceneTimelineEditor } from "@/components/projects/scene-timeline-editor";
 import { ScriptEditor } from "@/components/projects/script-editor";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
@@ -96,47 +99,26 @@ export default async function ProjectDetailPage({
           ) : null}
 
           {activeTab === "assets" ? (
-            <ListSection
-              title="Assets"
-              emptyMessage="No project assets uploaded yet."
-              items={detail.assets.map((asset) => ({
-                key: asset.id,
-                title: asset.file_name || asset.asset_type.replaceAll("_", " "),
-                description: asset.file_url || "No storage URL yet.",
-                meta: [asset.asset_type, asset.mime_type],
-              }))}
-            />
+            <AssetManager projectId={project.id} initialAssets={detail.assets} />
           ) : null}
 
           {activeTab === "render" ? (
-            <ListSection
-              title="Render jobs"
-              emptyMessage="No render jobs created yet."
-              items={detail.renderJobs.map((job) => ({
-                key: job.id,
-                title: `${job.status} render job`,
-                description:
-                  job.error_message ||
-                  job.provider_job_id ||
-                  "No provider job id or error message yet.",
-                meta: [job.provider, job.started_at, job.completed_at],
-              }))}
+            <RenderPanel
+              project={project}
+              scenes={detail.scenes}
+              prompts={detail.prompts}
+              assets={detail.assets}
+              renderJobs={detail.renderJobs}
+              generatedVideos={detail.generatedVideos}
             />
           ) : null}
 
           {activeTab === "export" ? (
-            <ListSection
-              title="Generated videos"
-              emptyMessage="No generated videos exported yet."
-              items={detail.generatedVideos.map((video) => ({
-                key: video.id,
-                title: `Export ${video.status}`,
-                description: video.file_url || "No export file URL yet.",
-                meta: [
-                  video.thumbnail_url,
-                  video.duration_seconds ? `${video.duration_seconds}s` : null,
-                ],
-              }))}
+            <ExportPanel
+              projectId={project.id}
+              assets={detail.assets}
+              generatedVideos={detail.generatedVideos}
+              exportJobs={detail.exportJobs}
             />
           ) : null}
         </SurfaceCard>
@@ -165,7 +147,7 @@ export default async function ProjectDetailPage({
               `Prompt count: ${detail.prompts.length}`,
               `Asset count: ${detail.assets.length}`,
               `Render jobs: ${detail.renderJobs.length}`,
-              `Exports: ${detail.generatedVideos.length}`,
+              `Exports: ${detail.exportJobs.length}`,
             ].map((item) => (
               <div
                 key={item}
@@ -208,58 +190,6 @@ function SectionBlock({
           ))}
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function ListSection({
-  title,
-  emptyMessage,
-  items,
-}: {
-  title: string;
-  emptyMessage: string;
-  items: Array<{
-    key: string;
-    title: string;
-    description: string;
-    meta: Array<string | null | undefined>;
-  }>;
-}) {
-  return (
-    <div>
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <div className="mt-6 space-y-4">
-        {items.length > 0 ? (
-          items.map((item) => (
-            <div
-              key={item.key}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
-            >
-              <p className="font-medium">{item.title}</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[var(--muted-foreground)]">
-                {item.description}
-              </p>
-              {item.meta.filter(Boolean).length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {item.meta.filter(Boolean).map((metaItem) => (
-                    <span
-                      key={metaItem}
-                      className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]"
-                    >
-                      {metaItem}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))
-        ) : (
-          <div className="rounded-2xl border border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-            {emptyMessage}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

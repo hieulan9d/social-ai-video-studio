@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+import { AnalyticsTracker } from "@/components/analytics/analytics-tracker";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,7 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Social AI Video Studio",
+  title: {
+    default: "Social AI Video Studio",
+    template: "%s | Social AI Video Studio",
+  },
   description: "MVP foundation for an AI social video SaaS platform.",
 };
 
@@ -24,10 +29,17 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
+  lang="en"
+  suppressHydrationWarning
+  className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+>
+      <body
+  suppressHydrationWarning
+  className="min-h-full bg-[var(--background)] text-[var(--foreground)]"
+>
+        <Suspense fallback={null}>
+          <AnalyticsTracker />
+        </Suspense>
         {children}
       </body>
     </html>

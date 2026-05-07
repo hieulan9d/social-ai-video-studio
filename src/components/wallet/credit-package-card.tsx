@@ -1,4 +1,5 @@
 import { startCheckout } from "@/lib/payments/actions";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import type { CreditPackage } from "@/lib/wallet/types";
 
 export function CreditPackageCard({
@@ -43,12 +44,12 @@ export function CreditPackageCard({
         <form action={startCheckout}>
           <input type="hidden" name="packageId" value={item.id} />
           <input type="hidden" name="provider" value={primaryProvider} />
-          <button
-            type="submit"
+          <FormSubmitButton
+            pendingLabel="Starting checkout..."
             className="rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
           >
             Top up with Mock
-          </button>
+          </FormSubmitButton>
         </form>
 
         {["Stripe", "MoMo", "VNPay"].map((provider) => (

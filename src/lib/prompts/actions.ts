@@ -8,7 +8,9 @@ import {
   replacePromptsForProject,
   upsertPromptRecord,
 } from "@/lib/projects/server";
+import { getFeatureCreditCost } from "@/lib/pricing/server";
 import type { GeneratedScript } from "@/lib/ai/types";
+import { deductCredits, refundCredits } from "@/lib/wallet/server";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -75,6 +77,8 @@ export async function generateAllPromptsAction(formData: FormData) {
 
   const consistencyInstruction = buildConsistencyInstruction(detail);
   const script = buildScriptForPrompt(detail);
+  const creditCost = await getFeatureCreditCost("prompt_generation");
+  const referenceId = `${projectId}:prompts:${Date.now()}`;
   const context = {
     platform: detail.project.platform,
     duration: detail.project.duration,
@@ -84,37 +88,64 @@ export async function generateAllPromptsAction(formData: FormData) {
     idea: detail.script.idea || detail.project.brief || "",
   };
 
-  const generatedPrompts = await Promise.all(
-    detail.scenes.map(async (scene) => {
-      const prompt = await generatePromptForScene({
-        scene: {
-          sceneNumber: scene.scene_order,
-          durationSeconds: scene.duration_seconds || 1,
-          visualDescription: scene.visual_description || "",
-          cameraAngle: scene.camera_angle || "",
-          cameraMovement: scene.camera_movement || "",
-          subjectAction: scene.subject_action || "",
-          background: scene.background || "",
-          lighting: scene.lighting || "",
-          voiceScript: scene.voiceover || "",
-          onScreenText: scene.on_screen_text || "",
-          notes: scene.notes || "",
-        },
-        context,
-        script,
-        consistencyInstruction,
-      });
+  await deductCredits({
+    userId: user.id,
+    amount: creditCost,
+    reason: "AI prompt generation",
+    referenceType: "prompt_generation",
+    referenceId,
+    metadata: {
+      project_id: projectId,
+      scene_count: detail.scenes.length,
+    },
+  });
 
-      return {
-        sceneId: scene.id,
-        promptType: prompt.promptType,
-        content: prompt.content,
-      };
-    }),
-  );
+  try {
+    const generatedPrompts = await Promise.all(
+      detail.scenes.map(async (scene) => {
+        const prompt = await generatePromptForScene({
+          scene: {
+            sceneNumber: scene.scene_order,
+            durationSeconds: scene.duration_seconds || 1,
+            visualDescription: scene.visual_description || "",
+            cameraAngle: scene.camera_angle || "",
+            cameraMovement: scene.camera_movement || "",
+            subjectAction: scene.subject_action || "",
+            background: scene.background || "",
+            lighting: scene.lighting || "",
+            voiceScript: scene.voiceover || "",
+            onScreenText: scene.on_screen_text || "",
+            notes: scene.notes || "",
+          },
+          context,
+          script,
+          consistencyInstruction,
+        });
 
-  await replacePromptsForProject(projectId, generatedPrompts);
-  revalidatePath(`/projects/${projectId}`);
+        return {
+          sceneId: scene.id,
+          promptType: prompt.promptType,
+          content: prompt.content,
+        };
+      }),
+    );
+
+    await replacePromptsForProject(projectId, generatedPrompts);
+    revalidatePath(`/projects/${projectId}`);
+  } catch (error) {
+    await refundCredits({
+      userId: user.id,
+      amount: creditCost,
+      reason: "Refund for failed AI prompt generation",
+      referenceType: "prompt_generation_refund",
+      referenceId,
+      metadata: {
+        project_id: projectId,
+      },
+    });
+
+    throw error;
+  }
 }
 
 export async function regeneratePromptAction(formData: FormData) {
@@ -138,40 +169,71 @@ export async function regeneratePromptAction(formData: FormData) {
     throw new Error("Scene not found.");
   }
 
-  const prompt = await generatePromptForScene({
-    scene: {
-      sceneNumber: scene.scene_order,
-      durationSeconds: scene.duration_seconds || 1,
-      visualDescription: scene.visual_description || "",
-      cameraAngle: scene.camera_angle || "",
-      cameraMovement: scene.camera_movement || "",
-      subjectAction: scene.subject_action || "",
-      background: scene.background || "",
-      lighting: scene.lighting || "",
-      voiceScript: scene.voiceover || "",
-      onScreenText: scene.on_screen_text || "",
-      notes: scene.notes || "",
+  const creditCost = await getFeatureCreditCost("prompt_generation");
+  const referenceId = `${projectId}:prompt:${sceneId}:${Date.now()}`;
+
+  await deductCredits({
+    userId: user.id,
+    amount: creditCost,
+    reason: "AI prompt regeneration",
+    referenceType: "prompt_generation",
+    referenceId,
+    metadata: {
+      project_id: projectId,
+      scene_id: sceneId,
     },
-    context: {
-      platform: detail.project.platform,
-      duration: detail.project.duration,
-      style: detail.project.style || "Modern social ad",
-      language: detail.project.language,
-      productType: detail.script.product_type || "product",
-      idea: detail.script.idea || detail.project.brief || "",
-    },
-    script: buildScriptForPrompt(detail),
-    consistencyInstruction: buildConsistencyInstruction(detail),
   });
 
-  await upsertPromptRecord({
-    projectId,
-    sceneId,
-    promptType: prompt.promptType,
-    content: prompt.content,
-  });
+  try {
+    const prompt = await generatePromptForScene({
+      scene: {
+        sceneNumber: scene.scene_order,
+        durationSeconds: scene.duration_seconds || 1,
+        visualDescription: scene.visual_description || "",
+        cameraAngle: scene.camera_angle || "",
+        cameraMovement: scene.camera_movement || "",
+        subjectAction: scene.subject_action || "",
+        background: scene.background || "",
+        lighting: scene.lighting || "",
+        voiceScript: scene.voiceover || "",
+        onScreenText: scene.on_screen_text || "",
+        notes: scene.notes || "",
+      },
+      context: {
+        platform: detail.project.platform,
+        duration: detail.project.duration,
+        style: detail.project.style || "Modern social ad",
+        language: detail.project.language,
+        productType: detail.script.product_type || "product",
+        idea: detail.script.idea || detail.project.brief || "",
+      },
+      script: buildScriptForPrompt(detail),
+      consistencyInstruction: buildConsistencyInstruction(detail),
+    });
 
-  revalidatePath(`/projects/${projectId}`);
+    await upsertPromptRecord({
+      projectId,
+      sceneId,
+      promptType: prompt.promptType,
+      content: prompt.content,
+    });
+
+    revalidatePath(`/projects/${projectId}`);
+  } catch (error) {
+    await refundCredits({
+      userId: user.id,
+      amount: creditCost,
+      reason: "Refund for failed AI prompt regeneration",
+      referenceType: "prompt_generation_refund",
+      referenceId,
+      metadata: {
+        project_id: projectId,
+        scene_id: sceneId,
+      },
+    });
+
+    throw error;
+  }
 }
 
 export async function savePromptsAction(formData: FormData) {

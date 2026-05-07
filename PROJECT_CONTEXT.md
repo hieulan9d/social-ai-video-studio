@@ -152,14 +152,15 @@ Current completed pipeline:
 - AI script generation
 - Scene generation
 - Prompt generation
-
-Planned next pipeline stages:
-
 - Asset upload
 - Text-to-video rendering
 - Image-to-video rendering
 - Start/end image transition rendering
 - Final video export
+
+Planned next pipeline stages:
+
+- Queue worker automation
 
 ## Current Core Features
 
@@ -174,13 +175,15 @@ Completed:
 - Script generation
 - Scene generation
 - Veo prompt generation
+- Asset upload and storage
+- Google Veo text-to-video rendering integration
+- Image-to-video mode
+- Start/end image transition mode
+- FFmpeg video export engine
 
 In progress / planned:
 
-- Asset upload and storage
-- Google Veo rendering integration
-- Render queue orchestration
-- Export pipeline
+- Render queue worker automation
 - More complete payment providers
 
 ## Full AI Workflow
@@ -431,7 +434,7 @@ Many generic AI video tools stop at generation. This product is intended to mana
 
 ## Future Roadmap
 
-### Near-term roadmap
+### Completed near-term roadmap
 
 Phase 9:
 
@@ -460,6 +463,14 @@ Phase 13:
 - Subtitles
 - Branding layers
 - Downloadable output
+
+### Upcoming roadmap
+
+Phase 14:
+
+- Queue worker automation
+- Retry policy
+- Failure analytics
 
 ### Medium-term roadmap
 

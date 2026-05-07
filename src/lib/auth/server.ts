@@ -25,6 +25,10 @@ function mapProfile(profile: ProfileRecord): AuthUserProfile {
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
     workspaceName: profile.workspace_name,
+    role: profile.role ?? "user",
+    accountStatus: profile.account_status ?? "active",
+    onboardingCompletedAt: profile.onboarding_completed_at ?? null,
+    onboardingMetadata: profile.onboarding_metadata ?? {},
   };
 }
 
@@ -51,7 +55,9 @@ export async function getCurrentUserProfile() {
 
   const { data: existingProfile, error } = await supabase
     .from("profiles")
-    .select("id, email, full_name, avatar_url, workspace_name")
+    .select(
+      "id, email, full_name, avatar_url, workspace_name, role, account_status, onboarding_completed_at, onboarding_metadata",
+    )
     .eq("id", user.id)
     .maybeSingle<ProfileRecord>();
 
@@ -67,7 +73,9 @@ export async function getCurrentUserProfile() {
   const { data: createdProfile, error: createError } = await supabase
     .from("profiles")
     .upsert(profilePayload)
-    .select("id, email, full_name, avatar_url, workspace_name")
+    .select(
+      "id, email, full_name, avatar_url, workspace_name, role, account_status, onboarding_completed_at, onboarding_metadata",
+    )
     .single<ProfileRecord>();
 
   if (createError) {
@@ -82,6 +90,20 @@ export async function requireUserProfile() {
 
   if (!profile) {
     redirect("/auth");
+  }
+
+  if (profile.accountStatus === "suspended") {
+    redirect("/auth");
+  }
+
+  return profile;
+}
+
+export async function requireAdminProfile() {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
   }
 
   return profile;

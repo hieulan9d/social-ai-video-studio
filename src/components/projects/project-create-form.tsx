@@ -1,4 +1,5 @@
 import { createProjectAction } from "@/lib/projects/actions";
+import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import {
   PROJECT_PLATFORMS,
   PROJECT_STATUSES,
@@ -72,12 +73,12 @@ export function ProjectCreateForm() {
         placeholder="Describe the offer, target audience, hook angle, and visual direction for this video project."
       />
 
-      <button
-        type="submit"
+      <FormSubmitButton
+        pendingLabel="Creating project..."
         className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
       >
         Create project
-      </button>
+      </FormSubmitButton>
     </form>
   );
 }
