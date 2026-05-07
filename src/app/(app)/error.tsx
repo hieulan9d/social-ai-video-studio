@@ -15,11 +15,12 @@ export default function AppError({
           <AlertTriangle className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-medium text-rose-300">Request failed</p>
-          <h1 className="mt-2 text-2xl font-semibold">Workspace data is unavailable.</h1>
+          <p className="text-sm font-medium text-rose-300">Yêu cầu thất bại</p>
+          <h1 className="mt-2 text-2xl font-semibold">Chưa tải được dữ liệu workspace.</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
-            The app kept the failure on this page instead of navigating away. Retry the
-            request after checking database connectivity or provider status.
+            Ứng dụng giữ lỗi ngay tại trang này để bạn không bị chuyển hướng bất
+            ngờ. Hãy thử lại sau khi kiểm tra kết nối cơ sở dữ liệu hoặc trạng
+            thái provider.
           </p>
           <button
             type="button"
@@ -27,7 +28,7 @@ export default function AppError({
             className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
           >
             <RotateCcw className="h-4 w-4" />
-            Retry
+            Thử lại
           </button>
         </div>
       </div>

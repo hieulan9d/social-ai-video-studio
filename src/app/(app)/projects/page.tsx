@@ -14,16 +14,16 @@ export default async function ProjectsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Project management"
-        title="Projects"
-        description="Browse your video projects, open detail workspaces, and manage pipeline readiness by status."
+        eyebrow="Quản lý dự án"
+        title="Dự án"
+        description="Xem các dự án video, mở workspace chi tiết và theo dõi trạng thái sẵn sàng của pipeline."
         action={
           <Link
             href="/projects/new"
             className="inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
           >
             <Plus className="h-4 w-4" />
-            New project
+            Dự án mới
           </Link>
         }
       />
@@ -45,19 +45,19 @@ export default async function ProjectsPage() {
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                <MetricCard label="Duration" value={`${project.duration}s`} />
+                <MetricCard label="Thời lượng" value={`${project.duration}s`} />
                 <MetricCard
-                  label="Language"
+                  label="Ngôn ngữ"
                   value={project.language}
                 />
                 <MetricCard
-                  label="Updated"
+                  label="Cập nhật"
                   value={new Date(project.updatedAt).toLocaleDateString()}
                 />
               </div>
 
               <p className="mt-6 line-clamp-3 text-sm leading-7 text-[var(--muted-foreground)]">
-                {project.brief || "No project brief yet."}
+                {project.brief || "Chưa có brief cho dự án."}
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
@@ -65,7 +65,7 @@ export default async function ProjectsPage() {
                   href={`/projects/${project.id}`}
                   className="rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
                 >
-                  Open project
+                  Mở dự án
                 </Link>
                 <ProjectDeleteButton projectId={project.id} />
               </div>
@@ -74,17 +74,16 @@ export default async function ProjectsPage() {
         </div>
       ) : (
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">No projects yet</h2>
+          <h2 className="text-xl font-semibold">Chưa có dự án</h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
-            Create your first project to capture the brief, prepare the script
-            structure, organize scenes, and manage future render jobs from one
-            workspace.
+            Tạo dự án đầu tiên để lưu brief, chuẩn bị cấu trúc kịch bản, sắp xếp
+            cảnh và quản lý các job render trong cùng một workspace.
           </p>
           <Link
             href="/projects/new"
             className="mt-6 inline-flex rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
           >
-            Create first project
+            Tạo dự án đầu tiên
           </Link>
         </SurfaceCard>
       )}

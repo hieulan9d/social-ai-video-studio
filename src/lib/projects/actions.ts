@@ -30,11 +30,11 @@ export async function createProjectAction(formData: FormData) {
   const brief = readString(formData, "brief");
 
   if (!title) {
-    throw new Error("Project title is required.");
+    throw new Error("Vui lòng nhập tiêu đề dự án.");
   }
 
   if (!PROJECT_PLATFORMS.includes(platform as (typeof PROJECT_PLATFORMS)[number])) {
-    throw new Error("Invalid project platform.");
+    throw new Error("Nền tảng dự án không hợp lệ.");
   }
 
   if (
@@ -42,19 +42,19 @@ export async function createProjectAction(formData: FormData) {
       videoType as (typeof PROJECT_VIDEO_TYPES)[number],
     )
   ) {
-    throw new Error("Invalid video type.");
+    throw new Error("Loại video không hợp lệ.");
   }
 
   if (!Number.isFinite(duration) || duration <= 0) {
-    throw new Error("Duration must be a positive number.");
+    throw new Error("Thời lượng phải là số dương.");
   }
 
   if (!language) {
-    throw new Error("Language is required.");
+    throw new Error("Vui lòng nhập ngôn ngữ.");
   }
 
   if (!PROJECT_STATUSES.includes(status as (typeof PROJECT_STATUSES)[number])) {
-    throw new Error("Invalid project status.");
+    throw new Error("Trạng thái dự án không hợp lệ.");
   }
 
   const project = await createProjectRecord({
@@ -78,7 +78,7 @@ export async function deleteProjectAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Project id is required.");
+    throw new Error("Thiếu ID dự án.");
   }
 
   await deleteProjectRecord(projectId, user.id);

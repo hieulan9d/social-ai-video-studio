@@ -19,7 +19,7 @@ export function SignOutButton() {
       ) : (
         <LogOut className="h-4 w-4" />
       )}
-      Logout
+      Đăng xuất
     </button>
   );
 }

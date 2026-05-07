@@ -3,10 +3,10 @@ import type { ProjectTab } from "@/lib/projects/types";
 
 const tabLabels: Record<ProjectTab, string> = {
   brief: "Brief",
-  script: "Script",
-  scenes: "Scenes",
-  prompts: "Prompts",
-  assets: "Assets",
+  script: "Kịch bản",
+  scenes: "Cảnh",
+  prompts: "Prompt",
+  assets: "Tài sản",
   render: "Render",
   export: "Export",
 };

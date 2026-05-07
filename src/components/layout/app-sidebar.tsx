@@ -10,7 +10,7 @@ import { appNavigation, secondaryNavigation } from "@/lib/navigation";
 export function AppSidebar() {
   const pathname = usePathname();
   const user = useAuth();
-  const userLabel = user.fullName || user.workspaceName || "Workspace user";
+  const userLabel = user.fullName || user.workspaceName || "Người dùng workspace";
 
   return (
     <aside className="hidden w-72 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-5 py-6 lg:block">
@@ -20,7 +20,7 @@ export function AppSidebar() {
         </span>
         <div>
           <p className="text-sm font-semibold">Social AI Video Studio</p>
-          <p className="text-xs text-[var(--muted-foreground)]">MVP foundation</p>
+          <p className="text-xs text-[var(--muted-foreground)]">Nền tảng MVP</p>
         </div>
       </Link>
 
@@ -39,7 +39,7 @@ export function AppSidebar() {
 
       <div className="mt-10 border-t border-[var(--border)] pt-6">
         <p className="px-2 text-xs font-medium uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
-          Support
+          Hỗ trợ
         </p>
         <div className="mt-3 space-y-2">
           {secondaryNavigation.map((item) => (

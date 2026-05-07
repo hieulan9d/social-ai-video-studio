@@ -67,10 +67,10 @@ export function StartEndTransitionForm({
           <MoveRight className="h-5 w-5" />
         </span>
         <div>
-          <p className="font-medium">Start-end image transition</p>
+          <p className="font-medium">Chuyển cảnh ảnh đầu-cuối</p>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Choose start and end images, generate an editable transition prompt,
-            and render through the same backend queue.
+            Chọn ảnh bắt đầu và ảnh kết thúc, tạo prompt chuyển cảnh có thể chỉnh
+            sửa, rồi render qua cùng hàng đợi backend.
           </p>
         </div>
       </div>
@@ -84,7 +84,7 @@ export function StartEndTransitionForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
-                    Start image
+                    Ảnh bắt đầu
                   </label>
                   <select
                     name="startAssetId"
@@ -102,7 +102,7 @@ export function StartEndTransitionForm({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium">
-                    End image
+                    Ảnh kết thúc
                   </label>
                   <select
                     name="endAssetId"
@@ -139,7 +139,7 @@ export function StartEndTransitionForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
-                    Transition style
+                    Kiểu chuyển cảnh
                   </label>
                   <select
                     name="transitionStyle"
@@ -166,7 +166,7 @@ export function StartEndTransitionForm({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium">
-                    Duration
+                    Thời lượng
                   </label>
                   <select
                     name="durationSeconds"
@@ -174,9 +174,9 @@ export function StartEndTransitionForm({
                     onChange={(event) => setDurationSeconds(event.target.value)}
                     className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
                   >
-                    <option value="4">4 seconds</option>
-                    <option value="6">6 seconds</option>
-                    <option value="8">8 seconds</option>
+                    <option value="4">4 giây</option>
+                    <option value="6">6 giây</option>
+                    <option value="8">8 giây</option>
                   </select>
                 </div>
               </div>
@@ -185,13 +185,13 @@ export function StartEndTransitionForm({
             <div className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Optional direction
+                  Định hướng bổ sung
                 </label>
                 <textarea
                   value={direction}
                   onChange={(event) => setDirection(event.target.value)}
                   rows={3}
-                  placeholder="Add product continuity, mood, pacing, camera notes..."
+                  placeholder="Thêm yêu cầu về tính liên tục sản phẩm, mood, nhịp chuyển, ghi chú camera..."
                   className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
                 />
               </div>
@@ -201,12 +201,12 @@ export function StartEndTransitionForm({
                 onClick={() => regeneratePrompt()}
                 className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm"
               >
-                Generate prompt
+                Tạo prompt
               </button>
 
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Editable transition prompt
+                  Prompt chuyển cảnh có thể chỉnh sửa
                 </label>
                 <textarea
                   name="prompt"
@@ -227,15 +227,15 @@ export function StartEndTransitionForm({
                 }
                 className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
               >
-                Render transition
+                Render chuyển cảnh
               </button>
             </div>
           </div>
         </form>
       ) : (
         <div className="mt-5 rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-          Upload at least one start image and one end image in the Assets tab
-          before rendering transitions.
+          Hãy tải ít nhất một ảnh bắt đầu và một ảnh kết thúc trong tab Tài sản
+          trước khi render chuyển cảnh.
         </div>
       )}
     </div>

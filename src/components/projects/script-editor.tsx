@@ -17,11 +17,11 @@ export function ScriptEditor({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">AI Script Generator</h2>
+        <h2 className="text-xl font-semibold">Trình tạo kịch bản AI</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Generate a Vietnamese short-form ad script with the structure Hook →
-          Problem → Solution → Product/Service → CTA. One generation deducts 1
-          credit before running and refunds automatically if generation fails.
+          Tạo kịch bản quảng cáo video ngắn tiếng Việt theo cấu trúc Hook → Vấn đề
+          → Giải pháp → Sản phẩm/Dịch vụ → CTA. Mỗi lần tạo sẽ trừ tín dụng trước
+          khi chạy và tự hoàn nếu tạo thất bại.
         </p>
       </div>
 
@@ -29,18 +29,18 @@ export function ScriptEditor({
         <input type="hidden" name="projectId" value={project.id} />
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label="Product type"
+            label="Loại sản phẩm"
             name="productType"
             defaultValue={script?.product_type || ""}
             placeholder="Mỹ phẩm, spa, thực phẩm chức năng..."
           />
           <ReadOnlyField
-            label="Project context"
-            value={`${project.platform} · ${project.duration}s · ${project.style || "Social ad style"}`}
+            label="Bối cảnh dự án"
+            value={`${project.platform} / ${project.duration}s / ${project.style || "Phong cách quảng cáo social"}`}
           />
         </div>
         <TextAreaField
-          label="Video idea"
+          label="Ý tưởng video"
           name="idea"
           defaultValue={script?.idea || project.brief || ""}
           placeholder="Mô tả ý tưởng quảng cáo, nỗi đau khách hàng, USP sản phẩm, ưu đãi và CTA mong muốn."
@@ -50,23 +50,23 @@ export function ScriptEditor({
           type="submit"
           className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
         >
-          Generate AI script
+          Tạo kịch bản AI
         </button>
       </form>
 
       <div className="border-t border-[var(--border)] pt-6">
-        <h3 className="text-lg font-semibold">Editable script</h3>
+        <h3 className="text-lg font-semibold">Kịch bản có thể chỉnh sửa</h3>
         <form action={updateScriptAction} className="mt-5 space-y-4">
           <input type="hidden" name="projectId" value={project.id} />
           <div className="grid gap-4 md:grid-cols-2">
             <Field
-              label="Video title"
+              label="Tiêu đề video"
               name="title"
               defaultValue={script?.title || project.title}
               placeholder="Tiêu đề video"
             />
             <Field
-              label="Target audience"
+              label="Khách hàng mục tiêu"
               name="targetAudience"
               defaultValue={script?.target_audience || ""}
               placeholder="Mẹ bỉm, chủ shop, phụ nữ 25-35..."
@@ -75,13 +75,13 @@ export function ScriptEditor({
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field
-              label="Idea"
+              label="Ý tưởng"
               name="idea"
               defaultValue={script?.idea || project.brief || ""}
               placeholder="Ý tưởng video"
             />
             <Field
-              label="Product type"
+              label="Loại sản phẩm"
               name="productType"
               defaultValue={script?.product_type || ""}
               placeholder="Loại sản phẩm/dịch vụ"
@@ -96,28 +96,28 @@ export function ScriptEditor({
             rows={3}
           />
           <TextAreaField
-            label="Problem"
+            label="Vấn đề"
             name="problem"
             defaultValue={script?.problem || ""}
             placeholder="Nỗi đau/vấn đề khách hàng"
             rows={4}
           />
           <TextAreaField
-            label="Solution"
+            label="Giải pháp"
             name="solution"
             defaultValue={script?.solution || ""}
             placeholder="Giải pháp"
             rows={4}
           />
           <TextAreaField
-            label="Product / Service"
+            label="Sản phẩm / Dịch vụ"
             name="productService"
             defaultValue={generatedOutput?.productService || ""}
             placeholder="Phần giới thiệu sản phẩm/dịch vụ"
             rows={4}
           />
           <TextAreaField
-            label="Voiceover"
+            label="Lời thoại"
             name="voiceover"
             defaultValue={script?.voiceover || script?.content || ""}
             placeholder="Toàn bộ lời thoại"
@@ -135,7 +135,7 @@ export function ScriptEditor({
             type="submit"
             className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-3 text-sm font-medium"
           >
-            Save script edits
+            Lưu chỉnh sửa kịch bản
           </button>
         </form>
       </div>

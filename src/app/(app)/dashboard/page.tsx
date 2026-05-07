@@ -15,21 +15,21 @@ export default async function DashboardPage() {
   const recentProjects = projects.slice(0, 3);
   const stats = [
     {
-      title: "Active projects",
+      title: "Dự án đang có",
       value: projects.length.toString(),
-      note: "Private projects owned by this workspace",
+      note: "Các dự án riêng thuộc workspace này",
       icon: BarChart3,
     },
     {
-      title: "Credits remaining",
+      title: "Tín dụng còn lại",
       value: wallet.balanceCredit.toString(),
-      note: "Live wallet balance read directly from the database.",
+      note: "Số dư ví được đọc trực tiếp từ cơ sở dữ liệu.",
       icon: Coins,
     },
     {
-      title: "Queued renders",
+      title: "Render đang theo dõi",
       value: "Live",
-      note: "Render and export state is tracked on each project",
+      note: "Trạng thái render và export được lưu theo từng dự án",
       icon: Clock3,
     },
   ];
@@ -37,9 +37,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Workspace overview"
-        title="Dashboard"
-        description="A control center for project intake, credits, render tracking, and launch operations."
+        eyebrow="Tổng quan workspace"
+        title="Bảng điều khiển"
+        description="Trung tâm theo dõi dự án, tín dụng, render và các thao tác vận hành trước khi ra mắt."
       />
 
       {!user.onboardingCompletedAt ? (
@@ -50,10 +50,10 @@ export default async function DashboardPage() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Finish onboarding</h2>
+                <h2 className="text-xl font-semibold">Hoàn tất hướng dẫn bắt đầu</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
-                  Set your launch goals, then jump into the first project with the
-                  right workflow context.
+                  Chọn mục tiêu sử dụng để workspace gợi ý luồng tạo dự án đầu
+                  tiên phù hợp hơn.
                 </p>
               </div>
             </div>
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
               href="/onboarding"
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
             >
-              Continue setup
+              Tiếp tục thiết lập
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -91,13 +91,13 @@ export default async function DashboardPage() {
         <SurfaceCard>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Recent projects</h2>
+              <h2 className="text-xl font-semibold">Dự án gần đây</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Latest project activity in this workspace.
+                Các hoạt động dự án mới nhất trong workspace.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
-              Synced layout
+              Đã đồng bộ
             </span>
           </div>
 
@@ -116,22 +116,22 @@ export default async function DashboardPage() {
                     </p>
                   </div>
                   <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
-                    {project.status.replaceAll("_", " ")}
+                    {formatProjectStatus(project.status)}
                   </span>
                 </Link>
               ))
             ) : (
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-                <p className="font-medium">No projects yet</p>
+                <p className="font-medium">Chưa có dự án</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-                  Create the first project to start script, scene, prompt, render,
-                  and export workflows.
+                  Tạo dự án đầu tiên để bắt đầu quy trình kịch bản, cảnh, prompt,
+                  render và export.
                 </p>
                 <Link
                   href="/projects/new"
                   className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
                 >
-                  Create project
+                  Tạo dự án
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -145,19 +145,19 @@ export default async function DashboardPage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">Build status</h2>
+              <h2 className="text-xl font-semibold">Trạng thái hệ thống</h2>
               <p className="text-sm text-[var(--muted-foreground)]">
-                Launch readiness across the production pipeline.
+                Mức sẵn sàng của pipeline sản xuất video.
               </p>
             </div>
           </div>
 
           <div className="mt-6 space-y-4">
             {[
-              "Auth, wallet, payments, and admin controls are ready",
-              "Asset upload and storage abstraction are wired",
-              "Text-to-video, image-to-video, and transition jobs are tracked",
-              "Export engine creates downloadable final video records",
+              "Auth, ví tín dụng, thanh toán và admin đã sẵn sàng",
+              "Tải tài sản và lớp trừu tượng storage đã được nối",
+              "Text-to-video, image-to-video và transition đều có tracking job",
+              "Export engine tạo bản ghi video cuối có thể tải xuống",
             ].map((item) => (
               <div
                 key={item}
@@ -171,4 +171,17 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
+}
+
+function formatProjectStatus(status: string) {
+  const labels: Record<string, string> = {
+    draft: "Bản nháp",
+    brief_ready: "Brief đã sẵn sàng",
+    script_ready: "Kịch bản đã sẵn sàng",
+    rendering: "Đang render",
+    completed: "Đã hoàn tất",
+    archived: "Đã lưu trữ",
+  };
+
+  return labels[status] ?? status.replaceAll("_", " ");
 }

@@ -17,14 +17,14 @@ import {
 } from "@/lib/assets/types";
 
 const assetLabels: Record<ProjectAssetType, string> = {
-  product_image: "Product image",
-  start_image: "Start image",
-  end_image: "End image",
-  avatar_image: "Avatar image",
+  product_image: "Ảnh sản phẩm",
+  start_image: "Ảnh bắt đầu",
+  end_image: "Ảnh kết thúc",
+  avatar_image: "Ảnh avatar",
   logo: "Logo",
-  background_image: "Background image",
-  voiceover_audio: "Voiceover audio",
-  music_audio: "Music audio",
+  background_image: "Ảnh nền",
+  voiceover_audio: "Âm thanh voiceover",
+  music_audio: "Nhạc nền",
 };
 
 type UploadDraft = {
@@ -99,7 +99,7 @@ export function AssetManager({
     const draft = drafts[assetType];
 
     if (!draft) {
-      setMessage("Choose a file before uploading.");
+      setMessage("Hãy chọn file trước khi tải lên.");
       return;
     }
 
@@ -118,7 +118,7 @@ export function AssetManager({
       const payload = (await response.json()) as ApiAssetResponse;
 
       if (!response.ok || !payload.ok || !payload.asset) {
-        throw new Error(payload.error || "Upload failed.");
+        throw new Error(payload.error || "Tải lên thất bại.");
       }
 
       URL.revokeObjectURL(draft.previewUrl);
@@ -128,7 +128,7 @@ export function AssetManager({
         [assetType]: undefined,
       }));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Upload failed.");
+      setMessage(error instanceof Error ? error.message : "Tải lên thất bại.");
     } finally {
       setBusyAssetType(null);
     }
@@ -145,12 +145,12 @@ export function AssetManager({
       const payload = (await response.json()) as { ok: boolean; error?: string };
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Delete failed.");
+        throw new Error(payload.error || "Xóa thất bại.");
       }
 
       setAssets((current) => current.filter((asset) => asset.id !== assetId));
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Delete failed.");
+      setMessage(error instanceof Error ? error.message : "Xóa thất bại.");
     } finally {
       setDeletingAssetId(null);
     }
@@ -159,10 +159,10 @@ export function AssetManager({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Project Assets</h2>
+        <h2 className="text-xl font-semibold">Tài sản dự án</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Upload private project images for product consistency, character
-          references, start/end transitions, logos, and background scenes.
+          Tải lên hình ảnh và âm thanh riêng của dự án để giữ nhất quán sản phẩm,
+          nhân vật, ảnh chuyển cảnh, logo và bối cảnh nền.
         </p>
       </div>
 
@@ -192,8 +192,8 @@ export function AssetManager({
                   <h3 className="font-semibold">{assetLabels[assetType]}</h3>
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                     {isAudioAsset
-                      ? "MP3, MP4, AAC, WAV, or WebM audio. Max 50MB."
-                      : "JPEG, PNG, WebP, or GIF. Max 10MB."}
+                      ? "Âm thanh MP3, MP4, AAC, WAV hoặc WebM. Tối đa 50MB."
+                      : "Ảnh JPEG, PNG, WebP hoặc GIF. Tối đa 10MB."}
                   </p>
                 </div>
                 <AssetIcon className="h-5 w-5 text-[var(--muted-foreground)]" />
@@ -218,7 +218,7 @@ export function AssetManager({
                     ) : (
                       <img
                         src={draft.previewUrl}
-                        alt={`${assetLabels[assetType]} preview`}
+                        alt={`Xem trước ${assetLabels[assetType]}`}
                         className="h-44 w-full object-cover"
                       />
                     )}
@@ -236,7 +236,7 @@ export function AssetManager({
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
                 >
                   <Upload className="h-4 w-4" />
-                  {busyAssetType === assetType ? "Uploading..." : "Upload asset"}
+                  {busyAssetType === assetType ? "Đang tải lên..." : "Tải tài sản lên"}
                 </button>
               </div>
 
@@ -278,7 +278,7 @@ export function AssetManager({
                         onClick={() => deleteAsset(asset.id)}
                         disabled={deletingAssetId === asset.id}
                         className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-500/30 text-rose-300 disabled:opacity-50"
-                        aria-label={`Delete ${asset.file_name}`}
+                        aria-label={`Xóa ${asset.file_name}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -286,7 +286,7 @@ export function AssetManager({
                   ))
                 ) : (
                   <p className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-                    No {assetLabels[assetType].toLowerCase()} uploaded yet.
+                    Chưa tải lên {assetLabels[assetType].toLowerCase()}.
                   </p>
                 )}
               </div>
@@ -305,7 +305,7 @@ function validateClientFile(file: File) {
     )
   ) {
     return file.size > MAX_PROJECT_IMAGE_ASSET_SIZE_BYTES
-      ? "Uploaded image must be 10MB or smaller."
+      ? "Ảnh tải lên phải có dung lượng từ 10MB trở xuống."
       : null;
   }
 
@@ -315,7 +315,7 @@ function validateClientFile(file: File) {
     )
   ) {
     return file.size > MAX_PROJECT_AUDIO_ASSET_SIZE_BYTES
-      ? "Uploaded audio must be 50MB or smaller."
+      ? "Âm thanh tải lên phải có dung lượng từ 50MB trở xuống."
       : null;
   }
 
@@ -324,7 +324,7 @@ function validateClientFile(file: File) {
       file.type as (typeof ALLOWED_PROJECT_ASSET_MIME_TYPES)[number],
     )
   ) {
-    return "Uploaded file must be an image or supported audio file.";
+    return "File tải lên phải là ảnh hoặc định dạng âm thanh được hỗ trợ.";
   }
 
   return null;

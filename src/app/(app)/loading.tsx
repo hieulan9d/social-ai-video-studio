@@ -5,7 +5,7 @@ export default function AppLoading() {
     <div className="space-y-5">
       <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-sm text-[var(--muted-foreground)]">
         <Loader2 className="h-4 w-4 animate-spin text-[var(--accent)]" />
-        Loading data from the workspace...
+        Đang tải dữ liệu workspace...
       </div>
       <div className="grid gap-5 xl:grid-cols-3">
         {[1, 2, 3].map((item) => (

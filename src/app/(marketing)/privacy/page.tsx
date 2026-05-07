@@ -2,35 +2,35 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "Privacy policy for Social AI Video Studio.",
+  title: "Chính sách quyền riêng tư",
+  description: "Chính sách quyền riêng tư của Social AI Video Studio.",
 };
 
 const sections = [
   {
-    title: "Data we process",
-    body: "We process account details, project briefs, uploaded assets, generated scripts, render metadata, wallet records, payments, and operational analytics needed to run the product.",
+    title: "Dữ liệu chúng tôi xử lý",
+    body: "Chúng tôi xử lý thông tin tài khoản, brief dự án, tài sản tải lên, kịch bản đã tạo, metadata render, bản ghi ví tín dụng, thanh toán và analytics vận hành cần thiết để chạy sản phẩm.",
   },
   {
-    title: "How data is used",
-    body: "Data is used to authenticate users, protect private projects, generate AI production assets, process credit transactions, troubleshoot failed jobs, and improve product reliability.",
+    title: "Cách dữ liệu được sử dụng",
+    body: "Dữ liệu được dùng để xác thực người dùng, bảo vệ dự án riêng tư, tạo tài sản sản xuất bằng AI, xử lý giao dịch tín dụng, khắc phục job lỗi và cải thiện độ tin cậy của sản phẩm.",
   },
   {
-    title: "Assets and outputs",
-    body: "Uploaded files and generated videos are scoped to the owning user and project. Access should be controlled by database policies, signed URLs, and backend authorization checks.",
+    title: "Tài sản và output",
+    body: "File tải lên và video đã tạo được giới hạn theo người dùng và dự án sở hữu. Quyền truy cập được kiểm soát bằng policy cơ sở dữ liệu, signed URL và kiểm tra phân quyền ở backend.",
   },
   {
-    title: "Service providers",
-    body: "The platform may use Supabase, payment providers, AI text providers, Google Veo, storage providers, and hosting infrastructure to deliver the service.",
+    title: "Nhà cung cấp dịch vụ",
+    body: "Nền tảng có thể dùng Supabase, payment provider, AI text provider, Google Veo, storage provider và hạ tầng hosting để cung cấp dịch vụ.",
   },
   {
-    title: "Retention",
-    body: "Operational records are retained while needed for billing, audit, support, product integrity, and legal obligations. Financial ledger records should not be deleted casually.",
+    title: "Thời gian lưu trữ",
+    body: "Bản ghi vận hành được lưu khi cần cho thanh toán, audit, hỗ trợ, tính toàn vẹn sản phẩm và nghĩa vụ pháp lý. Bản ghi ledger tài chính không nên bị xóa tùy tiện.",
   },
 ];
 
 export default function PrivacyPage() {
-  return <LegalPage title="Privacy Policy" updated="May 7, 2026" sections={sections} />;
+  return <LegalPage title="Chính sách quyền riêng tư" updated="8 tháng 5, 2026" sections={sections} />;
 }
 
 function LegalPage({
@@ -49,7 +49,7 @@ function LegalPage({
           Social AI Video Studio
         </Link>
         <p className="mt-12 text-sm text-[var(--muted-foreground)]">
-          Last updated: {updated}
+          Cập nhật lần cuối: {updated}
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight">{title}</h1>
         <div className="mt-10 space-y-8">
@@ -63,8 +63,8 @@ function LegalPage({
           ))}
         </div>
         <p className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--muted-foreground)]">
-          This page is launch-ready product copy and should be reviewed by counsel
-          before paid public release.
+          Nội dung này đã sẵn sàng cho MVP, nhưng nên được rà soát bởi tư vấn pháp
+          lý trước khi phát hành thương mại.
         </p>
       </div>
     </main>

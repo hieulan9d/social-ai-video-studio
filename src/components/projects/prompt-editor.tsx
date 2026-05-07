@@ -70,11 +70,11 @@ export function PromptEditor({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Veo Prompt Generator</h2>
+        <h2 className="text-xl font-semibold">Trình tạo prompt Veo</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Generate one cinematic English prompt per scene for Google Veo. Scene
-          data may be written in Vietnamese, but the final Veo prompt is always
-          saved in English.
+          Tạo một prompt tiếng Anh phong cách điện ảnh cho từng cảnh để dùng với
+          Google Veo. Dữ liệu cảnh có thể viết bằng tiếng Việt, nhưng prompt Veo
+          cuối cùng luôn được lưu bằng tiếng Anh.
         </p>
       </div>
 
@@ -84,30 +84,30 @@ export function PromptEditor({
           className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4"
         >
           <input type="hidden" name="projectId" value={project.id} />
-          <p className="text-sm font-medium">Generate prompts for all scenes</p>
+          <p className="text-sm font-medium">Tạo prompt cho tất cả cảnh</p>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            Input context: {project.platform} · {project.style || "Cinematic social ad"} ·{" "}
-            {script?.product_type || "general product"}
+            Bối cảnh đầu vào: {project.platform} / {project.style || "Quảng cáo social cinematic"} /{" "}
+            {script?.product_type || "sản phẩm chung"}
           </p>
           <button
             type="submit"
             disabled={!script || scenes.length === 0}
             className="mt-4 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
           >
-            Generate all Veo prompts
+            Tạo tất cả prompt Veo
           </button>
         </form>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-          <p className="text-sm font-medium">Consistency mode</p>
+          <p className="text-sm font-medium">Chế độ nhất quán</p>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
             {hasProductImage
-              ? "Product consistency instructions will be enforced because a product image or logo asset exists."
-              : "No product image detected. Generic product consistency instructions will still be added."}
+              ? "Sẽ áp dụng hướng dẫn giữ nhất quán sản phẩm vì đã có ảnh sản phẩm hoặc logo."
+              : "Chưa phát hiện ảnh sản phẩm. Hệ thống vẫn thêm hướng dẫn nhất quán sản phẩm chung."}
           </p>
           <p className="mt-3 text-sm text-[var(--muted-foreground)]">
-            Default negative instructions include: subtitles, watermark, distorted
-            face, extra fingers, wrong product label, random text, logo changes.
+            Negative instructions mặc định gồm: phụ đề, watermark, méo mặt, thừa
+            ngón tay, sai nhãn sản phẩm, chữ ngẫu nhiên, thay đổi logo.
           </p>
         </div>
       </div>
@@ -121,9 +121,9 @@ export function PromptEditor({
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="text-lg font-semibold">Scene {item.sceneNumber}</p>
+                  <p className="text-lg font-semibold">Cảnh {item.sceneNumber}</p>
                   <p className="text-sm text-[var(--muted-foreground)]">
-                    Prompt type: {item.promptType.toUpperCase()}
+                    Loại prompt: {item.promptType.toUpperCase()}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -134,7 +134,7 @@ export function PromptEditor({
                       type="submit"
                       className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm"
                     >
-                      Regenerate prompt
+                      Tạo lại prompt
                     </button>
                   </form>
                   <button
@@ -142,13 +142,13 @@ export function PromptEditor({
                     onClick={() => copyPrompt(item.content)}
                     className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm"
                   >
-                    Copy prompt
+                    Sao chép prompt
                   </button>
                 </div>
               </div>
 
               <div className="mt-4">
-                <label className="mb-2 block text-sm font-medium">Prompt content</label>
+                <label className="mb-2 block text-sm font-medium">Nội dung prompt</label>
                 <textarea
                   value={item.content}
                   onChange={(event) => updatePrompt(item.sceneId, event.target.value)}
@@ -160,7 +160,7 @@ export function PromptEditor({
           ))
         ) : (
           <div className="rounded-2xl border border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-            No scenes available yet. Generate scenes first, then create Veo prompts.
+            Chưa có cảnh. Hãy tạo cảnh trước, sau đó tạo prompt Veo.
           </div>
         )}
       </div>
@@ -173,7 +173,7 @@ export function PromptEditor({
             type="submit"
             className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
           >
-            Save prompt edits
+            Lưu chỉnh sửa prompt
           </button>
         </form>
       ) : null}

@@ -62,10 +62,10 @@ export function ExportPanel({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Video export engine</h2>
+        <h2 className="text-xl font-semibold">Bộ máy export video</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Reorder generated clips, add subtitles, audio, and logo watermark,
-          then export a final downloadable video through backend FFmpeg.
+          Sắp xếp lại clip đã tạo, thêm phụ đề, âm thanh và watermark/logo, sau
+          đó export video cuối có thể tải xuống bằng FFmpeg ở backend.
         </p>
       </div>
 
@@ -75,10 +75,10 @@ export function ExportPanel({
             <Film className="h-5 w-5" />
           </span>
           <div>
-            <p className="font-medium">Create final export</p>
+            <p className="font-medium">Tạo bản export cuối</p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Export jobs are queued, charged upfront, and refunded if FFmpeg
-              processing fails.
+              Job export được đưa vào hàng đợi, trừ tín dụng trước và hoàn lại
+              nếu xử lý FFmpeg thất bại.
             </p>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function ExportPanel({
 
             <div>
               <label className="mb-2 block text-sm font-medium">
-                Clip order
+                Thứ tự clip
               </label>
               <div className="space-y-3">
                 {selectedClips.map((clip, index) => (
@@ -119,7 +119,7 @@ export function ExportPanel({
                         onClick={() => moveClip(index, -1)}
                         disabled={index === 0}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] disabled:opacity-40"
-                        aria-label="Move clip up"
+                        aria-label="Chuyển clip lên"
                       >
                         <ArrowUp className="h-4 w-4" />
                       </button>
@@ -128,7 +128,7 @@ export function ExportPanel({
                         onClick={() => moveClip(index, 1)}
                         disabled={index === selectedClips.length - 1}
                         className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] disabled:opacity-40"
-                        aria-label="Move clip down"
+                        aria-label="Chuyển clip xuống"
                       >
                         <ArrowDown className="h-4 w-4" />
                       </button>
@@ -141,7 +141,7 @@ export function ExportPanel({
             <div className="grid gap-4 lg:grid-cols-3">
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Export ratio
+                  Tỷ lệ export
                 </label>
                 <select
                   name="exportRatio"
@@ -163,7 +163,7 @@ export function ExportPanel({
                 icon={<Music className="h-4 w-4" />}
               />
               <AssetSelect
-                label="Music"
+                label="Nhạc nền"
                 name="musicAssetId"
                 assets={audioAssets}
                 icon={<Music className="h-4 w-4" />}
@@ -179,12 +179,12 @@ export function ExportPanel({
               />
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Subtitles
+                  Phụ đề
                 </label>
                 <textarea
                   name="subtitles"
                   rows={4}
-                  placeholder="Optional burned-in subtitle text for the final export."
+                  placeholder="Phụ đề tùy chọn sẽ được chèn trực tiếp vào video cuối."
                   className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
                 />
               </div>
@@ -195,18 +195,18 @@ export function ExportPanel({
               disabled={selectedClips.length === 0}
               className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
             >
-              Export final video
+              Export video cuối
             </button>
           </form>
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-            Complete at least one render job before exporting final video.
+            Hãy hoàn tất ít nhất một job render trước khi export video cuối.
           </div>
         )}
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold">Export queue</h3>
+        <h3 className="text-lg font-semibold">Hàng đợi export</h3>
         <div className="mt-4 space-y-4">
           {exportJobs.length > 0 ? (
             exportJobs.map((job) => (
@@ -218,16 +218,16 @@ export function ExportPanel({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={getStatusClass(job.status)}>
-                        {job.status}
+                        {formatExportStatus(job.status)}
                       </span>
                       <span className="text-xs text-[var(--muted-foreground)]">
                         {job.export_ratio}
                       </span>
                       <span className="text-xs text-[var(--muted-foreground)]">
-                        {job.input_video_ids.length} clips
+                        {job.input_video_ids.length} clip
                       </span>
                       <span className="text-xs text-[var(--muted-foreground)]">
-                        {job.credit_cost} credits
+                        {job.credit_cost} tín dụng
                       </span>
                     </div>
                     {job.error_message ? (
@@ -251,7 +251,7 @@ export function ExportPanel({
                       className="inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
                     >
                       <Download className="h-4 w-4" />
-                      Download
+                      Tải xuống
                     </a>
                   ) : null}
                 </div>
@@ -259,7 +259,7 @@ export function ExportPanel({
             ))
           ) : (
             <div className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-              No export jobs have been created yet.
+              Chưa có job export nào.
             </div>
           )}
         </div>
@@ -290,7 +290,7 @@ function AssetSelect({
         defaultValue=""
         className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
       >
-        <option value="">None</option>
+        <option value="">Không chọn</option>
         {assets.map((asset) => (
           <option key={asset.id} value={asset.id}>
             {asset.file_name}
@@ -317,4 +317,15 @@ function getStatusClass(status: ExportJobRecord["status"]) {
   }
 
   return `${base} bg-amber-500/10 text-amber-200`;
+}
+
+function formatExportStatus(status: ExportJobRecord["status"]) {
+  const labels: Record<ExportJobRecord["status"], string> = {
+    queued: "Đang chờ",
+    processing: "Đang xử lý",
+    completed: "Đã hoàn tất",
+    failed: "Thất bại",
+  };
+
+  return labels[status];
 }

@@ -24,7 +24,7 @@ export async function startVideoExportAction(formData: FormData) {
   const logoAssetId = readString(formData, "logoAssetId");
 
   if (!projectId || !exportRatio || videoIds.length === 0) {
-    throw new Error("Project, export ratio, and at least one clip are required.");
+    throw new Error("Vui lòng cung cấp dự án, tỷ lệ export và ít nhất một clip.");
   }
 
   await createVideoExport({

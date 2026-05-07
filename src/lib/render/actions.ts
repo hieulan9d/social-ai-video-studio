@@ -20,7 +20,7 @@ export async function startTextToVideoRenderAction(formData: FormData) {
   const promptId = readString(formData, "promptId");
 
   if (!projectId || !promptId) {
-    throw new Error("Project and prompt are required.");
+    throw new Error("Vui lòng cung cấp dự án và prompt.");
   }
 
   await createTextToVideoRender({
@@ -42,7 +42,7 @@ export async function startImageToVideoRenderAction(formData: FormData) {
   const durationSeconds = Number.parseInt(readString(formData, "durationSeconds"), 10);
 
   if (!projectId || !assetId || !motionStyle || !prompt) {
-    throw new Error("Project, image, motion style, and prompt are required.");
+    throw new Error("Vui lòng cung cấp dự án, ảnh, phong cách chuyển động và prompt.");
   }
 
   await createImageToVideoRender({
@@ -69,7 +69,7 @@ export async function startEndTransitionRenderAction(formData: FormData) {
 
   if (!projectId || !startAssetId || !endAssetId || !transitionStyle || !prompt) {
     throw new Error(
-      "Project, start image, end image, transition style, and prompt are required.",
+      "Vui lòng cung cấp dự án, ảnh bắt đầu, ảnh kết thúc, kiểu chuyển cảnh và prompt.",
     );
   }
 
@@ -93,7 +93,7 @@ export async function syncRenderJobAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!renderJobId) {
-    throw new Error("Render job is required.");
+    throw new Error("Vui lòng chọn job render.");
   }
 
   await syncRenderJob(renderJobId, user.id);

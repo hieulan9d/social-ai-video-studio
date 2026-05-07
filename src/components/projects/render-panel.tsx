@@ -38,10 +38,10 @@ export function RenderPanel({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Text-to-video rendering</h2>
+        <h2 className="text-xl font-semibold">Render text-to-video</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Select a Veo prompt, spend render credits, and create a backend render
-          job. Provider credentials stay on the server.
+          Chọn prompt Veo, dùng tín dụng render và tạo job render ở backend.
+          Thông tin đăng nhập provider luôn nằm trên server.
         </p>
       </div>
 
@@ -54,10 +54,10 @@ export function RenderPanel({
             <Video className="h-5 w-5" />
           </span>
           <div>
-            <p className="font-medium">Create a render job</p>
+            <p className="font-medium">Tạo job render</p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Text-to-video currently uses one scene prompt per job. Failed
-              provider renders refund credits automatically.
+              Text-to-video hiện dùng một prompt cảnh cho mỗi job. Render thất bại
+              do provider sẽ tự hoàn tín dụng.
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export function RenderPanel({
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold">
-                        Scene {scene?.scene_order ?? "unknown"} prompt
+                        Prompt cảnh {scene?.scene_order ?? "không rõ"}
                       </p>
                       <p className="mt-2 line-clamp-4 text-sm leading-6 text-[var(--muted-foreground)]">
                         {prompt.content}
@@ -88,7 +88,7 @@ export function RenderPanel({
                       type="submit"
                       className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
                     >
-                      Render scene
+                      Render cảnh
                     </button>
                   </div>
                 </form>
@@ -97,7 +97,7 @@ export function RenderPanel({
           </div>
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-            No scene prompts are ready. Generate Veo prompts before rendering.
+            Chưa có prompt cảnh sẵn sàng. Hãy tạo prompt Veo trước khi render.
           </div>
         )}
       </div>
@@ -122,7 +122,7 @@ export function RenderHistory({
 }) {
   return (
     <div>
-      <h3 className="text-lg font-semibold">Render history</h3>
+      <h3 className="text-lg font-semibold">Lịch sử render</h3>
       <div className="mt-4 space-y-4">
         {renderJobs.length > 0 ? (
           renderJobs.map((job) => {
@@ -139,10 +139,10 @@ export function RenderHistory({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={getStatusClass(job.status)}>
-                        {job.status}
+                        {formatRenderStatus(job.status)}
                       </span>
                       <span className="text-xs text-[var(--muted-foreground)]">
-                        {job.provider || "unknown provider"}
+                        {job.provider || "provider không rõ"}
                       </span>
                       <span className="text-xs text-[var(--muted-foreground)]">
                         {job.render_mode.replaceAll("_", " ")}
@@ -153,11 +153,11 @@ export function RenderHistory({
                         </span>
                       ) : null}
                       <span className="text-xs text-[var(--muted-foreground)]">
-                        {job.credit_cost} credits
+                        {job.credit_cost} tín dụng
                       </span>
                     </div>
                     <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted-foreground)]">
-                      {job.prompt_snapshot || "No prompt snapshot saved."}
+                      {job.prompt_snapshot || "Chưa lưu snapshot prompt."}
                     </p>
                     {job.error_message ? (
                       <p className="mt-3 text-sm text-rose-300">
@@ -188,7 +188,7 @@ export function RenderHistory({
                           className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] px-4 py-2 text-sm"
                         >
                           <RefreshCw className="h-4 w-4" />
-                          Refresh
+                          Làm mới
                         </button>
                       </form>
                     ) : null}
@@ -200,7 +200,7 @@ export function RenderHistory({
                         className="inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
                       >
                         <Download className="h-4 w-4" />
-                        Download
+                        Tải xuống
                       </a>
                     ) : null}
                   </div>
@@ -210,7 +210,7 @@ export function RenderHistory({
           })
         ) : (
           <div className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-            No render jobs have been created yet.
+            Chưa có job render nào.
           </div>
         )}
       </div>
@@ -234,4 +234,15 @@ function getStatusClass(status: RenderJobRecord["status"]) {
   }
 
   return `${base} bg-amber-500/10 text-amber-200`;
+}
+
+function formatRenderStatus(status: RenderJobRecord["status"]) {
+  const labels: Record<RenderJobRecord["status"], string> = {
+    queued: "Đang chờ",
+    processing: "Đang xử lý",
+    completed: "Đã hoàn tất",
+    failed: "Thất bại",
+  };
+
+  return labels[status];
 }

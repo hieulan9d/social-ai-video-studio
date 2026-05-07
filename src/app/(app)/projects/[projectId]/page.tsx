@@ -38,15 +38,15 @@ export default async function ProjectDetailPage({
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
-            Project workspace
+            Workspace dự án
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             {project.title}
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
-            {project.platform} · {project.videoType.replaceAll("_", " ")} ·{" "}
-            {project.duration}s · {project.language}
-            {project.style ? ` · ${project.style}` : ""}
+            {project.platform} / {project.videoType.replaceAll("_", " ")} /{" "}
+            {project.duration}s / {project.language}
+            {project.style ? ` / ${project.style}` : ""}
           </p>
         </div>
 
@@ -56,7 +56,7 @@ export default async function ProjectDetailPage({
             href="/projects"
             className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--muted-foreground)]"
           >
-            Back to projects
+            Quay lại dự án
           </Link>
           <ProjectDeleteButton projectId={project.id} />
         </div>
@@ -71,7 +71,7 @@ export default async function ProjectDetailPage({
               title="Brief"
               description={
                 project.brief ||
-                "No brief has been written for this project yet. Add the product angle, target audience, and messaging here in the next iteration."
+                "Chưa có brief cho dự án này. Hãy bổ sung góc sản phẩm, khách hàng mục tiêu và thông điệp chính."
               }
             />
           ) : null}
@@ -124,30 +124,30 @@ export default async function ProjectDetailPage({
         </SurfaceCard>
 
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Project overview</h2>
+          <h2 className="text-xl font-semibold">Tổng quan dự án</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <OverviewCard label="Platform" value={project.platform} />
+            <OverviewCard label="Nền tảng" value={project.platform} />
             <OverviewCard
-              label="Video type"
+              label="Loại video"
               value={project.videoType.replaceAll("_", " ")}
             />
-            <OverviewCard label="Duration" value={`${project.duration} seconds`} />
-            <OverviewCard label="Language" value={project.language} />
-            <OverviewCard label="Style" value={project.style || "Not set"} />
+            <OverviewCard label="Thời lượng" value={`${project.duration} giây`} />
+            <OverviewCard label="Ngôn ngữ" value={project.language} />
+            <OverviewCard label="Phong cách" value={project.style || "Chưa thiết lập"} />
             <OverviewCard
-              label="Updated"
+              label="Cập nhật"
               value={new Date(project.updatedAt).toLocaleString()}
             />
           </div>
 
           <div className="mt-6 space-y-3">
             {[
-              `Script entries: ${detail.script ? 1 : 0}`,
-              `Scene count: ${detail.scenes.length}`,
-              `Prompt count: ${detail.prompts.length}`,
-              `Asset count: ${detail.assets.length}`,
-              `Render jobs: ${detail.renderJobs.length}`,
-              `Exports: ${detail.exportJobs.length}`,
+              `Số kịch bản: ${detail.script ? 1 : 0}`,
+              `Số cảnh: ${detail.scenes.length}`,
+              `Số prompt: ${detail.prompts.length}`,
+              `Số tài sản: ${detail.assets.length}`,
+              `Job render: ${detail.renderJobs.length}`,
+              `Bản export: ${detail.exportJobs.length}`,
             ].map((item) => (
               <div
                 key={item}

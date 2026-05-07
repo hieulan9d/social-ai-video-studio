@@ -8,7 +8,7 @@ export function ProjectDeleteButton({ projectId }: { projectId: string }) {
         type="submit"
         className="rounded-2xl border border-rose-500/30 px-4 py-3 text-sm font-medium text-rose-300 transition hover:bg-rose-500/10"
       >
-        Delete project
+        Xóa dự án
       </button>
     </form>
   );

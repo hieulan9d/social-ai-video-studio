@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Refund Policy",
-  description: "Credit refund policy for Social AI Video Studio.",
+  title: "Chính sách hoàn tín dụng",
+  description: "Chính sách hoàn tín dụng của Social AI Video Studio.",
 };
 
 const policies = [
-  "Credits deducted for platform-owned generation or render failures should be refunded automatically when no usable output is produced.",
-  "Payment refunds, chargebacks, or manual credit adjustments are handled by admins through auditable wallet transactions.",
-  "Credits are not refunded for user mistakes such as incorrect prompts, wrong uploaded assets, or approved outputs that do not match subjective creative preference.",
-  "Failed payment attempts do not add credits and do not require wallet refunds.",
+  "Tín dụng đã trừ cho lỗi generation hoặc render thuộc phía nền tảng sẽ được hoàn tự động khi không có output dùng được.",
+  "Hoàn tiền thanh toán, chargeback hoặc điều chỉnh tín dụng thủ công được admin xử lý thông qua giao dịch ví có thể audit.",
+  "Tín dụng không được hoàn cho lỗi thao tác của người dùng như prompt sai, tải nhầm tài sản hoặc output đã duyệt nhưng không khớp sở thích sáng tạo chủ quan.",
+  "Thanh toán thất bại không cộng tín dụng và không cần hoàn tín dụng trong ví.",
 ];
 
 export default function RefundPolicyPage() {
@@ -21,12 +21,12 @@ export default function RefundPolicyPage() {
           Social AI Video Studio
         </Link>
         <p className="mt-12 text-sm text-[var(--muted-foreground)]">
-          Last updated: May 7, 2026
+          Cập nhật lần cuối: 8 tháng 5, 2026
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Refund Policy</h1>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Chính sách hoàn tín dụng</h1>
         <p className="mt-5 leading-8 text-[var(--muted-foreground)]">
-          Social AI Video Studio uses a credit-backed workflow. The platform is
-          designed to refund credits when paid platform work fails after deduction.
+          Social AI Video Studio dùng workflow dựa trên tín dụng. Nền tảng được
+          thiết kế để hoàn tín dụng khi tác vụ trả phí thất bại sau khi đã trừ.
         </p>
         <div className="mt-10 space-y-4">
           {policies.map((policy) => (
@@ -39,8 +39,8 @@ export default function RefundPolicyPage() {
           ))}
         </div>
         <p className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--muted-foreground)]">
-          This page is launch-ready product copy and should be reviewed by counsel
-          before paid public release.
+          Nội dung này đã sẵn sàng cho MVP, nhưng nên được rà soát bởi tư vấn pháp
+          lý trước khi phát hành thương mại.
         </p>
       </div>
     </main>

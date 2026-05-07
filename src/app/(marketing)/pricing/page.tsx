@@ -4,8 +4,8 @@ import { ArrowRight, CheckCircle2, Coins, Sparkles } from "lucide-react";
 import { getPublicPricingData } from "@/lib/pricing/public";
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: "Credit packages and dynamic feature costs for Social AI Video Studio.",
+  title: "Bảng giá",
+  description: "Gói tín dụng và chi phí tính năng động của Social AI Video Studio.",
 };
 
 export const dynamic = "force-dynamic";
@@ -22,13 +22,13 @@ export default async function PricingPage() {
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/auth" className="text-sm text-[var(--muted-foreground)]">
-              Login
+              Đăng nhập
             </Link>
             <Link
               href="/wallet"
               className="rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
             >
-              Top up
+              Nạp tín dụng
             </Link>
           </div>
         </header>
@@ -37,20 +37,20 @@ export default async function PricingPage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--muted-foreground)]">
               <Coins className="h-4 w-4 text-[var(--accent)]" />
-              Database-managed pricing
+              Bảng giá quản lý bằng cơ sở dữ liệu
             </div>
             <h1 className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">
-              Pay with credits only when production work runs.
+              Chỉ dùng tín dụng khi tác vụ sản xuất thật sự chạy.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--muted-foreground)]">
-              Credit packages and feature costs are loaded from the database, so launch
-              pricing can change without deploying frontend code.
+              Gói tín dụng và chi phí tính năng được đọc từ cơ sở dữ liệu, nên
+              bạn có thể thay đổi giá launch mà không cần deploy lại frontend.
             </p>
           </div>
 
           <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)]">
             <p className="text-sm font-medium text-[var(--muted-foreground)]">
-              Feature costs
+              Chi phí tính năng
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {pricing.featurePrices.map((item) => (
@@ -63,7 +63,7 @@ export default async function PricingPage() {
                     {item.description}
                   </p>
                   <p className="mt-3 text-2xl font-semibold">
-                    {item.credit_cost} credits
+                    {item.credit_cost} tín dụng
                   </p>
                 </div>
               ))}
@@ -90,10 +90,10 @@ export default async function PricingPage() {
                 {item.currency} {item.priceAmount.toFixed(2)}
               </p>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                {item.credits} credits included
+                Bao gồm {item.credits} tín dụng
               </p>
               <div className="mt-6 space-y-3 text-sm">
-                {["Webhook-confirmed top-up", "Audited credit ledger", "Refund path for failed jobs"].map(
+                {["Nạp tiền xác nhận bằng webhook", "Ledger tín dụng có thể audit", "Có luồng hoàn cho job lỗi"].map(
                   (benefit) => (
                     <div key={benefit} className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-[var(--accent)]" />
@@ -106,7 +106,7 @@ export default async function PricingPage() {
                 href="/wallet"
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
               >
-                Choose package
+                Chọn gói
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </article>

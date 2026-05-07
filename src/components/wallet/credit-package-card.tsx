@@ -26,13 +26,13 @@ export function CreditPackageCard({
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-            Credits
+            Tín dụng
           </p>
           <p className="mt-2 text-3xl font-semibold">{item.credits}</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-            Price
+            Giá
           </p>
           <p className="mt-2 text-3xl font-semibold">
             {item.currency} {item.priceAmount.toFixed(2)}
@@ -45,10 +45,10 @@ export function CreditPackageCard({
           <input type="hidden" name="packageId" value={item.id} />
           <input type="hidden" name="provider" value={primaryProvider} />
           <FormSubmitButton
-            pendingLabel="Starting checkout..."
+            pendingLabel="Đang mở thanh toán..."
             className="rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
           >
-            Top up with Mock
+            Nạp bằng Mock
           </FormSubmitButton>
         </form>
 

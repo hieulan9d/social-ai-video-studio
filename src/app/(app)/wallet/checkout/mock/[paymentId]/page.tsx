@@ -27,12 +27,12 @@ export default async function MockCheckoutPage({
           Mock provider
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Complete test checkout
+          Hoàn tất checkout thử nghiệm
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
-          This page simulates a provider-hosted checkout. Credits are not added here
-          directly. The button below triggers the same webhook processing path used by
-          real providers.
+          Trang này mô phỏng checkout do provider lưu trữ. Tín dụng không được
+          cộng trực tiếp tại đây. Nút bên dưới kích hoạt cùng luồng xử lý webhook
+          như các provider thật.
         </p>
       </div>
 
@@ -40,22 +40,22 @@ export default async function MockCheckoutPage({
         <SurfaceCard>
           <div className="space-y-4">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <p className="text-sm text-[var(--muted-foreground)]">Payment ID</p>
+              <p className="text-sm text-[var(--muted-foreground)]">ID thanh toán</p>
               <p className="mt-2 break-all text-sm font-medium">{payment.id}</p>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-[var(--border)] px-4 py-4">
-                <p className="text-sm text-[var(--muted-foreground)]">Amount</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Số tiền</p>
                 <p className="mt-2 text-xl font-semibold">
                   {payment.currency} {payment.amount.toFixed(2)}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] px-4 py-4">
-                <p className="text-sm text-[var(--muted-foreground)]">Credits</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Tín dụng</p>
                 <p className="mt-2 text-xl font-semibold">{payment.creditsPurchased}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] px-4 py-4">
-                <p className="text-sm text-[var(--muted-foreground)]">Status</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Trạng thái</p>
                 <p className="mt-2 text-xl font-semibold capitalize">{payment.status}</p>
               </div>
             </div>
@@ -63,10 +63,10 @@ export default async function MockCheckoutPage({
         </SurfaceCard>
 
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Simulate successful payment</h2>
+          <h2 className="text-xl font-semibold">Mô phỏng thanh toán thành công</h2>
           <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-            This submits a signed mock webhook event. The webhook handler will verify
-            the signature, mark the payment as successful, and add credits once.
+            Thao tác này gửi một sự kiện mock webhook đã ký. Webhook handler sẽ
+            xác minh chữ ký, đánh dấu thanh toán thành công và cộng tín dụng đúng một lần.
           </p>
           <form action={completeMockCheckout} className="mt-6">
             <input type="hidden" name="paymentId" value={payment.id} />
@@ -74,7 +74,7 @@ export default async function MockCheckoutPage({
               type="submit"
               className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
             >
-              Confirm mock payment
+              Xác nhận thanh toán mock
             </button>
           </form>
         </SurfaceCard>

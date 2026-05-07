@@ -179,7 +179,7 @@ async function mutateCredits(
   const normalizedAmount = Math.abs(Math.trunc(amount));
 
   if (normalizedAmount <= 0) {
-    throw new Error("Credit amount must be greater than zero.");
+    throw new Error("Số tín dụng phải lớn hơn 0.");
   }
 
   const { data, error } = await supabase

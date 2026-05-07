@@ -58,21 +58,21 @@ export async function generateAllPromptsAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Project is required.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   if (!detail.script) {
-    throw new Error("Generate a script before generating prompts.");
+    throw new Error("Hãy tạo kịch bản trước khi tạo prompt.");
   }
 
   if (detail.scenes.length === 0) {
-    throw new Error("Generate scenes before generating prompts.");
+    throw new Error("Hãy tạo cảnh trước khi tạo prompt.");
   }
 
   const consistencyInstruction = buildConsistencyInstruction(detail);
@@ -82,7 +82,7 @@ export async function generateAllPromptsAction(formData: FormData) {
   const context = {
     platform: detail.project.platform,
     duration: detail.project.duration,
-    style: detail.project.style || "Modern social ad",
+    style: detail.project.style || "Quảng cáo social hiện đại",
     language: detail.project.language,
     productType: detail.script.product_type || "product",
     idea: detail.script.idea || detail.project.brief || "",
@@ -91,7 +91,7 @@ export async function generateAllPromptsAction(formData: FormData) {
   await deductCredits({
     userId: user.id,
     amount: creditCost,
-    reason: "AI prompt generation",
+    reason: "Tạo prompt AI",
     referenceType: "prompt_generation",
     referenceId,
     metadata: {
@@ -136,7 +136,7 @@ export async function generateAllPromptsAction(formData: FormData) {
     await refundCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Refund for failed AI prompt generation",
+      reason: "Hoàn tín dụng do tạo prompt AI thất bại",
       referenceType: "prompt_generation_refund",
       referenceId,
       metadata: {
@@ -154,19 +154,19 @@ export async function regeneratePromptAction(formData: FormData) {
   const sceneId = readString(formData, "sceneId");
 
   if (!projectId || !sceneId) {
-    throw new Error("Project and scene are required.");
+    throw new Error("Vui lòng cung cấp dự án và cảnh.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail || !detail.script) {
-    throw new Error("Project or script not found.");
+    throw new Error("Không tìm thấy dự án hoặc kịch bản.");
   }
 
   const scene = detail.scenes.find((item) => item.id === sceneId);
 
   if (!scene) {
-    throw new Error("Scene not found.");
+    throw new Error("Không tìm thấy cảnh.");
   }
 
   const creditCost = await getFeatureCreditCost("prompt_generation");
@@ -175,7 +175,7 @@ export async function regeneratePromptAction(formData: FormData) {
   await deductCredits({
     userId: user.id,
     amount: creditCost,
-    reason: "AI prompt regeneration",
+    reason: "Tạo lại prompt AI",
     referenceType: "prompt_generation",
     referenceId,
     metadata: {
@@ -202,7 +202,7 @@ export async function regeneratePromptAction(formData: FormData) {
       context: {
         platform: detail.project.platform,
         duration: detail.project.duration,
-        style: detail.project.style || "Modern social ad",
+        style: detail.project.style || "Quảng cáo social hiện đại",
         language: detail.project.language,
         productType: detail.script.product_type || "product",
         idea: detail.script.idea || detail.project.brief || "",
@@ -223,7 +223,7 @@ export async function regeneratePromptAction(formData: FormData) {
     await refundCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Refund for failed AI prompt regeneration",
+      reason: "Hoàn tín dụng do tạo lại prompt AI thất bại",
       referenceType: "prompt_generation_refund",
       referenceId,
       metadata: {
@@ -242,13 +242,13 @@ export async function savePromptsAction(formData: FormData) {
   const rawPrompts = readString(formData, "prompts");
 
   if (!projectId || !rawPrompts) {
-    throw new Error("Project and prompts are required.");
+    throw new Error("Vui lòng cung cấp dự án và prompt.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const parsed = JSON.parse(rawPrompts) as Array<{

@@ -63,17 +63,17 @@ export async function generateScenesAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Project is required.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   if (!detail.script) {
-    throw new Error("Generate a script before generating scenes.");
+    throw new Error("Hãy tạo kịch bản trước khi tạo cảnh.");
   }
 
   const referenceId = `${projectId}:scene:${Date.now()}`;
@@ -82,7 +82,7 @@ export async function generateScenesAction(formData: FormData) {
   await deductCredits({
     userId: user.id,
     amount: creditCost,
-    reason: "AI scene breakdown generation",
+    reason: "Tạo tách cảnh bằng AI",
     referenceType: "scene_generation",
     referenceId,
     metadata: {
@@ -97,9 +97,9 @@ export async function generateScenesAction(formData: FormData) {
       context: {
         platform: detail.project.platform,
         duration: detail.project.duration,
-        style: detail.project.style || "Modern social ad",
+        style: detail.project.style || "Quảng cáo social hiện đại",
         language: detail.project.language,
-        productType: detail.script.product_type || "General offer",
+        productType: detail.script.product_type || "Ưu đãi chung",
         idea: detail.script.idea || detail.project.brief || "",
       },
       script: {
@@ -141,7 +141,7 @@ export async function generateScenesAction(formData: FormData) {
     await refundCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Refund for failed AI scene breakdown generation",
+      reason: "Hoàn tín dụng do tạo tách cảnh AI thất bại",
       referenceType: "scene_generation_refund",
       referenceId,
       metadata: {
@@ -159,19 +159,19 @@ export async function saveScenesAction(formData: FormData) {
   const rawScenes = readString(formData, "scenes");
 
   if (!projectId || !rawScenes) {
-    throw new Error("Project and scenes are required.");
+    throw new Error("Vui lòng cung cấp dự án và danh sách cảnh.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const parsed = JSON.parse(rawScenes) as EditableScene[];
 
   if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error("At least one scene is required.");
+    throw new Error("Cần có ít nhất một cảnh.");
   }
 
   const normalizedScenes = normalizeScenes(parsed);

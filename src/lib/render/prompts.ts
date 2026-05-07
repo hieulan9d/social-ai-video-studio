@@ -22,21 +22,21 @@ export type StartEndTransitionStyle =
   (typeof START_END_TRANSITION_STYLES)[number];
 
 export const imageToVideoMotionLabels: Record<ImageToVideoMotionStyle, string> = {
-  cinematic_zoom: "cinematic zoom",
-  orbit: "orbit",
-  product_reveal: "product reveal",
+  cinematic_zoom: "Cinematic zoom",
+  orbit: "Orbit",
+  product_reveal: "Product reveal",
   parallax: "parallax",
-  handheld: "handheld",
-  luxury_ad: "luxury ad",
+  handheld: "Handheld",
+  luxury_ad: "Luxury ad",
 };
 
 export const startEndTransitionLabels: Record<StartEndTransitionStyle, string> = {
-  cinematic_morph: "cinematic morph",
-  speed_ramp: "speed ramp",
+  cinematic_morph: "Cinematic morph",
+  speed_ramp: "Speed ramp",
   three_d_orbit: "3D orbit",
-  product_transformation: "product transformation",
-  before_after: "before after",
-  light_sweep: "light sweep",
+  product_transformation: "Biến đổi sản phẩm",
+  before_after: "Before/after",
+  light_sweep: "Light sweep",
 };
 
 const motionInstructions: Record<ImageToVideoMotionStyle, string> = {

@@ -31,7 +31,7 @@ export function AuthForm({ next }: { next?: string }) {
   const formAction = mode === "login" ? loginAction : registerAction;
   const pending = mode === "login" ? loginPending : registerPending;
 
-  const title = mode === "login" ? "Login" : "Register";
+  const title = mode === "login" ? "Đăng nhập" : "Đăng ký";
 
   const signInWithGoogle = () => {
     startGoogleTransition(async () => {
@@ -65,7 +65,7 @@ export function AuthForm({ next }: { next?: string }) {
               : "text-[var(--muted-foreground)]",
           ].join(" ")}
         >
-          Login
+          Đăng nhập
         </button>
         <button
           type="button"
@@ -77,7 +77,7 @@ export function AuthForm({ next }: { next?: string }) {
               : "text-[var(--muted-foreground)]",
           ].join(" ")}
         >
-          Register
+          Đăng ký
         </button>
       </div>
 
@@ -85,7 +85,7 @@ export function AuthForm({ next }: { next?: string }) {
         <input type="hidden" name="next" value={next || "/dashboard"} />
 
         <div>
-          <label className="mb-2 block text-sm font-medium">Email address</label>
+          <label className="mb-2 block text-sm font-medium">Địa chỉ email</label>
           <input
             required
             name="email"
@@ -96,13 +96,13 @@ export function AuthForm({ next }: { next?: string }) {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">Password</label>
+          <label className="mb-2 block text-sm font-medium">Mật khẩu</label>
           <input
             required
             minLength={6}
             name="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder="Nhập mật khẩu của bạn"
             className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
           />
         </div>
@@ -110,21 +110,21 @@ export function AuthForm({ next }: { next?: string }) {
         {mode === "register" ? (
           <>
             <div>
-              <label className="mb-2 block text-sm font-medium">Full name</label>
+              <label className="mb-2 block text-sm font-medium">Họ và tên</label>
               <input
                 required
                 name="fullName"
                 type="text"
-                placeholder="Nguyen Van A"
+                placeholder="Nguyễn Văn A"
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium">Workspace name</label>
+              <label className="mb-2 block text-sm font-medium">Tên workspace</label>
               <input
                 name="workspaceName"
                 type="text"
-                placeholder="Your brand or team"
+                placeholder="Tên thương hiệu hoặc đội nhóm"
                 className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 outline-none transition focus:border-[var(--accent)]"
               />
             </div>
@@ -155,7 +155,7 @@ export function AuthForm({ next }: { next?: string }) {
 
       <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
         <span className="h-px flex-1 bg-[var(--border)]" />
-        Or continue with
+        Hoặc tiếp tục với
         <span className="h-px flex-1 bg-[var(--border)]" />
       </div>
 
@@ -166,7 +166,7 @@ export function AuthForm({ next }: { next?: string }) {
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm font-medium disabled:opacity-60"
       >
         {isGooglePending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-        Continue with Google
+        Tiếp tục với Google
       </button>
     </div>
   );

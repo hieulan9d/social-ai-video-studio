@@ -19,21 +19,21 @@ export default async function RenderHistoryPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
-            Render operations
+            Vận hành render
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Render history
+            Lịch sử render
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
-            Review text-to-video render jobs, refresh long-running jobs, and
-            download completed outputs.
+            Xem các job render text-to-video, làm mới job chạy lâu và tải xuống
+            output đã hoàn tất.
           </p>
         </div>
         <Link
           href="/projects"
           className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--muted-foreground)]"
         >
-          Back to projects
+          Quay lại dự án
         </Link>
       </div>
 

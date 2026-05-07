@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     default: "Social AI Video Studio",
     template: "%s | Social AI Video Studio",
   },
-  description: "MVP foundation for an AI social video SaaS platform.",
+  description: "Nền tảng SaaS tạo video ngắn bằng AI cho thị trường Việt Nam.",
 };
 
 export default function RootLayout({
@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-  lang="en"
+      lang="vi"
   suppressHydrationWarning
   className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
 >

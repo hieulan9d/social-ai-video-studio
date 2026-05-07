@@ -16,7 +16,7 @@ export function AppTopbar() {
           <div className="flex flex-1 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
             <Search className="h-4 w-4 text-[var(--muted-foreground)]" />
             <span className="text-sm text-[var(--muted-foreground)]">
-              Search projects, scripts, renders...
+              Tìm dự án, kịch bản, render...
             </span>
           </div>
 
@@ -35,7 +35,7 @@ export function AppTopbar() {
               className="inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
             >
               <Plus className="h-4 w-4" />
-              New project
+              Dự án mới
             </Link>
           </div>
         </div>

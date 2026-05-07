@@ -25,13 +25,13 @@ export async function generateScriptAction(formData: FormData) {
   const productType = readString(formData, "productType");
 
   if (!projectId || !idea || !productType) {
-    throw new Error("Project, idea, and product type are required.");
+    throw new Error("Vui lòng cung cấp dự án, ý tưởng và loại sản phẩm.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const referenceId = `${projectId}:${Date.now()}`;
@@ -40,7 +40,7 @@ export async function generateScriptAction(formData: FormData) {
   await deductCredits({
     userId: user.id,
     amount: creditCost,
-    reason: "AI script generation",
+    reason: "Tạo kịch bản AI",
     referenceType: "script_generation",
     referenceId,
     metadata: {
@@ -52,7 +52,7 @@ export async function generateScriptAction(formData: FormData) {
     const result = await generateFullScript({
       platform: project.platform,
       duration: project.duration,
-      style: project.style || "Modern social ad",
+      style: project.style || "Quảng cáo social hiện đại",
       language: project.language,
       productType,
       idea,
@@ -124,7 +124,7 @@ export async function generateScriptAction(formData: FormData) {
     await refundCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Refund for failed AI script generation",
+      reason: "Hoàn tín dụng do tạo kịch bản AI thất bại",
       referenceType: "script_generation_refund",
       referenceId,
       metadata: {
@@ -141,13 +141,13 @@ export async function updateScriptAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Project is required.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Project not found.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const title = readString(formData, "title");
@@ -211,13 +211,13 @@ export async function addManualScriptCredits(formData: FormData) {
   const amount = Number.parseInt(readString(formData, "amount"), 10);
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Invalid top-up amount.");
+    throw new Error("Số tín dụng nạp thử không hợp lệ.");
   }
 
   await addCredits({
     userId: user.id,
     amount,
-    reason: "Manual script test top-up",
+    reason: "Nạp thử tín dụng thủ công cho kịch bản",
     referenceType: "manual_topup",
     referenceId: `${user.id}:${Date.now()}`,
   });

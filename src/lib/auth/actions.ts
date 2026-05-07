@@ -66,7 +66,7 @@ export async function registerWithPassword(
   return {
     error: null,
     success:
-      "Account created. If email confirmation is enabled in Supabase, check your inbox before logging in.",
+      "Tài khoản đã được tạo. Nếu Supabase đang bật xác nhận email, hãy kiểm tra hộp thư trước khi đăng nhập.",
   };
 }
 

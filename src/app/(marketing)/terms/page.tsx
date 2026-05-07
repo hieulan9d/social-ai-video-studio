@@ -2,30 +2,30 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service",
-  description: "Terms of service for Social AI Video Studio.",
+  title: "Điều khoản dịch vụ",
+  description: "Điều khoản dịch vụ của Social AI Video Studio.",
 };
 
 const sections = [
   {
-    title: "Use of the service",
-    body: "Users are responsible for the briefs, prompts, uploaded assets, generated outputs, and campaigns they create through the platform.",
+    title: "Sử dụng dịch vụ",
+    body: "Người dùng chịu trách nhiệm với brief, prompt, tài sản tải lên, output đã tạo và chiến dịch được tạo thông qua nền tảng.",
   },
   {
-    title: "Credits and billing",
-    body: "Credits are prepaid usage units stored in the database. Purchases are credited only after verified payment confirmation, and paid actions may deduct credits before work begins.",
+    title: "Tín dụng và thanh toán",
+    body: "Tín dụng là đơn vị sử dụng trả trước được lưu trong cơ sở dữ liệu. Giao dịch mua chỉ được cộng tín dụng sau khi xác nhận thanh toán hợp lệ, và các action trả phí có thể trừ tín dụng trước khi chạy.",
   },
   {
-    title: "AI generation and rendering",
-    body: "AI outputs can vary. The platform stores render and generation status, and may refund credits for platform-owned failures where no usable output is produced.",
+    title: "AI generation và render",
+    body: "Output AI có thể thay đổi theo từng lần tạo. Nền tảng lưu trạng thái render và generation, đồng thời có thể hoàn tín dụng cho lỗi thuộc phía nền tảng khi không tạo được output dùng được.",
   },
   {
-    title: "User content",
-    body: "Users must have rights to upload and process their images, logos, music, voiceover, subtitles, and other campaign materials.",
+    title: "Nội dung của người dùng",
+    body: "Người dùng cần có quyền hợp lệ để tải lên và xử lý hình ảnh, logo, nhạc, voiceover, phụ đề và các tài liệu chiến dịch khác.",
   },
   {
-    title: "Operational limits",
-    body: "The service may enforce usage limits, provider availability limits, file validation, storage policies, and account restrictions to protect platform integrity.",
+    title: "Giới hạn vận hành",
+    body: "Dịch vụ có thể áp dụng giới hạn sử dụng, giới hạn theo provider, kiểm tra file, policy storage và hạn chế tài khoản để bảo vệ tính toàn vẹn của nền tảng.",
   },
 ];
 
@@ -37,9 +37,9 @@ export default function TermsPage() {
           Social AI Video Studio
         </Link>
         <p className="mt-12 text-sm text-[var(--muted-foreground)]">
-          Last updated: May 7, 2026
+          Cập nhật lần cuối: 8 tháng 5, 2026
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Terms of Service</h1>
+        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Điều khoản dịch vụ</h1>
         <div className="mt-10 space-y-8">
           {sections.map((section) => (
             <section key={section.title}>
@@ -51,8 +51,8 @@ export default function TermsPage() {
           ))}
         </div>
         <p className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm leading-6 text-[var(--muted-foreground)]">
-          This page is launch-ready product copy and should be reviewed by counsel
-          before paid public release.
+          Nội dung này đã sẵn sàng cho MVP, nhưng nên được rà soát bởi tư vấn pháp
+          lý trước khi phát hành thương mại.
         </p>
       </div>
     </main>

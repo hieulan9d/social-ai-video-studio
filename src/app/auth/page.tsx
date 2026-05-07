@@ -22,22 +22,21 @@ export default async function AuthPage({
       <div className="grid w-full gap-8 lg:grid-cols-[1fr_460px]">
         <section className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[var(--shadow-soft)] lg:p-10">
           <span className="inline-flex rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
-            Authentication portal
+            Cổng đăng nhập
           </span>
           <h1 className="mt-6 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            Access your workspace and manage social video operations.
+            Truy cập workspace và quản lý quy trình sản xuất video ngắn.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
-            This placeholder auth screen is ready to connect with Supabase Auth.
-            It includes login, registration, and trust messaging without wiring
-            backend logic yet.
+            Đăng nhập hoặc đăng ký để quản lý dự án, ví tín dụng, tài sản thương
+            hiệu và các tác vụ render trong một workspace bảo mật.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
-              { icon: Film, title: "Project access" },
-              { icon: ShieldCheck, title: "Secure auth flow" },
-              { icon: CheckCircle2, title: "Credit-aware accounts" },
+              { icon: Film, title: "Truy cập dự án" },
+              { icon: ShieldCheck, title: "Luồng đăng nhập an toàn" },
+              { icon: CheckCircle2, title: "Tài khoản gắn với tín dụng" },
             ].map((item) => (
               <div
                 key={item.title}
@@ -53,15 +52,15 @@ export default async function AuthPage({
         <section>
           <AuthForm next={next} />
           <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted-foreground)]">
-            Enable Email provider and Google provider in your Supabase project, then
-            add the callback URL shown in `.env.local`.
+            Hãy bật Email provider và Google provider trong Supabase, sau đó thêm
+            callback URL đã cấu hình trong `.env.local`.
           </div>
 
           <Link
             href="/"
             className="mt-6 inline-flex text-sm font-medium text-[var(--accent)]"
           >
-            Back to landing page
+            Quay lại trang giới thiệu
           </Link>
         </section>
       </div>

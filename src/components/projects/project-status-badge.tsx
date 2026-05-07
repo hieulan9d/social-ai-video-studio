@@ -9,6 +9,15 @@ const statusClasses: Record<ProjectStatus, string> = {
   archived: "bg-zinc-500/15 text-zinc-400",
 };
 
+const statusLabels: Record<ProjectStatus, string> = {
+  draft: "Bản nháp",
+  brief_ready: "Brief đã sẵn sàng",
+  script_ready: "Kịch bản đã sẵn sàng",
+  rendering: "Đang render",
+  completed: "Đã hoàn tất",
+  archived: "Đã lưu trữ",
+};
+
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   return (
     <span
@@ -17,7 +26,7 @@ export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
         statusClasses[status],
       ].join(" ")}
     >
-      {status.replaceAll("_", " ")}
+      {statusLabels[status]}
     </span>
   );
 }

@@ -5,30 +5,30 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Workspace settings"
-        title="Settings"
-        description="Configure profile, brand defaults, platform preferences, and future integrations."
+        eyebrow="Thiết lập workspace"
+        title="Cài đặt"
+        description="Cấu hình hồ sơ, mặc định thương hiệu, ưu tiên nền tảng và các tích hợp trong tương lai."
       />
 
       <div className="grid gap-5 xl:grid-cols-2">
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Profile</h2>
+          <h2 className="text-xl font-semibold">Hồ sơ</h2>
           <div className="mt-6 grid gap-5 md:grid-cols-2">
-            <SettingField label="Workspace name" value="Hang Thu Media" />
-            <SettingField label="Primary email" value="admin@hangthu.media" />
-            <SettingField label="Default language" value="Vietnamese" />
-            <SettingField label="Timezone" value="Asia/Bangkok" />
+            <SettingField label="Tên workspace" value="Hang Thu Media" />
+            <SettingField label="Email chính" value="admin@hangthu.media" />
+            <SettingField label="Ngôn ngữ mặc định" value="Tiếng Việt" />
+            <SettingField label="Múi giờ" value="Asia/Bangkok" />
           </div>
         </SurfaceCard>
 
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Brand defaults</h2>
+          <h2 className="text-xl font-semibold">Mặc định thương hiệu</h2>
           <div className="mt-6 space-y-4">
             {[
-              "Primary CTA tone: urgent and direct",
-              "Visual style: luxury, realistic, cinematic",
-              "Default export format: 1080x1920 social video",
-              "Subtitle style and brand color presets",
+              "Tone CTA chính: gấp rút và trực diện",
+              "Phong cách hình ảnh: cao cấp, chân thực, cinematic",
+              "Định dạng export mặc định: video social 1080x1920",
+              "Preset phụ đề và màu thương hiệu",
             ].map((item) => (
               <div
                 key={item}
@@ -41,13 +41,13 @@ export default function SettingsPage() {
         </SurfaceCard>
 
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Integrations</h2>
+          <h2 className="text-xl font-semibold">Tích hợp</h2>
           <div className="mt-6 space-y-3">
             {[
-              "Supabase database and auth",
-              "OpenAI for script and prompt generation",
-              "Google Veo for render jobs",
-              "Cloud storage and queue workers",
+              "Supabase cho cơ sở dữ liệu và auth",
+              "OpenAI cho tạo kịch bản và prompt",
+              "Google Veo cho job render",
+              "Cloud storage và queue worker",
             ].map((item) => (
               <div
                 key={item}
@@ -55,7 +55,7 @@ export default function SettingsPage() {
               >
                 <span className="text-sm">{item}</span>
                 <span className="rounded-full bg-[var(--surface-elevated)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
-                  Not connected
+                  Chưa kết nối
                 </span>
               </div>
             ))}
@@ -63,12 +63,12 @@ export default function SettingsPage() {
         </SurfaceCard>
 
         <SurfaceCard>
-          <h2 className="text-xl font-semibold">Access and roles</h2>
+          <h2 className="text-xl font-semibold">Quyền truy cập và vai trò</h2>
           <div className="mt-6 space-y-3">
             {[
-              "Owner: full billing and workspace control",
-              "Editor: project and asset access",
-              "Viewer: reporting and preview only",
+              "Owner: toàn quyền thanh toán và kiểm soát workspace",
+              "Editor: truy cập dự án và tài sản",
+              "Viewer: chỉ xem báo cáo và preview",
             ].map((item) => (
               <div
                 key={item}

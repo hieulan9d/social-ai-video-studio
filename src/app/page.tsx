@@ -17,45 +17,45 @@ export const dynamic = "force-dynamic"; // thêm dòng này ở đây
 
 const workflow = [
   "Brief",
-  "Script",
-  "Scenes",
-  "Prompts",
+  "Kịch bản",
+  "Cảnh",
+  "Prompt",
   "Veo render",
   "Export",
 ];
 
 const capabilities = [
   {
-    title: "Structured AI production",
+    title: "Sản xuất AI có cấu trúc",
     description:
-      "Generate Vietnamese ad scripts, scene breakdowns, and Veo-ready English prompts that stay attached to each project.",
+      "Tạo kịch bản quảng cáo tiếng Việt, tách cảnh và prompt tiếng Anh sẵn sàng cho Veo, tất cả gắn với từng dự án.",
     icon: Sparkles,
   },
   {
-    title: "Asset-aware rendering",
+    title: "Render theo tài sản thương hiệu",
     description:
-      "Upload product images, logos, avatars, backgrounds, start images, and end images for consistent video generation.",
+      "Tải ảnh sản phẩm, logo, avatar, ảnh nền, ảnh bắt đầu và ảnh kết thúc để giữ video nhất quán.",
     icon: ImageUp,
   },
   {
-    title: "Credit-backed workflow",
+    title: "Workflow dùng tín dụng",
     description:
-      "Wallet balance, feature pricing, deductions, refunds, and payments are persisted in the database for auditability.",
+      "Số dư ví, giá tính năng, trừ tín dụng, hoàn tín dụng và thanh toán đều được lưu trong cơ sở dữ liệu để dễ kiểm toán.",
     icon: Coins,
   },
   {
-    title: "Export-ready output",
+    title: "Output sẵn sàng export",
     description:
-      "Merge clips, add subtitles, music, voiceover, watermark/logo, and export 9:16, 1:1, or 16:9 videos.",
+      "Ghép clip, thêm phụ đề, nhạc, voiceover, watermark/logo và export video 9:16, 1:1 hoặc 16:9.",
     icon: Film,
   },
 ];
 
 const trust = [
-  "Backend-only provider keys",
-  "User-scoped projects and assets",
-  "Refund path for failed renders",
-  "Admin operations dashboard",
+  "API key chỉ chạy ở backend",
+  "Dự án và tài sản được phân quyền theo người dùng",
+  "Có luồng hoàn tín dụng khi render thất bại",
+  "Có dashboard vận hành cho admin",
 ];
 
 export default function LandingPage() {
@@ -73,8 +73,8 @@ export default function LandingPage() {
 
             <nav className="hidden items-center gap-6 text-sm text-[var(--muted-foreground)] md:flex">
               <a href="#workflow">Workflow</a>
-              <a href="#features">Features</a>
-              <Link href="/pricing">Pricing</Link>
+              <a href="#features">Tính năng</a>
+              <Link href="/pricing">Bảng giá</Link>
             </nav>
 
             <div className="flex items-center gap-3">
@@ -82,13 +82,13 @@ export default function LandingPage() {
                 href="/auth"
                 className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-medium"
               >
-                Login
+                Đăng nhập
               </Link>
               <Link
                 href="/onboarding"
                 className="hidden rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)] sm:inline-flex"
               >
-                Start
+                Bắt đầu
               </Link>
             </div>
           </header>
@@ -97,7 +97,7 @@ export default function LandingPage() {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--muted-foreground)]">
                 <PlaySquare className="h-4 w-4 text-[var(--accent)]" />
-                Short-form AI video production for launch teams
+                Sản xuất video ngắn bằng AI cho đội ngũ ra mắt sản phẩm
               </div>
 
               <div>
@@ -105,9 +105,9 @@ export default function LandingPage() {
                   Social AI Video Studio
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted-foreground)]">
-                  Turn product briefs into scripts, scene plans, Veo prompts, render
-                  jobs, and downloadable social videos inside one credit-based
-                  production workspace.
+                  Biến brief sản phẩm thành kịch bản, kế hoạch cảnh, prompt Veo,
+                  job render và video social có thể tải xuống trong một workspace
+                  sản xuất dùng tín dụng.
                 </p>
               </div>
 
@@ -116,14 +116,14 @@ export default function LandingPage() {
                   href="/onboarding"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-6 py-4 text-sm font-medium text-[var(--background)]"
                 >
-                  Launch first project
+                  Tạo dự án đầu tiên
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/pricing"
                   className="inline-flex items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-6 py-4 text-sm font-medium"
                 >
-                  View pricing
+                  Xem bảng giá
                 </Link>
               </div>
 
@@ -141,7 +141,7 @@ export default function LandingPage() {
               <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-soft)]">
                 <Image
                   src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=1200&q=80"
-                  alt="Social video production workspace"
+                  alt="Workspace sản xuất video social"
                   width={1200}
                   height={700}
                   priority
@@ -150,12 +150,12 @@ export default function LandingPage() {
                 <div className="grid gap-4 p-5 md:grid-cols-[0.9fr_1.1fr]">
                   <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
                     <p className="text-sm text-[var(--muted-foreground)]">
-                      Active campaign
+                      Chiến dịch đang chạy
                     </p>
                     <h2 className="mt-2 text-2xl font-semibold">Glow Serum Launch</h2>
                     <div className="mt-4 flex items-center gap-2 text-sm text-emerald-400">
                       <ShieldCheck className="h-4 w-4" />
-                      Credits and assets verified
+                      Tín dụng và tài sản đã được xác minh
                     </div>
                   </div>
 
@@ -184,15 +184,15 @@ export default function LandingPage() {
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-                Production workflow
+                Workflow sản xuất
               </p>
-              <h2 className="mt-3 text-3xl font-semibold">From idea to final export</h2>
+              <h2 className="mt-3 text-3xl font-semibold">Từ ý tưởng tới bản export cuối</h2>
             </div>
             <Link
               href="/projects/new"
               className="inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
             >
-              Create project
+              Tạo dự án
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -237,9 +237,9 @@ export default function LandingPage() {
             Social AI Video Studio
           </div>
           <div className="flex flex-wrap gap-4">
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/refund-policy">Refund Policy</Link>
+            <Link href="/privacy">Quyền riêng tư</Link>
+            <Link href="/terms">Điều khoản</Link>
+            <Link href="/refund-policy">Chính sách hoàn tín dụng</Link>
           </div>
         </div>
       </footer>

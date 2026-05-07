@@ -64,8 +64,8 @@ export function ImageToVideoForm({
         <div>
           <p className="font-medium">Image-to-video</p>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Choose an uploaded image, generate an editable motion prompt, then
-            render it through the backend provider pipeline.
+            Chọn ảnh đã tải lên, tạo prompt chuyển động có thể chỉnh sửa, rồi
+            render qua pipeline provider ở backend.
           </p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export function ImageToVideoForm({
           <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium">Uploaded image</label>
+                <label className="mb-2 block text-sm font-medium">Ảnh đã tải lên</label>
                 <select
                   name="assetId"
                   value={assetId}
@@ -102,7 +102,7 @@ export function ImageToVideoForm({
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Motion style</label>
+                  <label className="mb-2 block text-sm font-medium">Phong cách chuyển động</label>
                   <select
                     name="motionStyle"
                     value={motionStyle}
@@ -127,16 +127,16 @@ export function ImageToVideoForm({
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium">Duration</label>
+                  <label className="mb-2 block text-sm font-medium">Thời lượng</label>
                   <select
                     name="durationSeconds"
                     value={durationSeconds}
                     onChange={(event) => setDurationSeconds(event.target.value)}
                     className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
                   >
-                    <option value="4">4 seconds</option>
-                    <option value="6">6 seconds</option>
-                    <option value="8">8 seconds</option>
+                    <option value="4">4 giây</option>
+                    <option value="6">6 giây</option>
+                    <option value="8">8 giây</option>
                   </select>
                 </div>
               </div>
@@ -144,12 +144,12 @@ export function ImageToVideoForm({
 
             <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-medium">Optional direction</label>
+                <label className="mb-2 block text-sm font-medium">Định hướng bổ sung</label>
                 <textarea
                   value={direction}
                   onChange={(event) => setDirection(event.target.value)}
                   rows={3}
-                  placeholder="Add product detail, desired mood, camera note..."
+                  placeholder="Thêm chi tiết sản phẩm, mood mong muốn, ghi chú camera..."
                   className="w-full rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm outline-none"
                 />
               </div>
@@ -159,11 +159,11 @@ export function ImageToVideoForm({
                 onClick={() => regeneratePrompt()}
                 className="rounded-2xl border border-[var(--border)] px-4 py-2 text-sm"
               >
-                Generate prompt
+                Tạo prompt
               </button>
 
               <div>
-                <label className="mb-2 block text-sm font-medium">Editable prompt</label>
+                <label className="mb-2 block text-sm font-medium">Prompt có thể chỉnh sửa</label>
                 <textarea
                   name="prompt"
                   value={prompt}
@@ -178,14 +178,14 @@ export function ImageToVideoForm({
                 disabled={!assetId || !prompt.trim()}
                 className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
               >
-                Render image video
+                Render video từ ảnh
               </button>
             </div>
           </div>
         </form>
       ) : (
         <div className="mt-5 rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
-          Upload a project image in the Assets tab before using image-to-video.
+          Hãy tải ảnh trong tab Tài sản trước khi dùng image-to-video.
         </div>
       )}
     </div>

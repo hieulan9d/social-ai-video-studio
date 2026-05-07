@@ -11,9 +11,9 @@ export function ProjectCreateForm() {
     <form action={createProjectAction} className="space-y-5">
       <div className="grid gap-5 md:grid-cols-2">
         <InputField
-          label="Project title"
+          label="Tiêu đề dự án"
           name="title"
-          placeholder="Glow serum product ad"
+          placeholder="Video quảng cáo serum Glow"
           required
         />
         <SelectField
@@ -29,7 +29,7 @@ export function ProjectCreateForm() {
 
       <div className="grid gap-5 md:grid-cols-2">
         <SelectField
-          label="Video type"
+          label="Loại video"
           name="videoType"
           defaultValue="text_to_video"
           options={PROJECT_VIDEO_TYPES.map((value) => ({
@@ -38,7 +38,7 @@ export function ProjectCreateForm() {
           }))}
         />
         <InputField
-          label="Duration (seconds)"
+          label="Thời lượng (giây)"
           name="duration"
           type="number"
           min={1}
@@ -48,17 +48,17 @@ export function ProjectCreateForm() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
-        <InputField label="Style" name="style" placeholder="Luxury cinematic" />
+        <InputField label="Phong cách" name="style" placeholder="Cinematic cao cấp" />
         <InputField
-          label="Language"
+          label="Ngôn ngữ"
           name="language"
-          placeholder="Vietnamese"
+          placeholder="Tiếng Việt"
           required
         />
       </div>
 
       <SelectField
-        label="Status"
+        label="Trạng thái"
         name="status"
         defaultValue="draft"
         options={PROJECT_STATUSES.map((value) => ({
@@ -70,14 +70,14 @@ export function ProjectCreateForm() {
       <TextAreaField
         label="Brief"
         name="brief"
-        placeholder="Describe the offer, target audience, hook angle, and visual direction for this video project."
+        placeholder="Mô tả ưu đãi, khách hàng mục tiêu, góc hook và định hướng hình ảnh cho video này."
       />
 
       <FormSubmitButton
-        pendingLabel="Creating project..."
+        pendingLabel="Đang tạo dự án..."
         className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
       >
-        Create project
+        Tạo dự án
       </FormSubmitButton>
     </form>
   );

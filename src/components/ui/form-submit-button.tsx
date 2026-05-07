@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 
 export function FormSubmitButton({
   children,
-  pendingLabel = "Working...",
+  pendingLabel = "Đang xử lý...",
   className,
 }: {
   children: React.ReactNode;

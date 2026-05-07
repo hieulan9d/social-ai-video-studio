@@ -121,36 +121,35 @@ export function SceneTimelineEditor({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Automatic Scene Breakdown</h2>
+        <h2 className="text-xl font-semibold">Tách cảnh tự động</h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-          Generate timeline-ready scenes from the existing script and project
-          context. Scene generation deducts 1 credit before running and refunds
-          automatically if generation fails.
+          Tạo các cảnh sẵn sàng đưa vào timeline từ kịch bản và bối cảnh dự án.
+          Mỗi lần tạo sẽ trừ tín dụng trước khi chạy và tự hoàn nếu tạo thất bại.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
         <form action={generateScenesAction} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
           <input type="hidden" name="projectId" value={project.id} />
-          <p className="text-sm font-medium">Generate scenes from script</p>
+          <p className="text-sm font-medium">Tạo cảnh từ kịch bản</p>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            Input context: {project.platform} · {project.duration}s ·{" "}
-            {project.style || "Social ad style"}
+            Bối cảnh đầu vào: {project.platform} / {project.duration}s /{" "}
+            {project.style || "Phong cách quảng cáo social"}
           </p>
           <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            Script status: {script ? "Available" : "No script yet"}
+            Trạng thái kịch bản: {script ? "Đã có" : "Chưa có kịch bản"}
           </p>
           <button
             type="submit"
             disabled={!script}
             className="mt-4 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)] disabled:opacity-50"
           >
-            Generate scenes with AI
+            Tạo cảnh bằng AI
           </button>
         </form>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-          <p className="text-sm font-medium">Duration validation</p>
+          <p className="text-sm font-medium">Kiểm tra thời lượng</p>
           <p className="mt-3 text-3xl font-semibold">
             {totalDuration}s / {project.duration}s
           </p>
@@ -161,8 +160,8 @@ export function SceneTimelineEditor({
             ].join(" ")}
           >
             {Math.abs(durationDelta) <= 2
-              ? "Total duration is within allowed tolerance."
-              : `Adjust scenes to be within 2 seconds of target (${durationDelta > 0 ? "+" : ""}${durationDelta}s).`}
+              ? "Tổng thời lượng đang nằm trong mức cho phép."
+              : `Hãy chỉnh cảnh để lệch tối đa 2 giây so với mục tiêu (${durationDelta > 0 ? "+" : ""}${durationDelta}s).`}
           </p>
         </div>
       </div>
@@ -179,9 +178,9 @@ export function SceneTimelineEditor({
             >
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-lg font-semibold">Scene {scene.sceneNumber}</p>
+                  <p className="text-lg font-semibold">Cảnh {scene.sceneNumber}</p>
                   <p className="text-sm text-[var(--muted-foreground)]">
-                    Timeline order #{scene.sceneNumber}
+                    Thứ tự timeline #{scene.sceneNumber}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -190,34 +189,34 @@ export function SceneTimelineEditor({
                     onClick={() => moveScene(index, -1)}
                     className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm"
                   >
-                    Move up
+                    Chuyển lên
                   </button>
                   <button
                     type="button"
                     onClick={() => moveScene(index, 1)}
                     className="rounded-2xl border border-[var(--border)] px-3 py-2 text-sm"
                   >
-                    Move down
+                    Chuyển xuống
                   </button>
                   <button
                     type="button"
                     onClick={() => deleteScene(index)}
                     className="rounded-2xl border border-rose-500/30 px-3 py-2 text-sm text-rose-300"
                   >
-                    Delete
+                    Xóa
                   </button>
                 </div>
               </div>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <TextAreaField
-                  label="Visual description"
+                  label="Mô tả hình ảnh"
                   value={scene.visualDescription}
                   onChange={(value) => updateScene(index, "visualDescription", value)}
                   rows={4}
                 />
                 <TextAreaField
-                  label="Voiceover"
+                  label="Lời thoại"
                   value={scene.voiceover}
                   onChange={(value) => updateScene(index, "voiceover", value)}
                   rows={4}
@@ -226,7 +225,7 @@ export function SceneTimelineEditor({
 
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <Field
-                  label="Duration seconds"
+                  label="Thời lượng giây"
                   type="number"
                   value={String(scene.durationSeconds)}
                   onChange={(value) =>
@@ -234,27 +233,27 @@ export function SceneTimelineEditor({
                   }
                 />
                 <Field
-                  label="Camera angle"
+                  label="Góc máy"
                   value={scene.cameraAngle}
                   onChange={(value) => updateScene(index, "cameraAngle", value)}
                 />
                 <Field
-                  label="Camera movement"
+                  label="Chuyển động máy"
                   value={scene.cameraMovement}
                   onChange={(value) => updateScene(index, "cameraMovement", value)}
                 />
                 <Field
-                  label="Subject action"
+                  label="Hành động chủ thể"
                   value={scene.subjectAction}
                   onChange={(value) => updateScene(index, "subjectAction", value)}
                 />
                 <Field
-                  label="Background"
+                  label="Bối cảnh nền"
                   value={scene.background}
                   onChange={(value) => updateScene(index, "background", value)}
                 />
                 <Field
-                  label="Lighting"
+                  label="Ánh sáng"
                   value={scene.lighting}
                   onChange={(value) => updateScene(index, "lighting", value)}
                 />
@@ -262,13 +261,13 @@ export function SceneTimelineEditor({
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <TextAreaField
-                  label="On-screen text"
+                  label="Chữ trên màn hình"
                   value={scene.onScreenText}
                   onChange={(value) => updateScene(index, "onScreenText", value)}
                   rows={3}
                 />
                 <TextAreaField
-                  label="Notes"
+                  label="Ghi chú"
                   value={scene.notes}
                   onChange={(value) => updateScene(index, "notes", value)}
                   rows={3}
@@ -284,13 +283,13 @@ export function SceneTimelineEditor({
             onClick={addScene}
             className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm font-medium"
           >
-            Add scene
+            Thêm cảnh
           </button>
           <button
             type="submit"
             className="rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
           >
-            Save scene timeline
+            Lưu timeline cảnh
           </button>
         </div>
       </form>
