@@ -6,7 +6,7 @@ export async function GET() {
   const user = await getCurrentUserProfile();
 
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Ban can dang nhap." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Bạn cần đăng nhập." }, { status: 401 });
   }
 
   const summary = await getAnalyticsDashboardSummary(user.id);

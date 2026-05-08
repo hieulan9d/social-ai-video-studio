@@ -24,7 +24,7 @@ type QuickMode =
   | "prompt"
   | "script";
 
-type QualityOption = "Nhanh" | "Chuan" | "Cao";
+type QualityOption = "Nhanh" | "Chuẩn" | "Cao";
 
 const modes: Array<{
   id: QuickMode;
@@ -35,50 +35,50 @@ const modes: Array<{
   {
     id: "text-to-image",
     label: "Text to Image",
-    description: "Tao anh tu y tuong bang prompt chi tiet.",
+    description: "Tạo ảnh từ ý tưởng bằng prompt chi tiết.",
     href: "/quick-create/image",
   },
   {
     id: "image-to-image",
     label: "Image to Image",
-    description: "Dung anh tham chieu de tao bien the moi.",
+    description: "Dùng ảnh tham chiếu để tạo biến thể mới.",
     href: "/quick-create/image",
   },
   {
     id: "text-to-video",
     label: "Text to Video",
-    description: "Sinh clip ngan tu mo ta va mood creative.",
+    description: "Sinh clip ngắn từ mô tả và mood creative.",
     href: "/quick-create/video",
   },
   {
     id: "image-to-video",
     label: "Image to Video",
-    description: "Bien anh tinh thanh video motion nhe.",
+    description: "Biến ảnh tĩnh thành video motion nhẹ.",
     href: "/quick-create/video",
   },
   {
     id: "start-end-image-to-video",
     label: "Start/End Image to Video",
-    description: "Tao chuyen canh giua anh dau va anh cuoi.",
+    description: "Tạo chuyển cảnh giữa ảnh đầu và ảnh cuối.",
     href: "/quick-create/video",
   },
   {
     id: "prompt",
     label: "Prompt Generator",
-    description: "Toi uu prompt truoc khi generate anh hoac video.",
+    description: "Tối ưu prompt trước khi generate ảnh hoặc video.",
     href: "/quick-create/prompt",
   },
   {
     id: "script",
     label: "Script Generator",
-    description: "Tao hook, scene breakdown va CTA cho video ads.",
+    description: "Tạo hook, scene breakdown và CTA cho video ads.",
     href: "/quick-create/prompt",
   },
 ];
 
 const aspectRatios = ["1:1", "9:16", "16:9", "4:3", "3:4"];
 const durations = ["5s", "10s", "15s", "30s", "60s"];
-const qualityOptions: QualityOption[] = ["Nhanh", "Chuan", "Cao"];
+const qualityOptions: QualityOption[] = ["Nhanh", "Chuẩn", "Cao"];
 
 function getModeIcon(mode: QuickMode) {
   if (mode === "text-to-image" || mode === "image-to-image") return ImageIcon;
@@ -113,8 +113,8 @@ function getModeSummary(mode: QuickMode) {
     return {
       title: "Prompt Generator",
       preview:
-        "Ket qua se tra ve prompt anh/video, negative prompt, shot list va model de xuat.",
-      routeLabel: "Mo Prompt AI",
+        "Kết quả sẽ trả về prompt ảnh/video, negative prompt, shot list và model đề xuất.",
+      routeLabel: "Mở Prompt AI",
       href: "/quick-create/prompt",
     };
   }
@@ -122,8 +122,8 @@ function getModeSummary(mode: QuickMode) {
   if (mode === "script") {
     return {
       title: "Script Generator",
-      preview: "Tao hook, scene, voice-over, CTA va khung visual cho video ngan.",
-      routeLabel: "Tao kich ban",
+      preview: "Tạo hook, scene, voice-over, CTA và khung visual cho video ngắn.",
+      routeLabel: "Tạo kịch bản",
       href: "/quick-create/prompt",
     };
   }
@@ -132,8 +132,8 @@ function getModeSummary(mode: QuickMode) {
     return {
       title: "Image Preview",
       preview:
-        "Preview anh, tai xuong, luu vao du an hoac tao bien the se xuat hien o panel phai.",
-      routeLabel: "Di toi Tao anh",
+        "Preview ảnh, tải xuống, lưu vào dự án hoặc tạo biến thể sẽ xuất hiện ở panel phải.",
+      routeLabel: "Đi tới Tạo ảnh",
       href: "/quick-create/image",
     };
   }
@@ -141,8 +141,8 @@ function getModeSummary(mode: QuickMode) {
   return {
     title: "Video Preview",
     preview:
-      "Preview video, trang thai xu ly va hanh dong luu vao du an se hien tai panel phai.",
-    routeLabel: "Di toi Tao video",
+      "Preview video, trạng thái xử lý và hành động lưu vào dự án sẽ hiện tại panel phải.",
+    routeLabel: "Đi tới Tạo video",
     href: "/quick-create/video",
   };
 }
@@ -177,7 +177,7 @@ export default function QuickAIDashboard({
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedAspectRatio, setSelectedAspectRatio] = useState("9:16");
   const [selectedDuration, setSelectedDuration] = useState("15s");
-  const [selectedQuality, setSelectedQuality] = useState<QualityOption>("Chuan");
+  const [selectedQuality, setSelectedQuality] = useState<QualityOption>("Chuẩn");
   const activeSummary = getModeSummary(activeMode);
   const resolvedModel =
     selectedModel && modelOptions.includes(selectedModel)
@@ -205,11 +205,11 @@ export default function QuickAIDashboard({
           Quick create
         </p>
         <h1 className="text-3xl font-medium tracking-[-0.03em] text-[var(--heading)]">
-          Tao nhanh AI
+          Tạo nhanh AI
         </h1>
         <p className="max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
-          Tao anh, video, prompt hoac kich ban chi trong vai buoc. Chon dung mode,
-          nhap y tuong va dieu chinh nhanh truoc khi mo studio chinh.
+          Tạo ảnh, video, prompt hoặc kịch bản chỉ trong vài bước. Chọn đúng mode, nhập ý tưởng
+          và điều chỉnh nhanh trước khi mở studio chính.
         </p>
       </div>
 
@@ -252,7 +252,7 @@ export default function QuickAIDashboard({
                 value={prompt}
                 onChange={(event) => setPrompt(event.target.value)}
                 rows={6}
-                placeholder="Nhap prompt, y tuong san pham, concept quang cao hoac chien dich..."
+                placeholder="Nhập prompt, ý tưởng sản phẩm, concept quảng cáo hoặc chiến dịch..."
                 className="w-full rounded-[12px] border bg-[var(--surface-muted)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
               />
             </Field>
@@ -268,7 +268,7 @@ export default function QuickAIDashboard({
                 />
               </Field>
               <div className="space-y-4">
-                <Field label="Chon model">
+                <Field label="Chọn model">
                   <select
                     value={resolvedModel}
                     onChange={(event) => setSelectedModel(event.target.value)}
@@ -283,21 +283,21 @@ export default function QuickAIDashboard({
                 </Field>
 
                 <ChoiceGroup
-                  label="Chon ty le"
+                  label="Chọn tỷ lệ"
                   value={selectedAspectRatio}
                   options={aspectRatios}
                   onChange={setSelectedAspectRatio}
                 />
 
                 <ChoiceGroup
-                  label="Thoi luong"
+                  label="Thời lượng"
                   value={selectedDuration}
                   options={durations}
                   onChange={setSelectedDuration}
                 />
 
                 <ChoiceGroup
-                  label="Chat luong"
+                  label="Chất lượng"
                   value={selectedQuality}
                   options={qualityOptions}
                   onChange={(value) => setSelectedQuality(value as QualityOption)}
@@ -307,19 +307,19 @@ export default function QuickAIDashboard({
 
             {activeMode === "start-end-image-to-video" ? (
               <div className="grid gap-4 md:grid-cols-2">
-                <UploadBox title="Anh bat dau" subtitle="Keo tha hoac chon anh mo canh" />
-                <UploadBox title="Anh ket thuc" subtitle="Keo tha hoac chon anh dong canh" />
+                <UploadBox title="Ảnh bắt đầu" subtitle="Kéo thả hoặc chọn ảnh mở cảnh" />
+                <UploadBox title="Ảnh kết thúc" subtitle="Kéo thả hoặc chọn ảnh đóng cảnh" />
               </div>
             ) : (
               <UploadBox
-                title="Upload anh tham chieu"
-                subtitle="Dung cho image to image hoac image to video"
+                title="Upload ảnh tham chiếu"
+                subtitle="Dùng cho image to image hoặc image to video"
               />
             )}
 
             <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-[var(--muted-foreground)]">Uoc tinh credits</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Ước tính credits</p>
                 <p className="text-lg font-medium text-[var(--heading)]">{estimatedCredits}</p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -328,13 +328,13 @@ export default function QuickAIDashboard({
                   className="inline-flex items-center gap-2 rounded-[8px] border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--muted-foreground)]"
                 >
                   <WandSparkles className="h-4 w-4 text-[var(--highlight)]" />
-                  Toi uu prompt
+                  Tối ưu prompt
                 </Link>
                 <Link
                   href={activeSummary.href}
                   className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)]"
                 >
-                  Tao ngay
+                  Tạo ngay
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -371,19 +371,19 @@ export default function QuickAIDashboard({
                     <span className="text-[var(--heading)]">Model:</span> {resolvedModel}
                   </p>
                   <p className="mt-1">
-                    <span className="text-[var(--heading)]">Ty le:</span> {selectedAspectRatio}
+                    <span className="text-[var(--heading)]">Tỷ lệ:</span> {selectedAspectRatio}
                     {" · "}
-                    <span className="text-[var(--heading)]">Thoi luong:</span> {selectedDuration}
+                    <span className="text-[var(--heading)]">Thời lượng:</span> {selectedDuration}
                   </p>
                   <p className="mt-1">
-                    <span className="text-[var(--heading)]">Chat luong:</span> {selectedQuality}
+                    <span className="text-[var(--heading)]">Chất lượng:</span> {selectedQuality}
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {["Tai xuong", "Luu vao du an", "Tao bien the", "Copy prompt"].map((action) => (
+              {["Tải xuống", "Lưu vào dự án", "Tạo biến thể", "Copy prompt"].map((action) => (
                 <div
                   key={action}
                   className="rounded-[8px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted-foreground)]"

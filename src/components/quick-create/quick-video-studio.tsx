@@ -87,7 +87,7 @@ export function QuickVideoStudio({
     setMessage(null);
 
     if (videoMode === "start-end-image-to-video" && (startImage.error || endImage.error)) {
-      setError("Vui long sua anh Start/End hop le truoc khi tao video.");
+      setError("Vui lòng sửa ảnh Start/End hợp lệ trước khi tạo video.");
       setLoading(false);
       return;
     }
@@ -131,7 +131,7 @@ export function QuickVideoStudio({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? "Tao video that bai.");
+        throw new Error(payload.error ?? "Tạo video thất bại.");
       }
 
       const nextOutput: VideoOutput =
@@ -164,11 +164,11 @@ export function QuickVideoStudio({
         payload.result.type === "ephemeral"
           ? payload.result.warning
           : projectId
-            ? "Da tao video va luu vao du an."
-            : "Da tao video nhanh.",
+            ? "Đã tạo video và lưu vào dự án."
+            : "Đã tạo video nhanh.",
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Tao video that bai.");
+      setError(caught instanceof Error ? caught.message : "Tạo video thất bại.");
     } finally {
       setLoading(false);
     }
@@ -176,7 +176,7 @@ export function QuickVideoStudio({
 
   async function saveToProject() {
     if (!output || !selectedProjectId) {
-      setError("Vui long chon du an de luu.");
+      setError("Vui lòng chọn dự án để lưu.");
       return;
     }
 
@@ -188,11 +188,11 @@ export function QuickVideoStudio({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Khong the luu vao du an.");
+      setError(payload.error ?? "Không thể lưu vào dự án.");
       return;
     }
 
-    setMessage("Da luu output vao du an.");
+    setMessage("Đã lưu output vào dự án.");
   }
 
   return (
@@ -200,7 +200,7 @@ export function QuickVideoStudio({
       <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="flex items-center gap-3">
           <Film className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Tao video nhanh</h2>
+          <h2 className="text-xl font-semibold">Tạo video nhanh</h2>
         </div>
 
         <div className="mt-6 space-y-5">
@@ -211,13 +211,13 @@ export function QuickVideoStudio({
               onChange={(event) => setPrompt(event.target.value)}
               rows={6}
               className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-              placeholder="Mo ta video ban muon tao..."
+              placeholder="Mô tả video bạn muốn tạo..."
             />
           </label>
 
           <div className="grid gap-4 md:grid-cols-4">
             <Select
-              label="Che do video"
+              label="Chế độ video"
               value={videoMode}
               onChange={(value) => {
                 const nextMode = value as VideoMode;
@@ -242,19 +242,19 @@ export function QuickVideoStudio({
             </Select>
 
             <Select
-              label="Thoi luong"
+              label="Thời lượng"
               value={String(duration)}
               onChange={(value) => setDuration(Number.parseInt(value, 10))}
             >
               {QUICK_VIDEO_DURATIONS.map((item) => (
                 <option key={item} value={item}>
-                  {item} giay
+                  {item} giây
                 </option>
               ))}
             </Select>
 
             <Select
-              label="Ty le"
+              label="Tỷ lệ"
               value={aspectRatio}
               onChange={(value) => setAspectRatio(value as AspectRatio)}
             >
@@ -274,7 +274,7 @@ export function QuickVideoStudio({
           ) : null}
 
           <label className="block">
-            <span className="text-sm font-medium">Anh/video tham chieu tuy chon</span>
+            <span className="text-sm font-medium">Ảnh/video tham chiếu tùy chọn</span>
             <input
               type="file"
               accept="image/*,video/*"
@@ -303,7 +303,7 @@ export function QuickVideoStudio({
           ) : null}
 
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
-            Uoc tinh credits:{" "}
+            Ước tính credits:{" "}
             <span className="font-medium text-[var(--foreground)]">
               {formatCreditEstimate(activeCreditCost)}
             </span>
@@ -316,7 +316,7 @@ export function QuickVideoStudio({
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {loading ? "Dang tao video..." : "Generate"}
+            {loading ? "Đang tạo video..." : "Generate"}
           </button>
 
           <Status message={message} error={error} />
@@ -327,7 +327,7 @@ export function QuickVideoStudio({
         <h2 className="text-xl font-semibold">Preview video</h2>
         {!output ? (
           <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted-foreground)]">
-            Chua co video nao. Nhap prompt va bam Generate de bat dau.
+            Chưa có video nào. Nhập prompt và bấm Generate để bắt đầu.
           </div>
         ) : (
           <div className="mt-6 rounded-2xl border border-[var(--border)] p-3">
@@ -335,12 +335,12 @@ export function QuickVideoStudio({
             <div className="mt-3 flex flex-wrap gap-2">
               <a href={output.output_url} download className={actionClass}>
                 <Download className="h-4 w-4" />
-                Tai xuong
+                Tải xuống
               </a>
               {!projectId && output.persistable !== false ? (
                 <button type="button" onClick={saveToProject} className={actionClass}>
                   <Save className="h-4 w-4" />
-                  Luu vao du an
+                  Lưu vào dự án
                 </button>
               ) : null}
             </div>
@@ -349,7 +349,7 @@ export function QuickVideoStudio({
 
         {!projectId && projects.length > 0 ? (
           <label className="mt-6 block">
-            <span className="text-sm font-medium">Du an de luu output</span>
+            <span className="text-sm font-medium">Dự án để lưu output</span>
             <select
               value={selectedProjectId}
               onChange={(event) => setSelectedProjectId(event.target.value)}
@@ -393,7 +393,7 @@ function ImageDropCard({
     if (!allowedImageTypes.includes(file.type)) {
       onChange({
         ...emptySlot,
-        error: "Anh phai la JPG, JPEG, PNG hoac WEBP.",
+        error: "Ảnh phải là JPG, JPEG, PNG hoặc WEBP.",
       });
       return;
     }
@@ -417,7 +417,7 @@ function ImageDropCard({
     try {
       new URL(trimmed);
     } catch {
-      onChange({ ...state, url: trimmed, file: null, error: "Link anh khong hop le." });
+      onChange({ ...state, url: trimmed, file: null, error: "Link ảnh không hợp lệ." });
       return;
     }
 
@@ -426,7 +426,7 @@ function ImageDropCard({
         ...state,
         url: trimmed,
         file: null,
-        error: "Link phai tro toi anh JPG, JPEG, PNG hoac WEBP.",
+        error: "Link phải trỏ tới ảnh JPG, JPEG, PNG hoặc WEBP.",
       });
       return;
     }
@@ -452,7 +452,7 @@ function ImageDropCard({
             className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted-foreground)]"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Xoa
+            Xóa
           </button>
         ) : null}
       </div>
@@ -477,7 +477,7 @@ function ImageDropCard({
             onError={() =>
               onChange({
                 ...state,
-                error: "Khong the tai preview anh. Hay kiem tra lai link hoac file.",
+                error: "Không thể tải preview ảnh. Hãy kiểm tra lại link hoặc file.",
               })
             }
             className="h-full w-full object-cover"
@@ -489,7 +489,7 @@ function ImageDropCard({
             ) : (
               <UploadCloud className="h-8 w-8" />
             )}
-            Keo anh vao day hoac nhan de chon anh
+            Kéo ảnh vào đây hoặc nhấn để chọn ảnh
           </span>
         )}
       </button>
@@ -503,7 +503,7 @@ function ImageDropCard({
       />
 
       <label className="mt-3 block">
-        <span className="text-xs font-medium text-[var(--muted-foreground)]">Hoac dan link anh</span>
+        <span className="text-xs font-medium text-[var(--muted-foreground)]">Hoặc dán link ảnh</span>
         <input
           value={state.url}
           onChange={(event) => setUrl(event.target.value)}
@@ -518,7 +518,7 @@ function ImageDropCard({
         </p>
       ) : hasImageInput(state) ? (
         <p className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600">
-          Anh da san sang.
+          Ảnh đã sẵn sàng.
         </p>
       ) : null}
     </div>

@@ -1,10 +1,5 @@
-/**
- * AI Text Service
- * Xử lý tất cả task sinh text: chat, prompt, script, reasoning, gemini
- */
-
 import { chatCompletion } from "./client";
-import { getModelByTask, type AITask } from "./model-router";
+import { getModelCandidatesByTask, type AITask } from "./model-router";
 
 export interface GenerateTextParams {
   task: AITask;
@@ -26,7 +21,7 @@ export type GenerateTextError = {
 };
 
 export async function generateText(
-  params: GenerateTextParams
+  params: GenerateTextParams,
 ): Promise<GenerateTextResult | GenerateTextError> {
   const { task, prompt, systemPrompt, temperature, maxTokens } = params;
 
@@ -42,11 +37,9 @@ export async function generateText(
   if (!supportedTextTasks.includes(task)) {
     return {
       success: false,
-      error: `Task "${task}" không phải text task. Dùng "chat", "prompt", "script", "reasoning", "gemini_text", hoặc "gemini_fast".`,
+      error: `Task "${task}" không phải text task.`,
     };
   }
-
-  const model = getModelByTask(task);
 
   const messages: Array<{ role: "system" | "user"; content: string }> = [];
 
@@ -57,18 +50,30 @@ export async function generateText(
   messages.push({ role: "user", content: prompt });
 
   try {
-    const result = await chatCompletion({
-      model,
-      messages,
-      temperature: temperature ?? 0.7,
-      max_tokens: maxTokens ?? 2048,
-    });
+    const { models, settings } = await getModelCandidatesByTask(task);
+    const candidates = settings.autoFallbackOnError ? models : models.slice(0, 1);
+    let lastError: unknown = null;
 
-    return {
-      success: true,
-      text: result.content,
-      model: result.model,
-    };
+    for (const model of candidates) {
+      try {
+        const result = await chatCompletion({
+          model,
+          messages,
+          temperature: temperature ?? 0.7,
+          max_tokens: maxTokens ?? 2048,
+        });
+
+        return {
+          success: true,
+          text: result.content,
+          model: result.model,
+        };
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { success: false, error: message };

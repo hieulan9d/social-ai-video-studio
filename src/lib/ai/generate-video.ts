@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { getAssetStorageProvider } from "@/lib/assets/storage";
+import { getRoutedModelCandidates } from "@/lib/ai/smart-routing";
 import { GoogleVeoProvider } from "@/lib/video/providers/google-veo-provider";
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { deductCredits, refundCredits } from "@/lib/wallet/server";
@@ -82,7 +83,7 @@ async function fetchUrlToBlob(url?: string | null) {
   const response = await fetch(url, { cache: "no-store" });
 
   if (!response.ok) {
-    throw new Error(`Khong the tai tai nguyen tu URL: ${url}`);
+    throw new Error(`Không thể tải tài nguyên từ URL: ${url}`);
   }
 
   return response.blob();
@@ -141,7 +142,7 @@ async function waitForGoogleVeoCompletion(provider: GoogleVeoProvider, operation
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
-  throw new Error("Google Veo render timeout. Vui long thu lai.");
+  throw new Error("Google Veo render timeout. Vui lòng thử lại.");
 }
 
 async function uploadVideoAndGetSignedUrl({
@@ -235,6 +236,84 @@ async function insertGeneratedProjectVideoAsset({
   };
 }
 
+async function runVideoGeneration(input: {
+  prompt: string;
+  selectedModel: string;
+  duration: number;
+  aspectRatio: "9:16" | "16:9" | "1:1";
+  resolvedVideoMode: "text-to-video" | "image-to-video" | "start-end-image-to-video";
+  referenceAsset?: File | null;
+  startImage?: File | null;
+  endImage?: File | null;
+  startImageUrl?: string | null;
+  endImageUrl?: string | null;
+}) {
+  const providerModel = resolveGoogleVeoModel(input.selectedModel);
+  const provider = new GoogleVeoProvider(providerModel);
+  const negativePrompt =
+    "subtitles, watermark, random text, distorted face, broken hands, extra fingers, logo changes";
+
+  let started;
+
+  if (input.resolvedVideoMode === "text-to-video") {
+    started = await provider.startTextToVideo({
+      prompt: input.prompt,
+      aspectRatio: input.aspectRatio,
+      durationSeconds: input.duration,
+      negativePrompt,
+    });
+  } else if (input.resolvedVideoMode === "image-to-video") {
+    const imageInput = await resolveSingleImageInput({
+      file: input.startImage,
+      url: input.startImageUrl,
+      fallbackFile: input.referenceAsset,
+    });
+
+    if (!imageInput) {
+      throw new Error("Image-to-video cần 1 ảnh đầu vào hợp lệ.");
+    }
+
+    started = await provider.startImageToVideo({
+      prompt: input.prompt,
+      aspectRatio: input.aspectRatio,
+      durationSeconds: input.duration,
+      negativePrompt,
+      image: imageInput,
+    });
+  } else {
+    const resolvedStartImage = await resolveSingleImageInput({
+      file: input.startImage,
+      url: input.startImageUrl,
+    });
+    const resolvedEndImage = await resolveSingleImageInput({
+      file: input.endImage,
+      url: input.endImageUrl,
+    });
+
+    if (!resolvedStartImage || !resolvedEndImage) {
+      throw new Error("Start/end image to video cần cả 2 ảnh hợp lệ.");
+    }
+
+    started = await provider.startEndImageTransition({
+      prompt: input.prompt,
+      aspectRatio: input.aspectRatio,
+      durationSeconds: input.duration,
+      negativePrompt,
+      startImage: resolvedStartImage,
+      endImage: resolvedEndImage,
+    });
+  }
+
+  const completed = await waitForGoogleVeoCompletion(provider, started.operationName);
+
+  return {
+    provider,
+    providerModel,
+    started,
+    completed,
+  };
+}
+
 export async function generateVideo({
   userId,
   prompt,
@@ -265,7 +344,7 @@ export async function generateVideo({
   const normalizedPrompt = prompt.trim();
 
   if (normalizedPrompt.length < 3) {
-    throw new Error("Prompt phai co it nhat 3 ky tu.");
+    throw new Error("Prompt phải có ít nhất 3 ký tự.");
   }
 
   const normalizedDuration = normalizeDurationSeconds(duration);
@@ -283,82 +362,65 @@ export async function generateVideo({
         : "text-to-video");
   const creditCost = await getFeatureCreditCost("video_generation");
   const referenceId = `${projectId ?? "quick"}:video:${Date.now()}`;
-  const veoModel = resolveGoogleVeoModel(model);
+  const { models, settings } = await getRoutedModelCandidates({
+    task: model === "veo-3-fast" ? "video_fast" : "video",
+    requestedModel: model,
+  });
+  const candidateModels = settings.autoFallbackOnError ? models : models.slice(0, 1);
+  const primaryModel = candidateModels[0] ?? model;
 
   await deductCredits({
     userId,
     amount: creditCost,
-    reason: projectId ? "Tao video trong du an" : "Tao video nhanh",
+    reason: projectId ? "Tạo video trong dự án" : "Tạo video nhanh",
     referenceType: "video_generation",
     referenceId,
     metadata: {
       project_id: projectId ?? null,
       requested_model: model,
-      provider_model: veoModel,
+      routed_model: primaryModel,
       duration: normalizedDuration,
       video_mode: resolvedVideoMode,
     },
   });
 
   try {
-    const provider = new GoogleVeoProvider(veoModel);
-    const negativePrompt =
-      "subtitles, watermark, random text, distorted face, broken hands, extra fingers, logo changes";
+    let generationResult:
+      | {
+          provider: GoogleVeoProvider;
+          providerModel: string;
+          started: { operationName: string };
+          completed: { rawResponse: Record<string, unknown>; videoUri?: string | null };
+        }
+      | null = null;
+    let lastError: unknown = null;
 
-    let started;
-
-    if (resolvedVideoMode === "text-to-video") {
-      started = await provider.startTextToVideo({
-        prompt: normalizedPrompt,
-        aspectRatio: normalizedAspectRatio,
-        durationSeconds: normalizedDuration,
-        negativePrompt,
-      });
-    } else if (resolvedVideoMode === "image-to-video") {
-      const imageInput = await resolveSingleImageInput({
-        file: startImage,
-        url: startImageUrl,
-        fallbackFile: referenceAsset,
-      });
-
-      if (!imageInput) {
-        throw new Error("Image-to-video can 1 anh dau vao hop le.");
+    for (const candidateModel of candidateModels) {
+      try {
+        generationResult = await runVideoGeneration({
+          prompt: normalizedPrompt,
+          selectedModel: candidateModel,
+          duration: normalizedDuration,
+          aspectRatio: normalizedAspectRatio,
+          resolvedVideoMode,
+          referenceAsset,
+          startImage,
+          endImage,
+          startImageUrl,
+          endImageUrl,
+        });
+        break;
+      } catch (error) {
+        lastError = error;
       }
-
-      started = await provider.startImageToVideo({
-        prompt: normalizedPrompt,
-        aspectRatio: normalizedAspectRatio,
-        durationSeconds: normalizedDuration,
-        negativePrompt,
-        image: imageInput,
-      });
-    } else {
-      const resolvedStartImage = await resolveSingleImageInput({
-        file: startImage,
-        url: startImageUrl,
-      });
-      const resolvedEndImage = await resolveSingleImageInput({
-        file: endImage,
-        url: endImageUrl,
-      });
-
-      if (!resolvedStartImage || !resolvedEndImage) {
-        throw new Error("Start/end image to video can ca 2 anh hop le.");
-      }
-
-      started = await provider.startEndImageTransition({
-        prompt: normalizedPrompt,
-        aspectRatio: normalizedAspectRatio,
-        durationSeconds: normalizedDuration,
-        negativePrompt,
-        startImage: resolvedStartImage,
-        endImage: resolvedEndImage,
-      });
     }
 
-    const completed = await waitForGoogleVeoCompletion(provider, started.operationName);
-    const downloaded = await provider.downloadVideo({
-      videoUri: completed.videoUri!,
+    if (!generationResult) {
+      throw lastError;
+    }
+
+    const downloaded = await generationResult.provider.downloadVideo({
+      videoUri: generationResult.completed.videoUri!,
     });
     const uploaded = await uploadVideoAndGetSignedUrl({
       videoBlob: downloaded.data,
@@ -370,10 +432,10 @@ export async function generateVideo({
       aspect_ratio: normalizedAspectRatio,
       duration_seconds: normalizedDuration,
       video_mode: resolvedVideoMode,
-      provider: provider.name,
-      provider_model: provider.model,
-      provider_operation_name: started.operationName,
-      provider_response: completed.rawResponse,
+      provider: generationResult.provider.name,
+      provider_model: generationResult.provider.model,
+      provider_operation_name: generationResult.started.operationName,
+      provider_response: generationResult.completed.rawResponse,
       start_image_url: startImageUrl ?? null,
       end_image_url: endImageUrl ?? null,
     };
@@ -383,7 +445,7 @@ export async function generateVideo({
         userId,
         projectId,
         prompt: normalizedPrompt,
-        model: provider.model,
+        model: generationResult.provider.model,
         signedUrl: uploaded.signedUrl,
         storageProvider: uploaded.storageProvider,
         storageBucket: uploaded.storageBucket,
@@ -401,7 +463,7 @@ export async function generateVideo({
         user_id: userId,
         type: "video",
         prompt: normalizedPrompt,
-        model: provider.model,
+        model: generationResult.provider.model,
         output_url: uploaded.signedUrl,
         status: "completed",
         aspect_ratio: normalizedAspectRatio,
@@ -422,11 +484,11 @@ export async function generateVideo({
             id: `ephemeral-video-${Date.now()}`,
             output_url: uploaded.signedUrl,
             prompt: normalizedPrompt,
-            model: provider.model,
+            model: generationResult.provider.model,
           },
           outputUrl: uploaded.signedUrl,
           warning:
-            "Bang quick_generations chua ton tai. Output da duoc tao nhung chua luu vao lich su nhanh.",
+            "Bảng quick_generations chưa tồn tại. Output đã được tạo nhưng chưa lưu vào lịch sử nhanh.",
         };
       }
 
@@ -441,7 +503,7 @@ export async function generateVideo({
         user_id: userId,
         type: "video",
         prompt: normalizedPrompt,
-        model: veoModel,
+        model: primaryModel,
         output_url: null,
         status: "failed",
         aspect_ratio: normalizedAspectRatio,
@@ -454,7 +516,7 @@ export async function generateVideo({
           start_image_url: startImageUrl ?? null,
           end_image_url: endImageUrl ?? null,
         },
-        error_message: error instanceof Error ? error.message : "Tao video that bai.",
+        error_message: error instanceof Error ? error.message : "Tạo video thất bại.",
       });
 
       if (insertError && !isMissingQuickGenerationsTableError(insertError)) {
@@ -465,10 +527,10 @@ export async function generateVideo({
     await refundCredits({
       userId,
       amount: creditCost,
-      reason: "Hoan tin dung do tao video that bai",
+      reason: "Hoàn tín dụng do tạo video thất bại",
       referenceType: "video_generation_refund",
       referenceId,
-      metadata: { project_id: projectId ?? null, model: veoModel },
+      metadata: { project_id: projectId ?? null, model: primaryModel },
     });
 
     throw error;

@@ -37,7 +37,7 @@ export async function assertProjectOwnership(projectId: string, userId: string) 
   }
 
   if (!data) {
-    throw new Error("Khong tim thay du an hoac ban khong co quyen truy cap.");
+    throw new Error("Không tìm thấy dự án hoặc bạn không có quyền truy cập.");
   }
 }
 
@@ -89,7 +89,7 @@ export async function saveGeneratedProjectAsset({
   if (error) {
     if (isMissingProjectAssetQuickSchemaError(error)) {
       throw new Error(
-        "Database cua ban chua cap nhat bang project_assets cho quick save. Can chay phan migration 0019_quick_ai_studio.sql de them cac cot type, prompt, model, output_url, status.",
+        "Database của bạn chưa cập nhật bảng project_assets cho quick save. Cần chạy phần migration 0019_quick_ai_studio.sql để thêm các cột type, prompt, model, output_url, status.",
       );
     }
 

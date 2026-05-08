@@ -22,13 +22,13 @@ export function QuickHistoryPageClient() {
           const payload = await response.json();
 
           if (!response.ok || !payload.ok) {
-            throw new Error(payload.error ?? "Khong the tai du an.");
+            throw new Error(payload.error ?? "Không thể tải dự án.");
           }
 
           setProjects(payload.projects);
         })
         .catch((error) => {
-          setError("projects", error instanceof Error ? error.message : "Khong the tai du an.");
+          setError("projects", error instanceof Error ? error.message : "Không thể tải dự án.");
         });
     }
 
@@ -39,7 +39,7 @@ export function QuickHistoryPageClient() {
           const payload = await response.json();
 
           if (!response.ok || !payload.ok) {
-            throw new Error(payload.error ?? "Khong the tai lich su.");
+            throw new Error(payload.error ?? "Không thể tải lịch sử.");
           }
 
           setQuickHistory(payload.generations);
@@ -47,7 +47,7 @@ export function QuickHistoryPageClient() {
         .catch((error) => {
           setError(
             "quickHistory",
-            error instanceof Error ? error.message : "Khong the tai lich su.",
+            error instanceof Error ? error.message : "Không thể tải lịch sử.",
           );
         });
     }
@@ -83,7 +83,7 @@ export function QuickHistoryPageClient() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">History</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
-            Quan ly toan bo anh, video va prompt da tao nhanh.
+            Quản lý toàn bộ ảnh, video và prompt đã tạo nhanh.
           </p>
         </div>
         <QuickStudioNav active="history" />

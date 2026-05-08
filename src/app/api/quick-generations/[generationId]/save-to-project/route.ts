@@ -11,24 +11,24 @@ export async function POST(
     const user = await getCurrentUserProfile();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Ban can dang nhap." }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Bạn cần đăng nhập." }, { status: 401 });
     }
 
     const { generationId } = await params;
     const payload = (await request.json()) as { projectId?: unknown };
 
     if (typeof payload.projectId !== "string" || !payload.projectId) {
-      throw new Error("Vui long chon du an.");
+      throw new Error("Vui lòng chọn dự án.");
     }
 
     const generation = await getQuickGeneration({ userId: user.id, generationId });
 
     if (generation.type === "prompt") {
-      throw new Error("Prompt AI khong co file output de luu vao du an.");
+      throw new Error("Prompt AI không có file output để lưu vào dự án.");
     }
 
     if (!generation.output_url) {
-      throw new Error("Output nay chua san sang de luu vao du an.");
+      throw new Error("Output này chưa sẵn sàng để lưu vào dự án.");
     }
 
     const asset = await saveGeneratedProjectAsset({
@@ -50,7 +50,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Khong the luu vao du an.",
+        error: error instanceof Error ? error.message : "Không thể lưu vào dự án.",
       },
       { status: 400 },
     );

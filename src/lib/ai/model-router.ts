@@ -1,8 +1,6 @@
-/**
- * Model Router
- * Map task → model dựa trên biến môi trường
- * Có fallback nếu env thiếu
- */
+import "server-only";
+
+import { getRoutedModelCandidates } from "@/lib/ai/smart-routing";
 
 export type AITask =
   | "chat"
@@ -39,17 +37,33 @@ const ENV_MAP: Record<AITask, string> = {
   video_fast: "AI_VIDEO_FAST_MODEL",
 };
 
-export function getModelByTask(task: AITask): string {
+export function getConfiguredModelByTask(task: AITask): string {
   const envKey = ENV_MAP[task];
   const envValue = process.env[envKey];
   return envValue || FALLBACKS[task];
 }
 
-/** Lấy toàn bộ config model hiện tại (dùng cho Admin Settings) */
-export function getAllModelConfig(): Record<string, string> {
+export async function getModelByTask(task: AITask): Promise<string> {
+  const { models } = await getRoutedModelCandidates({
+    task,
+    requestedModel: getConfiguredModelByTask(task),
+  });
+
+  return models[0] ?? getConfiguredModelByTask(task);
+}
+
+export async function getModelCandidatesByTask(task: AITask) {
+  return getRoutedModelCandidates({
+    task,
+    requestedModel: getConfiguredModelByTask(task),
+  });
+}
+
+export async function getAllModelConfig(): Promise<Record<string, string>> {
   const tasks = Object.keys(ENV_MAP) as AITask[];
-  return tasks.reduce((acc, task) => {
-    acc[task] = getModelByTask(task);
-    return acc;
-  }, {} as Record<string, string>);
+  const entries = await Promise.all(
+    tasks.map(async (task) => [task, await getModelByTask(task)] as const),
+  );
+
+  return Object.fromEntries(entries);
 }

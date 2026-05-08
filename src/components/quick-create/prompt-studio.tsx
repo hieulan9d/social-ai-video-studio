@@ -85,20 +85,20 @@ function buildVideoUserPrompt(input: {
   consistency: string;
 }) {
   return [
-    "Hay phan tich y tuong sau va tao prompt video hoan chinh.",
-    `Y tuong goc: ${input.idea}`,
-    `Thoi luong muc tieu: ${input.duration}`,
-    `Nen tang: ${input.platform}`,
-    `Phong cach mong muon: ${input.style || "Chua chi dinh"}`,
-    `Ngon ngu noi dung: ${input.language}`,
-    `Yeu cau consistency: ${input.consistency || "Uu tien giu dong nhat nhan vat, san pham, background khi hop ly."}`,
-    "Muc tieu dau ra:",
-    "- Tao concept video ro rang, co tinh thuong mai va kha nang san xuat.",
-    "- Chia canh hop ly theo thoi luong.",
-    "- Mo ta visual, camera, action, lighting, voice-over, on-screen text.",
-    "- Tao prompt rieng cho tung canh.",
-    "- Tao negative prompt cho tung canh.",
-    "- Them consistency notes de dung cho AI video generation.",
+    "Hãy phân tích ý tưởng sau và tạo prompt video hoàn chỉnh.",
+    `Ý tưởng gốc: ${input.idea}`,
+    `Thời lượng mục tiêu: ${input.duration}`,
+    `Nền tảng: ${input.platform}`,
+    `Phong cách mong muốn: ${input.style || "Chưa chỉ định"}`,
+    `Ngôn ngữ nội dung: ${input.language}`,
+    `Yêu cầu consistency: ${input.consistency || "Ưu tiên giữ đồng nhất nhân vật, sản phẩm, background khi hợp lý."}`,
+    "Mục tiêu đầu ra:",
+    "- Tạo concept video rõ ràng, có tính thương mại và khả năng sản xuất.",
+    "- Chia cảnh hợp lý theo thời lượng.",
+    "- Mô tả visual, camera, action, lighting, voice-over, on-screen text.",
+    "- Tạo prompt riêng cho từng cảnh.",
+    "- Tạo negative prompt cho từng cảnh.",
+    "- Thêm consistency notes để dùng cho AI video generation.",
   ].join("\n");
 }
 
@@ -110,18 +110,18 @@ function buildImageUserPrompt(input: {
   consistency: string;
 }) {
   return [
-    "Hay phan tich y tuong sau va tao prompt anh hoan chinh.",
-    `Y tuong goc: ${input.idea}`,
-    `Nen tang su dung: ${input.platform}`,
-    `Phong cach mong muon: ${input.style || "Chua chi dinh"}`,
-    `Ngon ngu mo ta: ${input.language}`,
-    `Yeu cau consistency: ${input.consistency || "Uu tien giu dong nhat nhan vat, san pham, background khi hop ly."}`,
-    "Muc tieu dau ra:",
-    "- Lam ro concept va huong visual.",
-    "- Toi uu bo cuc, goc may, anh sang, chat lieu hinh anh.",
-    "- Tao 1 main prompt chat luong cao.",
-    "- Tao 1 negative prompt huu ich.",
-    "- Tao 2-3 prompt variations de test nhanh.",
+    "Hãy phân tích ý tưởng sau và tạo prompt ảnh hoàn chỉnh.",
+    `Ý tưởng gốc: ${input.idea}`,
+    `Nền tảng sử dụng: ${input.platform}`,
+    `Phong cách mong muốn: ${input.style || "Chưa chỉ định"}`,
+    `Ngôn ngữ mô tả: ${input.language}`,
+    `Yêu cầu consistency: ${input.consistency || "Ưu tiên giữ đồng nhất nhân vật, sản phẩm, background khi hợp lý."}`,
+    "Mục tiêu đầu ra:",
+    "- Làm rõ concept và hướng visual.",
+    "- Tối ưu bố cục, góc máy, ánh sáng, chất liệu hình ảnh.",
+    "- Tạo 1 main prompt chất lượng cao.",
+    "- Tạo 1 negative prompt hữu ích.",
+    "- Tạo 2-3 prompt variations để test nhanh.",
   ].join("\n");
 }
 
@@ -183,7 +183,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      throw new Error(payload.error ?? "Khong the luu lich su prompt AI.");
+      throw new Error(payload.error ?? "Không thể lưu lịch sử prompt AI.");
     }
 
     if (payload.warning) {
@@ -201,7 +201,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
 
   async function handleGenerate() {
     if (!idea.trim()) {
-      setError("Vui long nhap y tuong.");
+      setError("Vui lòng nhập ý tưởng.");
       return;
     }
 
@@ -245,7 +245,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
       const payload = await response.json();
 
       if (!response.ok || !payload.success) {
-        throw new Error(payload.error ?? "Khong the tao prompt AI.");
+        throw new Error(payload.error ?? "Không thể tạo prompt AI.");
       }
 
       const generatedText = String(payload.text ?? "");
@@ -260,11 +260,11 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
         setWarning(
           historyError instanceof Error
             ? historyError.message
-            : "Khong the luu lich su prompt AI.",
+            : "Không thể lưu lịch sử prompt AI.",
         );
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Khong the tao prompt AI.");
+      setError(caught instanceof Error ? caught.message : "Không thể tạo prompt AI.");
     } finally {
       setLoading(false);
     }
@@ -318,7 +318,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
             <div>
               <h2 className="text-xl font-semibold">Prompt Studio</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Da nap bo kien thuc prompt de suy luan ky hon truoc khi tao output.
+                Đã nạp bộ kiến thức prompt để suy luận kỹ hơn trước khi tạo output.
               </p>
             </div>
           </div>
@@ -327,20 +327,20 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
             <div className="grid gap-3 sm:grid-cols-2">
               <ModeButton
                 active={mode === "video"}
-                title="Tao prompt video"
-                description="Chia canh, camera, voice-over, prompt tung canh."
+                title="Tạo prompt video"
+                description="Chia cảnh, camera, voice-over, prompt từng cảnh."
                 onClick={() => setMode("video")}
               />
               <ModeButton
                 active={mode === "image"}
-                title="Tao prompt anh"
-                description="Tao main prompt, negative prompt va cac bien the."
+                title="Tạo prompt ảnh"
+                description="Tạo main prompt, negative prompt và các biến thể."
                 onClick={() => setMode("image")}
               />
             </div>
 
             <label className="block">
-              <span className="text-sm font-medium">Y tuong goc</span>
+              <span className="text-sm font-medium">Ý tưởng gốc</span>
               <textarea
                 value={idea}
                 onChange={(event) => setIdea(event.target.value)}
@@ -348,15 +348,15 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                 className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
                 placeholder={
                   mode === "video"
-                    ? "Vi du: Viet kich ban tao video 30s ve co gai gioi thieu san pham Romance VIP."
-                    : "Vi du: Tao anh quang cao serum cao cap voi co gai chau A, nen studio sang, cam giac sang trong."
+                    ? "Ví dụ: Viết kịch bản tạo video 30s về cô gái giới thiệu sản phẩm Romance VIP."
+                    : "Ví dụ: Tạo ảnh quảng cáo serum cao cấp với cô gái châu Á, nền studio sáng, cảm giác sang trọng."
                 }
               />
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">
               <Select
-                label="Nen tang"
+                label="Nền tảng"
                 value={platform}
                 onChange={(value) => setPlatform(value as PlatformOption)}
               >
@@ -369,7 +369,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
 
               {mode === "video" ? (
                 <Select
-                  label="Thoi luong"
+                  label="Thời lượng"
                   value={duration}
                   onChange={(value) => setDuration(value as DurationOption)}
                 >
@@ -381,7 +381,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                 </Select>
               ) : (
                 <label className="block">
-                  <span className="text-sm font-medium">Ngon ngu mo ta</span>
+                  <span className="text-sm font-medium">Ngôn ngữ mô tả</span>
                   <input
                     value={language}
                     onChange={(event) => setLanguage(event.target.value)}
@@ -392,34 +392,34 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
             </div>
 
             <label className="block">
-              <span className="text-sm font-medium">Phong cach mong muon</span>
+              <span className="text-sm font-medium">Phong cách mong muốn</span>
               <input
                 value={style}
                 onChange={(event) => setStyle(event.target.value)}
                 className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-                placeholder="Vi du: cinematic luxury, social ad hien dai, studio clean, high-energy TikTok"
+                placeholder="Ví dụ: cinematic luxury, social ad hiện đại, studio clean, high-energy TikTok"
               />
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium">Ghi chu consistency</span>
+              <span className="text-sm font-medium">Ghi chú consistency</span>
               <textarea
                 value={consistency}
                 onChange={(event) => setConsistency(event.target.value)}
                 rows={4}
                 className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-                placeholder="Vi du: giu nguyen co gai chau A 25 tuoi, vay do, chai san pham mau vang champagne, nen studio trang kem."
+                placeholder="Ví dụ: giữ nguyên cô gái châu Á 25 tuổi, váy đỏ, chai sản phẩm màu vàng champagne, nền studio trắng kem."
               />
             </label>
 
             {mode === "video" ? (
               <label className="block">
-                <span className="text-sm font-medium">Ngon ngu noi dung</span>
+                <span className="text-sm font-medium">Ngôn ngữ nội dung</span>
                 <input
                   value={language}
                   onChange={(event) => setLanguage(event.target.value)}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-                  placeholder="Vi du: Vietnamese"
+                placeholder="Ví dụ: Vietnamese"
                 />
               </label>
             ) : null}
@@ -431,7 +431,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
             >
               {loading ? <Sparkles className="h-4 w-4 animate-pulse" /> : null}
-              {loading ? "Dang tao prompt AI..." : "Tao Prompt AI"}
+              {loading ? "Đang tạo prompt AI..." : "Tạo Prompt AI"}
             </button>
 
             {error ? (
@@ -451,9 +451,9 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
         <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold">Ket qua prompt</h2>
+              <h2 className="text-xl font-semibold">Kết quả prompt</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Output dang Markdown de ban copy sang buoc tao anh hoac tao video.
+                Output dạng Markdown để bạn copy sang bước tạo ảnh hoặc tạo video.
               </p>
             </div>
             <button
@@ -472,7 +472,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              {copiedKey === "result" ? "Da copy" : "Sao chep"}
+              {copiedKey === "result" ? "Đã copy" : "Sao chép"}
             </button>
           </div>
 
@@ -488,8 +488,8 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
             </pre>
           ) : (
             <div className="mt-5 rounded-3xl border border-dashed border-[var(--border)] p-8 text-sm leading-7 text-[var(--muted-foreground)]">
-              Chua co ket qua. Nhap y tuong don gian, chon che do roi bam{" "}
-              <span className="font-medium text-[var(--foreground)]">Tao Prompt AI</span>.
+              Chưa có kết quả. Nhập ý tưởng đơn giản, chọn chế độ rồi bấm{" "}
+              <span className="font-medium text-[var(--foreground)]">Tạo Prompt AI</span>.
             </div>
           )}
         </section>
@@ -499,23 +499,23 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
         <div className="flex items-center gap-3">
           <History className="h-5 w-5" />
           <div>
-            <h2 className="text-xl font-semibold">Lich su prompt AI</h2>
+            <h2 className="text-xl font-semibold">Lịch sử prompt AI</h2>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Xem lai cac prompt da tao va nap lai vao studio khi can.
+              Xem lại các prompt đã tạo và nạp lại vào studio khi cần.
             </p>
           </div>
         </div>
 
         {!historyAvailable ? (
           <div className="mt-5 rounded-3xl border border-amber-500/30 bg-amber-500/10 p-8 text-sm leading-7 text-amber-700">
-            Lich su prompt AI chua hoat dong vi database cua ban chua co bang{" "}
+            Lịch sử prompt AI chưa hoạt động vì database của bạn chưa có bảng{" "}
             <code className="rounded bg-white/60 px-1 py-0.5 text-xs">quick_generations</code>.
-            Can chay migration `0019_quick_ai_studio.sql` va `0021_prompt_history_support.sql`
+            Cần chạy migration `0019_quick_ai_studio.sql` và `0021_prompt_history_support.sql`
             trong Supabase SQL Editor.
           </div>
         ) : history.length === 0 ? (
           <div className="mt-5 rounded-3xl border border-dashed border-[var(--border)] p-8 text-sm text-[var(--muted-foreground)]">
-            Chua co lich su prompt AI.
+            Chưa có lịch sử prompt AI.
           </div>
         ) : (
           <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -542,14 +542,14 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                       onClick={() => loadHistoryItem(item)}
                       className="rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                     >
-                      Mo lai
+                      Mở lại
                     </button>
                   </div>
 
                   <div className="mt-4 space-y-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                        Y tuong
+                        Ý tưởng
                       </p>
                       <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--foreground)]">
                         {item.prompt}
@@ -580,7 +580,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                           : "border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
                       ].join(" ")}
                     >
-                      {copiedKey === `idea:${item.id}` ? "Da copy" : "Copy y tuong"}
+                      {copiedKey === `idea:${item.id}` ? "Đã copy" : "Copy ý tưởng"}
                     </button>
                     <button
                       type="button"
@@ -595,7 +595,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                           : "border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
                       ].join(" ")}
                     >
-                      {copiedKey === `output:${item.id}` ? "Da copy" : "Copy output"}
+                      {copiedKey === `output:${item.id}` ? "Đã copy" : "Copy output"}
                     </button>
                   </div>
                 </article>

@@ -152,8 +152,8 @@ async function requestNineRouter(
 
         throw new Error(
           isHtmlResponse
-            ? `9router endpoint ${endpointUrl} tráº£ vá» HTML thay vÃ¬ JSON. HÃ£y kiá»ƒm tra NINE_ROUTER_BASE_URL, route ${endpoint}, hoáº·c provider video trÃªn 9Router. Content-Type: ${contentType}. Preview: ${preview}`
-            : `9router endpoint ${endpointUrl} khÃ´ng tráº£ vá» JSON há»£p lá»‡. Content-Type: ${contentType}. Preview: ${preview}`,
+            ? `9router endpoint ${endpointUrl} trả về HTML thay vì JSON. Hãy kiểm tra NINE_ROUTER_BASE_URL, route ${endpoint}, hoặc provider video trên 9Router. Content-Type: ${contentType}. Preview: ${preview}`
+            : `9router endpoint ${endpointUrl} không trả về JSON hợp lệ. Content-Type: ${contentType}. Preview: ${preview}`,
         );
       }
     }

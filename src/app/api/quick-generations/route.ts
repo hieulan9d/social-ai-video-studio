@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUserProfile();
 
   if (!user) {
-    return NextResponse.json({ ok: false, error: "Ban can dang nhap." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Bạn cần đăng nhập." }, { status: 401 });
   }
 
   const type = request.nextUrl.searchParams.get("type");
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUserProfile();
 
     if (!user) {
-      return NextResponse.json({ ok: false, error: "Ban can dang nhap." }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Bạn cần đăng nhập." }, { status: 401 });
     }
 
     const payload = (await request.json()) as {
@@ -46,15 +46,15 @@ export async function POST(request: NextRequest) {
       payload.type !== "video" &&
       payload.type !== "prompt"
     ) {
-      throw new Error("Loai lich su quick khong hop le.");
+      throw new Error("Loại lịch sử quick không hợp lệ.");
     }
 
     if (typeof payload.prompt !== "string" || payload.prompt.trim().length < 3) {
-      throw new Error("Prompt khong hop le.");
+      throw new Error("Prompt không hợp lệ.");
     }
 
     if (typeof payload.model !== "string" || payload.model.trim().length === 0) {
-      throw new Error("Model khong hop le.");
+      throw new Error("Model không hợp lệ.");
     }
 
     const generation = await createQuickGeneration({
@@ -87,13 +87,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       generation,
-      warning: generation ? null : "Bang quick_generations chua ton tai.",
+      warning: generation ? null : "Bảng quick_generations chưa tồn tại.",
     });
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Khong the luu lich su quick.",
+        error: error instanceof Error ? error.message : "Không thể lưu lịch sử quick.",
       },
       { status: 400 },
     );

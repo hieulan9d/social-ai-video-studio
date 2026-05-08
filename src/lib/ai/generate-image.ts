@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { saveGeneratedProjectAsset } from "@/lib/ai/generated-assets";
 import { generateImageWithNineRouter } from "@/lib/ai/nine-router-media-provider";
+import { getRoutedModelCandidates } from "@/lib/ai/smart-routing";
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { deductCredits, refundCredits } from "@/lib/wallet/server";
 
@@ -74,30 +75,62 @@ export async function generateImage({
   const normalizedPrompt = prompt.trim();
 
   if (normalizedPrompt.length < 3) {
-    throw new Error("Prompt phai co it nhat 3 ky tu.");
+    throw new Error("Prompt phải có ít nhất 3 ký tự.");
   }
 
   const normalizedQuantity = Math.min(4, Math.max(1, Math.trunc(quantity || 1)));
   const creditCost = (await getFeatureCreditCost("image_generation")) * normalizedQuantity;
   const referenceId = `${projectId ?? "quick"}:image:${Date.now()}`;
+  const { models, settings } = await getRoutedModelCandidates({
+    task: "image",
+    requestedModel: model,
+  });
+  const candidateModels = settings.autoFallbackOnError ? models : models.slice(0, 1);
+  const primaryModel = candidateModels[0] ?? model;
 
   await deductCredits({
     userId,
     amount: creditCost,
-    reason: projectId ? "Tao anh trong du an" : "Tao anh nhanh",
+    reason: projectId ? "Tạo ảnh trong dự án" : "Tạo ảnh nhanh",
     referenceType: "image_generation",
     referenceId,
-    metadata: { project_id: projectId ?? null, model, quantity: normalizedQuantity },
+    metadata: {
+      project_id: projectId ?? null,
+      requested_model: model,
+      routed_model: primaryModel,
+      quantity: normalizedQuantity,
+    },
   });
 
   try {
-    const result = await generateImageOutputs({
-      prompt: normalizedPrompt,
-      model,
-      aspectRatio,
-      quantity: normalizedQuantity,
-      referenceImage,
-    });
+    let result:
+      | {
+          outputUrls: string[];
+          rawResponses: Record<string, unknown>[];
+        }
+      | null = null;
+    let resolvedModel = primaryModel;
+    let lastError: unknown = null;
+
+    for (const candidateModel of candidateModels) {
+      try {
+        result = await generateImageOutputs({
+          prompt: normalizedPrompt,
+          model: candidateModel,
+          aspectRatio,
+          quantity: normalizedQuantity,
+          referenceImage,
+        });
+        resolvedModel = candidateModel;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!result) {
+      throw lastError;
+    }
 
     if (projectId) {
       const assets = await Promise.all(
@@ -107,7 +140,7 @@ export async function generateImage({
             projectId,
             type: "image",
             prompt: normalizedPrompt,
-            model,
+            model: resolvedModel,
             outputUrl,
             metadata: {
               aspect_ratio: aspectRatio,
@@ -128,7 +161,7 @@ export async function generateImage({
           user_id: userId,
           type: "image",
           prompt: normalizedPrompt,
-          model,
+          model: resolvedModel,
           output_url: outputUrl,
           status: "completed",
           aspect_ratio: aspectRatio,
@@ -147,11 +180,11 @@ export async function generateImage({
             id: `ephemeral-image-${Date.now()}-${index}`,
             output_url: outputUrl,
             prompt: normalizedPrompt,
-            model,
+            model: resolvedModel,
           })),
           outputUrls: result.outputUrls,
           warning:
-            "Bang quick_generations chua ton tai. Output da duoc tao nhung chua luu vao lich su nhanh.",
+            "Bảng quick_generations chưa tồn tại. Output đã được tạo nhưng chưa lưu vào lịch sử nhanh.",
         };
       }
 
@@ -166,13 +199,13 @@ export async function generateImage({
         user_id: userId,
         type: "image",
         prompt: normalizedPrompt,
-        model,
+        model: primaryModel,
         output_url: null,
         status: "failed",
         aspect_ratio: aspectRatio,
         quantity: normalizedQuantity,
         reference_file_name: referenceImage?.name ?? null,
-        error_message: error instanceof Error ? error.message : "Tao anh that bai.",
+        error_message: error instanceof Error ? error.message : "Tạo ảnh thất bại.",
       });
 
       if (insertError && !isMissingQuickGenerationsTableError(insertError)) {
@@ -183,10 +216,10 @@ export async function generateImage({
     await refundCredits({
       userId,
       amount: creditCost,
-      reason: "Hoan tin dung do tao anh that bai",
+      reason: "Hoàn tín dụng do tạo ảnh thất bại",
       referenceType: "image_generation_refund",
       referenceId,
-      metadata: { project_id: projectId ?? null, model },
+      metadata: { project_id: projectId ?? null, model: primaryModel },
     });
 
     throw error;

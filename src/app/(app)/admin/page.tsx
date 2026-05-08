@@ -554,7 +554,7 @@ function PackageForm({
           />
         </FieldLabel>
         <FieldLabel label="Tiền tệ">
-          <input name="currency" defaultValue={pkg?.currency ?? "USD"} className={inputClass} />
+          <input name="currency" defaultValue={pkg?.currency ?? "VND"} className={inputClass} />
         </FieldLabel>
         <label className="flex items-center gap-2 text-sm">
           <input

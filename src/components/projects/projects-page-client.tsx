@@ -30,13 +30,13 @@ export function ProjectsPageClient() {
         const payload = await response.json();
 
         if (!response.ok || !payload.ok) {
-          throw new Error(payload.error ?? "Khong the tai du an.");
+          throw new Error(payload.error ?? "Không thể tải dự án.");
         }
 
         setProjects(payload.projects);
       })
       .catch((error) => {
-        setError("projects", error instanceof Error ? error.message : "Khong the tai du an.");
+        setError("projects", error instanceof Error ? error.message : "Không thể tải dự án.");
       });
   }, [projectsState.loaded, projectsState.loading, setError, setProjects, startLoading]);
 
@@ -57,22 +57,22 @@ export function ProjectsPageClient() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Project studio"
-        title="Du an"
-        description="Tap trung brief, script, prompt, image, render job va export trong tung workspace rieng."
+        title="Dự án"
+        description="Tập trung brief, script, prompt, image, render job và export trong từng workspace riêng."
         action={
           <Link
             href="/projects/new"
             className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)]"
           >
             <Plus className="h-4 w-4" />
-            Tao moi
+            Tạo mới
           </Link>
         }
       />
 
       {search ? (
         <div className="rounded-[12px] border bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
-          Ket qua tim kiem cho{" "}
+          Kết quả tìm kiếm cho{" "}
           <span className="font-medium text-[var(--heading)]">{search}</span>
         </div>
       ) : null}
@@ -112,7 +112,7 @@ export function ProjectsPageClient() {
                     {project.title}
                   </Link>
                   <p className="line-clamp-2 text-sm text-[var(--muted-foreground)]">
-                    {project.brief || "Chua co brief cho du an nay."}
+                    {project.brief || "Chưa có brief cho dự án này."}
                   </p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--highlight)]">
@@ -121,15 +121,15 @@ export function ProjectsPageClient() {
               </div>
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <MetricCard label="Loai" value={project.videoType.replaceAll("_", " ")} />
-                <MetricCard label="Thoi luong" value={`${project.duration}s`} />
-                <MetricCard label="Ngon ngu" value={project.language} />
+                <MetricCard label="Loại" value={project.videoType.replaceAll("_", " ")} />
+                <MetricCard label="Thời lượng" value={`${project.duration}s`} />
+                <MetricCard label="Ngôn ngữ" value={project.language} />
               </div>
 
               <div className="mt-5 flex items-center justify-between gap-3 rounded-[12px] border bg-[var(--surface-muted)] px-4 py-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                    Cap nhat
+                    Cập nhật
                   </p>
                   <p className="mt-1 text-sm text-[var(--foreground)]">
                     {new Date(project.updatedAt).toLocaleString("vi-VN")}
@@ -143,7 +143,7 @@ export function ProjectsPageClient() {
                   href={`/projects/${project.id}`}
                   className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)]"
                 >
-                  Mo workspace
+                  Mở workspace
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
                 <ProjectDeleteButton projectId={project.id} />
@@ -155,18 +155,18 @@ export function ProjectsPageClient() {
         <SurfaceCard className="rounded-[var(--radius-shell)] p-8">
           <div className="max-w-2xl space-y-3">
             <h2 className="text-2xl font-medium text-[var(--heading)]">
-              {search ? "Khong tim thay du an phu hop" : "Chua co du an nao"}
+              {search ? "Không tìm thấy dự án phù hợp" : "Chưa có dự án nào"}
             </h2>
             <p className="text-sm leading-7 text-[var(--muted-foreground)]">
               {search
-                ? "Thu tu khoa khac hoac quay lai danh sach day du de tiep tuc lam viec."
-                : "Tao du an moi de gom brief, script, prompt, image, video va lich su render vao cung mot workspace."}
+                ? "Thử từ khóa khác hoặc quay lại danh sách đầy đủ để tiếp tục làm việc."
+                : "Tạo dự án mới để gom brief, script, prompt, image, video và lịch sử render vào cùng một workspace."}
             </p>
             <Link
               href={search ? "/projects" : "/projects/new"}
               className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)]"
             >
-              {search ? "Xem toan bo du an" : "Tao du an dau tien"}
+              {search ? "Xem toàn bộ dự án" : "Tạo dự án đầu tiên"}
               <ArrowUpRight className="h-4 w-4" />
             </Link>
           </div>

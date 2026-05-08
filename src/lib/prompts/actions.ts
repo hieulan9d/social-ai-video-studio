@@ -58,21 +58,21 @@ export async function generateAllPromptsAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Vui long chon du an.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   if (!detail.script) {
-    throw new Error("Hay tao kich ban truoc khi tao prompt.");
+    throw new Error("Hãy tạo kịch bản trước khi tạo prompt.");
   }
 
   if (detail.scenes.length === 0) {
-    throw new Error("Hay tao canh truoc khi tao prompt.");
+    throw new Error("Hãy tạo cảnh trước khi tạo prompt.");
   }
 
   const consistencyInstruction = buildConsistencyInstruction(detail);
@@ -92,7 +92,7 @@ export async function generateAllPromptsAction(formData: FormData) {
     await deductCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Tao prompt AI",
+    reason: "Tạo prompt AI",
       referenceType: "prompt_generation",
       referenceId,
       metadata: {
@@ -139,7 +139,7 @@ export async function generateAllPromptsAction(formData: FormData) {
       await refundCredits({
         userId: user.id,
         amount: creditCost,
-        reason: "Hoan tin dung do tao prompt AI that bai",
+    reason: "Hoàn tín dụng do tạo prompt AI thất bại",
         referenceType: "prompt_generation_refund",
         referenceId,
         metadata: {
@@ -158,19 +158,19 @@ export async function regeneratePromptAction(formData: FormData) {
   const sceneId = readString(formData, "sceneId");
 
   if (!projectId || !sceneId) {
-    throw new Error("Vui long cung cap du an va canh.");
+    throw new Error("Vui lòng cung cấp dự án và cảnh.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail || !detail.script) {
-    throw new Error("Khong tim thay du an hoac kich ban.");
+    throw new Error("Không tìm thấy dự án hoặc kịch bản.");
   }
 
   const scene = detail.scenes.find((item) => item.id === sceneId);
 
   if (!scene) {
-    throw new Error("Khong tim thay canh.");
+    throw new Error("Không tìm thấy cảnh.");
   }
 
   const creditCost = await getFeatureCreditCost("prompt_generation");
@@ -180,7 +180,7 @@ export async function regeneratePromptAction(formData: FormData) {
     await deductCredits({
       userId: user.id,
       amount: creditCost,
-      reason: "Tao lai prompt AI",
+    reason: "Tạo lại prompt AI",
       referenceType: "prompt_generation",
       referenceId,
       metadata: {
@@ -230,7 +230,7 @@ export async function regeneratePromptAction(formData: FormData) {
       await refundCredits({
         userId: user.id,
         amount: creditCost,
-        reason: "Hoan tin dung do tao lai prompt AI that bai",
+    reason: "Hoàn tín dụng do tạo lại prompt AI thất bại",
         referenceType: "prompt_generation_refund",
         referenceId,
         metadata: {
@@ -250,13 +250,13 @@ export async function savePromptsAction(formData: FormData) {
   const rawPrompts = readString(formData, "prompts");
 
   if (!projectId || !rawPrompts) {
-    throw new Error("Vui long cung cap du an va prompt.");
+    throw new Error("Vui lòng cung cấp dự án và prompt.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const parsed = JSON.parse(rawPrompts) as Array<{

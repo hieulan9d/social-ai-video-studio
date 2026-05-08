@@ -63,17 +63,17 @@ export async function generateScenesAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Vui long chon du an.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   if (!detail.script) {
-    throw new Error("Hay tao kich ban truoc khi tao canh.");
+    throw new Error("Hãy tạo kịch bản trước khi tạo cảnh.");
   }
 
   const referenceId = `${projectId}:scene:${Date.now()}`;
@@ -163,13 +163,13 @@ export async function saveScenesAction(formData: FormData) {
   const rawScenes = readString(formData, "scenes");
 
   if (!projectId || !rawScenes) {
-    throw new Error("Vui long cung cap du an va danh sach canh.");
+    throw new Error("Vui lòng cung cấp dự án và danh sách cảnh.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const parsed = JSON.parse(rawScenes) as EditableScene[];

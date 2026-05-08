@@ -142,7 +142,7 @@ export async function markFailedExportReviewedAction(formData: FormData) {
 export async function upsertCreditPackageAction(formData: FormData) {
   const slug = readString(formData, "slug");
   const name = readString(formData, "name");
-  const currency = readString(formData, "currency") || "USD";
+  const currency = readString(formData, "currency") || "VND";
 
   if (!slug || !name) {
     throw new Error("Package slug and name are required.");

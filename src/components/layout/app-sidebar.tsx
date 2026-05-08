@@ -18,7 +18,7 @@ export function AppSidebar({
   const pathname = usePathname();
   const user = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const userLabel = user.fullName || user.workspaceName || "Nguoi dung";
+  const userLabel = user.fullName || user.workspaceName || "Người dùng";
   const initials = userLabel
     .split(" ")
     .filter(Boolean)
@@ -103,7 +103,7 @@ export function AppSidebar({
                   {userLabel}
                 </p>
                 <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                  Goi workspace
+                  Gói workspace
                 </p>
               </div>
               <div className="relative">

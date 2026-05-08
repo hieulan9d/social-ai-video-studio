@@ -1,5 +1,6 @@
-import { startCheckout } from "@/lib/payments/actions";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
+import { startCheckout } from "@/lib/payments/actions";
+import { formatMoneyVnd, getDisplayCurrencyLabel } from "@/lib/payments/format";
 import type { CreditPackage } from "@/lib/wallet/types";
 
 export function CreditPackageCard({
@@ -17,7 +18,7 @@ export function CreditPackageCard({
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.description}</p>
         </div>
         <div className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
-          {item.currency}
+          {getDisplayCurrencyLabel(item.currency)}
         </div>
       </div>
 
@@ -29,7 +30,7 @@ export function CreditPackageCard({
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Giá</p>
           <p className="mt-2 text-3xl font-medium text-[var(--heading)]">
-            {item.currency} {item.priceAmount.toFixed(2)}
+            {formatMoneyVnd(item.priceAmount, item.currency)}
           </p>
         </div>
       </div>

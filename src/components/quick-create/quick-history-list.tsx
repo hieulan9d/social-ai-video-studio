@@ -32,17 +32,17 @@ export function QuickHistoryList({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Khong the xoa lich su.");
+      setError(payload.error ?? "Không thể xóa lịch sử.");
       return;
     }
 
     setGenerations((current) => current.filter((item) => item.id !== id));
-    setMessage("Da xoa lich su.");
+    setMessage("Đã xóa lịch sử.");
   }
 
   async function saveToProject(id: string) {
     if (!projectId) {
-      setError("Vui long chon du an.");
+      setError("Vui lòng chọn dự án.");
       return;
     }
 
@@ -54,11 +54,11 @@ export function QuickHistoryList({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Khong the luu vao du an.");
+      setError(payload.error ?? "Không thể lưu vào dự án.");
       return;
     }
 
-    setMessage("Da luu output vao du an.");
+    setMessage("Đã lưu output vào dự án.");
   }
 
   return (
@@ -66,9 +66,9 @@ export function QuickHistoryList({
       <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Lich su tao nhanh</h2>
+            <h2 className="text-xl font-semibold">Lịch sử tạo nhanh</h2>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              Xem lai prompt, anh va video da tao nhanh.
+              Xem lại prompt, ảnh và video đã tạo nhanh.
             </p>
           </div>
           {projects.length > 0 ? (
@@ -91,7 +91,7 @@ export function QuickHistoryList({
 
       {generations.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted-foreground)]">
-          Chua co lich su tao nhanh.
+          Chưa có lịch sử tạo nhanh.
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -152,7 +152,7 @@ export function QuickHistoryList({
                 {item.output_url ? (
                   <a href={item.output_url} download className={actionClass}>
                     <Download className="h-4 w-4" />
-                    Tai lai
+                    Tải lại
                   </a>
                 ) : null}
 
@@ -168,13 +168,13 @@ export function QuickHistoryList({
                 ) : (
                   <button type="button" onClick={() => saveToProject(item.id)} className={actionClass}>
                     <Save className="h-4 w-4" />
-                    Luu vao du an
+                    Lưu vào dự án
                   </button>
                 )}
 
                 <button type="button" onClick={() => deleteItem(item.id)} className={actionClass}>
                   <Trash2 className="h-4 w-4" />
-                  Xoa
+                  Xóa
                 </button>
               </div>
             </article>

@@ -1,15 +1,16 @@
 import {
   Bot,
   Cable,
-  CheckCircle2,
-  Coins,
   ImageIcon,
   KeyRound,
   RefreshCcw,
   Video,
 } from "lucide-react";
+import { SmartRoutingSettingsCard } from "@/components/settings/smart-routing-settings";
 import { PageHeader } from "@/components/ui/page-header";
 import { SurfaceCard } from "@/components/ui/surface-card";
+import { getSmartRoutingSettings } from "@/lib/ai/smart-routing";
+import { requireUserProfile } from "@/lib/auth/server";
 
 const providerCards = [
   {
@@ -20,7 +21,10 @@ const providerCards = [
   },
   {
     title: "Google",
-    status: process.env.GOOGLE_VEO_API_KEY || process.env.GEMINI_API_KEY ? "Đã kết nối" : "Chưa cấu hình",
+    status:
+      process.env.GOOGLE_VEO_API_KEY || process.env.GEMINI_API_KEY
+        ? "Đã kết nối"
+        : "Chưa cấu hình",
     models: "Gemini Image · Veo 3 · Veo Fast",
     checkedAt: "Theo file .env.local",
   },
@@ -28,21 +32,75 @@ const providerCards = [
     title: "9Router",
     status: process.env.NINE_ROUTER_API_KEY ? "Đã kết nối" : "Chưa cấu hình",
     models: "OpenAI / Google proxy routing",
-    checkedAt: process.env.NINE_ROUTER_BASE_URL || process.env.AI_BASE_URL || "http://localhost:20128/v1",
+    checkedAt:
+      process.env.NINE_ROUTER_BASE_URL || process.env.AI_BASE_URL || "http://localhost:20128/v1",
   },
 ];
 
 const featureMappings = [
-  ["Tạo ảnh", "9Router", process.env.AI_IMAGE_MODEL || "gemini/gemini-3.1-flash-image-preview", "Hoạt động", "Mặc định", "2 credits"],
-  ["Tạo video", "Google", process.env.GOOGLE_VEO_MODEL || "veo-3.1-fast-generate-preview", "Hoạt động", "Mặc định", "5 credits"],
-  ["Tạo prompt", "9Router", process.env.AI_PROMPT_MODEL || "cx/gpt-5.2", "Hoạt động", "Mặc định", "0 credits"],
-  ["Viết kịch bản", "9Router", process.env.AI_SCRIPT_MODEL || "gemini/gemini-2.5-pro", "Hoạt động", "Mặc định", "0 credits"],
-  ["Tối ưu prompt", "9Router", process.env.AI_REASONING_MODEL || "gemini/gemini-2.5-pro", "Hoạt động", "Mặc định", "0 credits"],
-  ["Image to Video", "Google", process.env.GOOGLE_VEO_FAST_MODEL || "veo-3.1-fast-generate-preview", "Hoạt động", "Fallback", "5 credits"],
-  ["Start/End Image to Video", "Google", process.env.GOOGLE_VEO_MODEL || "veo-3.1-fast-generate-preview", "Hoạt động", "Mặc định", "5 credits"],
+  [
+    "Tạo ảnh",
+    "9Router",
+    process.env.AI_IMAGE_MODEL || "gemini/gemini-3.1-flash-image-preview",
+    "Hoạt động",
+    "Mặc định",
+    "2 credits",
+  ],
+  [
+    "Tạo video",
+    "Google",
+    process.env.GOOGLE_VEO_MODEL || "veo-3.1-fast-generate-preview",
+    "Hoạt động",
+    "Mặc định",
+    "5 credits",
+  ],
+  [
+    "Tạo prompt",
+    "9Router",
+    process.env.AI_PROMPT_MODEL || "cx/gpt-5.2",
+    "Hoạt động",
+    "Mặc định",
+    "0 credits",
+  ],
+  [
+    "Viết kịch bản",
+    "9Router",
+    process.env.AI_SCRIPT_MODEL || "gemini/gemini-2.5-pro",
+    "Hoạt động",
+    "Mặc định",
+    "0 credits",
+  ],
+  [
+    "Tối ưu prompt",
+    "9Router",
+    process.env.AI_REASONING_MODEL || "gemini/gemini-2.5-pro",
+    "Hoạt động",
+    "Mặc định",
+    "0 credits",
+  ],
+  [
+    "Image to Video",
+    "Google",
+    process.env.GOOGLE_VEO_FAST_MODEL || "veo-3.1-fast-generate-preview",
+    "Hoạt động",
+    "Fallback",
+    "5 credits",
+  ],
+  [
+    "Start/End Image to Video",
+    "Google",
+    process.env.GOOGLE_VEO_MODEL || "veo-3.1-fast-generate-preview",
+    "Hoạt động",
+    "Mặc định",
+    "5 credits",
+  ],
 ];
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const profile = await requireUserProfile();
+  const smartRoutingSettings = await getSmartRoutingSettings();
+  const canEdit = profile.role === "admin";
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -84,7 +142,15 @@ export default function SettingsPage() {
           <table className="min-w-full text-left text-sm">
             <thead className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
               <tr>
-                {["Feature", "Provider", "Model", "Status", "Default", "Estimated cost", "Action"].map((item) => (
+                {[
+                  "Feature",
+                  "Provider",
+                  "Model",
+                  "Status",
+                  "Default",
+                  "Estimated cost",
+                  "Action",
+                ].map((item) => (
                   <th key={item} className="border-b border-[var(--border)] px-3 py-3 font-medium">
                     {item}
                   </th>
@@ -135,7 +201,10 @@ export default function SettingsPage() {
           <h2 className="text-lg font-medium text-[var(--heading)]">API key settings</h2>
           <div className="mt-5 space-y-4">
             <MaskedField label="NINE_ROUTER_API_KEY" value={mask(process.env.NINE_ROUTER_API_KEY)} />
-            <MaskedField label="GOOGLE_VEO_API_KEY" value={mask(process.env.GOOGLE_VEO_API_KEY || process.env.GEMINI_API_KEY)} />
+            <MaskedField
+              label="GOOGLE_VEO_API_KEY"
+              value={mask(process.env.GOOGLE_VEO_API_KEY || process.env.GEMINI_API_KEY)}
+            />
             <MaskedField label="OPENAI_API_KEY" value={mask(process.env.OPENAI_API_KEY)} />
 
             <div className="flex flex-wrap gap-3">
@@ -158,12 +227,8 @@ export default function SettingsPage() {
 
       <SurfaceCard>
         <h2 className="text-lg font-medium text-[var(--heading)]">Smart routing</h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <ToggleCard label="Auto chọn model rẻ nhất" icon={Coins} />
-          <ToggleCard label="Auto chọn model nhanh nhất" icon={CheckCircle2} />
-          <ToggleCard label="Auto fallback khi lỗi" icon={RefreshCcw} />
-          <ToggleCard label="Giới hạn credits / ngày" icon={Coins} />
-          <ToggleCard label="Giới hạn credits / user" icon={Coins} />
+        <div className="mt-5">
+          <SmartRoutingSettingsCard initialSettings={smartRoutingSettings} canEdit={canEdit} />
         </div>
       </SurfaceCard>
     </div>
@@ -204,28 +269,6 @@ function MaskedField({ label, value }: { label: string; value: string }) {
     <div className="rounded-[12px] border bg-[var(--surface-muted)] px-4 py-3">
       <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">{label}</p>
       <p className="mt-2 font-mono text-sm text-[var(--highlight)]">{value}</p>
-    </div>
-  );
-}
-
-function ToggleCard({
-  label,
-  icon: Icon,
-}: {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="rounded-[12px] border bg-[var(--surface-muted)] px-4 py-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--accent-soft)] text-[var(--highlight)]">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="h-6 w-11 rounded-full border border-[var(--border-strong)] bg-[#111c35] p-1">
-          <div className="h-4 w-4 rounded-full bg-[var(--highlight)]" />
-        </div>
-      </div>
-      <p className="mt-4 text-sm text-[var(--foreground)]">{label}</p>
     </div>
   );
 }

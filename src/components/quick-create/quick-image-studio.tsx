@@ -79,7 +79,7 @@ export function QuickImageStudio({
       const payload = await response.json();
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? "Tao anh that bai.");
+        throw new Error(payload.error ?? "Tạo ảnh thất bại.");
       }
 
       const nextOutputs: OutputItem[] =
@@ -119,11 +119,11 @@ export function QuickImageStudio({
         payload.result.type === "ephemeral"
           ? payload.result.warning
           : projectId
-            ? "Da tao anh va luu vao du an."
-            : "Da tao anh nhanh.",
+            ? "Đã tạo ảnh và lưu vào dự án."
+            : "Đã tạo ảnh nhanh.",
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Tao anh that bai.");
+      setError(caught instanceof Error ? caught.message : "Tạo ảnh thất bại.");
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ export function QuickImageStudio({
 
   async function saveToProject(output: OutputItem) {
     if (!selectedProjectId) {
-      setError("Vui long chon du an de luu.");
+      setError("Vui lòng chọn dự án để lưu.");
       return;
     }
 
@@ -143,11 +143,11 @@ export function QuickImageStudio({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Khong the luu vao du an.");
+      setError(payload.error ?? "Không thể lưu vào dự án.");
       return;
     }
 
-    setMessage("Da luu output vao du an.");
+    setMessage("Đã lưu output vào dự án.");
   }
 
   return (
@@ -155,7 +155,7 @@ export function QuickImageStudio({
       <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="flex items-center gap-3">
           <ImagePlus className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Tao anh nhanh</h2>
+          <h2 className="text-xl font-semibold">Tạo ảnh nhanh</h2>
         </div>
 
         <div className="mt-6 space-y-5">
@@ -166,7 +166,7 @@ export function QuickImageStudio({
               onChange={(event) => setPrompt(event.target.value)}
               rows={6}
               className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-              placeholder="Mo ta anh ban muon tao..."
+              placeholder="Mô tả ảnh bạn muốn tạo..."
             />
           </label>
 
@@ -180,7 +180,7 @@ export function QuickImageStudio({
             </Select>
 
             <Select
-              label="Ty le khung hinh"
+              label="Tỷ lệ khung hình"
               value={aspectRatio}
               onChange={(value) => setAspectRatio(value as AspectRatio)}
             >
@@ -193,7 +193,7 @@ export function QuickImageStudio({
           </div>
 
           <label className="block">
-            <span className="text-sm font-medium">So luong anh</span>
+            <span className="text-sm font-medium">Số lượng ảnh</span>
             <input
               type="number"
               min={1}
@@ -205,7 +205,7 @@ export function QuickImageStudio({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium">Anh tham chieu tuy chon</span>
+            <span className="text-sm font-medium">Ảnh tham chiếu tùy chọn</span>
             <input
               type="file"
               accept="image/*"
@@ -217,7 +217,7 @@ export function QuickImageStudio({
           {referencePreview ? (
             <Image
               src={referencePreview}
-              alt="Anh tham chieu"
+              alt="Ảnh tham chiếu"
               width={960}
               height={540}
               unoptimized
@@ -226,7 +226,7 @@ export function QuickImageStudio({
           ) : null}
 
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
-            Uoc tinh credits:{" "}
+            Ước tính credits:{" "}
             <span className="font-medium text-[var(--foreground)]">
               {formatCreditEstimate(estimatedCreditCost * Math.max(1, quantity))}
             </span>
@@ -239,7 +239,7 @@ export function QuickImageStudio({
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-[var(--background)] disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {loading ? "Dang tao anh..." : "Generate"}
+            {loading ? "Đang tạo ảnh..." : "Generate"}
           </button>
 
           <Status message={message} error={error} />
@@ -247,10 +247,10 @@ export function QuickImageStudio({
       </section>
 
       <section className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
-        <h2 className="text-xl font-semibold">Preview anh</h2>
+        <h2 className="text-xl font-semibold">Preview ảnh</h2>
         {outputs.length === 0 ? (
           <div className="mt-6 rounded-2xl border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--muted-foreground)]">
-            Chua co anh nao. Nhap prompt va bam Generate de bat dau.
+            Chưa có ảnh nào. Nhập prompt và bấm Generate để bắt đầu.
           </div>
         ) : (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -268,12 +268,12 @@ export function QuickImageStudio({
                 <div className="mt-3 flex flex-wrap gap-2">
                   <a href={output.output_url} download className={actionClass}>
                     <Download className="h-4 w-4" />
-                    Tai xuong
+                    Tải xuống
                   </a>
                   {!projectId && output.persistable !== false ? (
                     <button type="button" onClick={() => saveToProject(output)} className={actionClass}>
                       <Save className="h-4 w-4" />
-                      Luu vao du an
+                      Lưu vào dự án
                     </button>
                   ) : null}
                   <button
@@ -282,7 +282,7 @@ export function QuickImageStudio({
                     className={actionClass}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Xoa
+                    Xóa
                   </button>
                 </div>
               </article>
@@ -292,7 +292,7 @@ export function QuickImageStudio({
 
         {!projectId && projects.length > 0 ? (
           <label className="mt-6 block">
-            <span className="text-sm font-medium">Du an de luu output</span>
+            <span className="text-sm font-medium">Dự án để lưu output</span>
             <select
               value={selectedProjectId}
               onChange={(event) => setSelectedProjectId(event.target.value)}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Coins, Sparkles } from "lucide-react";
+import { formatMoneyVnd } from "@/lib/payments/format";
 import { getPublicPricingData } from "@/lib/pricing/public";
 
 export const metadata: Metadata = {
@@ -87,7 +88,7 @@ export default async function PricingPage() {
                 <Sparkles className="h-5 w-5 text-[var(--accent)]" />
               </div>
               <p className="mt-6 text-4xl font-semibold">
-                {item.currency} {item.priceAmount.toFixed(2)}
+                {formatMoneyVnd(item.priceAmount, item.currency)}
               </p>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
                 Bao gồm {item.credits} tín dụng

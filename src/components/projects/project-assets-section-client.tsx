@@ -31,13 +31,13 @@ export function ProjectAssetsSectionClient({ projectId }: { projectId: string })
         const payload = await response.json();
 
         if (!response.ok || !payload.ok) {
-          throw new Error(payload.error ?? "Khong the tai assets.");
+          throw new Error(payload.error ?? "Không thể tải assets.");
         }
 
         setAssets(projectId, payload.assets);
       })
       .catch((error) => {
-        setError(projectId, error instanceof Error ? error.message : "Khong the tai assets.");
+        setError(projectId, error instanceof Error ? error.message : "Không thể tải assets.");
       });
   }, [assetsState.loaded, assetsState.loading, projectId, setAssets, setError, startLoading]);
 

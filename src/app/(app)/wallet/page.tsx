@@ -3,6 +3,7 @@ import { CreditPackageCard } from "@/components/wallet/credit-package-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { formatMoneyVnd } from "@/lib/payments/format";
 import { getPaymentHistory } from "@/lib/payments/server";
 import {
   getCreditPackages,
@@ -114,7 +115,7 @@ export default async function WalletPage() {
                   </div>
                   <div className="mt-4 flex items-center justify-between text-sm text-[var(--muted-foreground)]">
                     <span>
-                      {item.currency} {item.amount.toFixed(2)}
+                      {formatMoneyVnd(item.amount, item.currency)}
                     </span>
                     <span>{item.creditedAt ? "Đã cộng credits" : "Đang chờ webhook"}</span>
                   </div>

@@ -189,7 +189,7 @@ export async function getQuickGeneration({
   }
 
   if (!data) {
-    throw new Error("Khong tim thay lich su tao nhanh.");
+    throw new Error("Không tìm thấy lịch sử tạo nhanh.");
   }
 
   return data;

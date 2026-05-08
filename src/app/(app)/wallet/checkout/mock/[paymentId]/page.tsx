@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
 import { completeMockCheckout } from "@/lib/payments/actions";
+import { formatMoneyVnd } from "@/lib/payments/format";
 import { getPaymentForUser } from "@/lib/payments/server";
 
 export default async function MockCheckoutPage({
@@ -47,7 +48,7 @@ export default async function MockCheckoutPage({
               <div className="rounded-2xl border border-[var(--border)] px-4 py-4">
                 <p className="text-sm text-[var(--muted-foreground)]">Số tiền</p>
                 <p className="mt-2 text-xl font-semibold">
-                  {payment.currency} {payment.amount.toFixed(2)}
+                  {formatMoneyVnd(payment.amount, payment.currency)}
                 </p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] px-4 py-4">

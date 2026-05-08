@@ -1,6 +1,8 @@
 import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import { getSmartRoutingSettings } from "@/lib/ai/smart-routing";
 import { getAdminTestBalance, isAdminUserId } from "@/lib/auth/permissions";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type {
   CreditPackage,
   CreditPackageRecord,
@@ -75,6 +77,70 @@ function isCancelledQueryError(error: unknown) {
     "code" in error &&
     (error as { code?: string }).code === "57014"
   );
+}
+
+function getStartOfTodayIso() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return now.toISOString();
+}
+
+async function getDeductedCreditsSince({
+  userId,
+  sinceIso,
+}: {
+  userId?: string;
+  sinceIso: string;
+}) {
+  const admin = createAdminClient();
+  let query = admin
+    .from("credit_transactions")
+    .select("amount_credit")
+    .eq("transaction_type", "deduction")
+    .gte("created_at", sinceIso);
+
+  if (userId) {
+    query = query.eq("user_id", userId);
+  }
+
+  const { data, error } = await query.returns<Array<{ amount_credit: number }>>();
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).reduce((total, item) => total + Math.abs(item.amount_credit), 0);
+}
+
+async function assertSmartRoutingCreditLimits({
+  userId,
+  amount,
+}: {
+  userId: string;
+  amount: number;
+}) {
+  if (amount <= 0) {
+    return;
+  }
+
+  const settings = await getSmartRoutingSettings();
+  const sinceIso = getStartOfTodayIso();
+
+  if (settings.dailyCreditLimitEnabled && settings.dailyCreditLimit !== null) {
+    const currentDailySpend = await getDeductedCreditsSince({ sinceIso });
+
+    if (currentDailySpend + amount > settings.dailyCreditLimit) {
+      throw new Error("Đã vượt giới hạn credits toàn hệ thống trong ngày.");
+    }
+  }
+
+  if (settings.perUserCreditLimitEnabled && settings.perUserCreditLimit !== null) {
+    const currentUserSpend = await getDeductedCreditsSince({ userId, sinceIso });
+
+    if (currentUserSpend + amount > settings.perUserCreditLimit) {
+      throw new Error("User này đã vượt giới hạn credits trong ngày.");
+    }
+  }
 }
 
 export const getUserWallet = cache(async (userId: string) => {
@@ -217,7 +283,8 @@ async function mutateCredits(
       userId,
       balanceCredit: getAdminTestBalance(),
       transactionId: `admin-bypass:${functionName}:${referenceId ?? Date.now()}`,
-      transactionType: functionName === "deduct_credits" ? "admin_bypass_debit" : "admin_bypass_refund",
+      transactionType:
+        functionName === "deduct_credits" ? "admin_bypass_debit" : "admin_bypass_refund",
       amountCredit: 0,
       reason: reason ?? "Admin bypass",
       referenceType: referenceType ?? "admin_bypass",
@@ -233,6 +300,13 @@ async function mutateCredits(
 
   if (normalizedAmount <= 0) {
     throw new Error("Số tín dụng phải lớn hơn 0.");
+  }
+
+  if (functionName === "deduct_credits") {
+    await assertSmartRoutingCreditLimits({
+      userId,
+      amount: normalizedAmount,
+    });
   }
 
   const { data, error } = await supabase

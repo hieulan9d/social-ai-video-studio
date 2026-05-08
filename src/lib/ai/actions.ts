@@ -26,13 +26,13 @@ export async function generateScriptAction(formData: FormData) {
   const productType = readString(formData, "productType");
 
   if (!projectId || !idea || !productType) {
-    throw new Error("Vui long cung cap du an, y tuong va loai san pham.");
+    throw new Error("Vui lòng cung cấp dự án, ý tưởng và loại sản phẩm.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const referenceId = `${projectId}:${Date.now()}`;
@@ -147,13 +147,13 @@ export async function updateScriptAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Vui long chon du an.");
+    throw new Error("Vui lòng chọn dự án.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Khong tim thay du an.");
+    throw new Error("Không tìm thấy dự án.");
   }
 
   const title = readString(formData, "title");
@@ -217,7 +217,7 @@ export async function addManualScriptCredits(formData: FormData) {
   const amount = Number.parseInt(readString(formData, "amount"), 10);
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("So tin dung nap thu khong hop le.");
+    throw new Error("Số tín dụng nạp thử không hợp lệ.");
   }
 
   await addCredits({

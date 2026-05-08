@@ -22,11 +22,11 @@ function getErrorMessage(error: unknown) {
     try {
       return JSON.stringify(record);
     } catch {
-      return "Tao anh that bai.";
+      return "Tạo ảnh thất bại.";
     }
   }
 
-  return "Tao anh that bai.";
+  return "Tạo ảnh thất bại.";
 }
 
 function errorResponse(error: unknown, status = 400) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUserProfile();
 
     if (!user) {
-      return errorResponse(new Error("Ban can dang nhap."), 401);
+      return errorResponse(new Error("Bạn cần đăng nhập."), 401);
     }
 
     const formData = await request.formData();
@@ -56,11 +56,11 @@ export async function POST(request: NextRequest) {
     const referenceImage = formData.get("referenceImage");
 
     if (!isImageModel(model)) {
-      throw new Error("Model anh khong hop le.");
+      throw new Error("Model ảnh không hợp lệ.");
     }
 
     if (!isAspectRatio(aspectRatio)) {
-      throw new Error("Ty le anh khong hop le.");
+      throw new Error("Tỷ lệ ảnh không hợp lệ.");
     }
 
     const result = await generateImage({

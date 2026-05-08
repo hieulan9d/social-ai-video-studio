@@ -24,13 +24,13 @@ export function AnalyticsPageClient() {
         const payload = await response.json();
 
         if (!response.ok || !payload.ok) {
-          throw new Error(payload.error ?? "Khong the tai analytics.");
+          throw new Error(payload.error ?? "Không thể tải analytics.");
         }
 
         setAnalytics(payload.summary);
       })
       .catch((error) => {
-        setError("analytics", error instanceof Error ? error.message : "Khong the tai analytics.");
+        setError("analytics", error instanceof Error ? error.message : "Không thể tải analytics.");
       });
   }, [analyticsState.loaded, analyticsState.loading, setAnalytics, setError, startLoading]);
 
@@ -74,8 +74,8 @@ export function AnalyticsPageClient() {
     <div className="space-y-5">
       <PageHeader
         eyebrow="Analytics"
-        title="Phan tich su dung"
-        description="Theo doi nhip tao anh, video, prompt, credits va hoat dong gan day trong studio AI cua ban."
+        title="Phân tích sử dụng"
+        description="Theo dõi nhịp tạo ảnh, video, prompt, credits và hoạt động gần đây trong studio AI của bạn."
       />
 
       <div className="grid gap-4 xl:grid-cols-4">
@@ -97,13 +97,13 @@ export function AnalyticsPageClient() {
         <SurfaceCard className="rounded-[var(--radius-shell)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium text-[var(--heading)]">Nhip tao noi dung</h2>
+              <h2 className="text-lg font-medium text-[var(--heading)]">Nhịp tạo nội dung</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                {summary.windowLabel} · tong quan anh, video va prompt theo ngay.
+                {summary.windowLabel} · tổng quan ảnh, video và prompt theo ngày.
               </p>
             </div>
             <span className="rounded-full border border-[var(--border)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              7 ngay
+              7 ngày
             </span>
           </div>
 
@@ -115,15 +115,21 @@ export function AnalyticsPageClient() {
                   <div className="flex h-full items-end justify-center gap-1 rounded-[12px] border bg-[var(--surface-muted)] px-2 py-3">
                     <div
                       className="w-3 rounded-full bg-[#2dd4bf]"
-                      style={{ height: total > 0 ? `${Math.max(8, (item.image / maxChartValue) * 100)}%` : "8%" }}
+                      style={{
+                        height: total > 0 ? `${Math.max(8, (item.image / maxChartValue) * 100)}%` : "8%",
+                      }}
                     />
                     <div
                       className="w-3 rounded-full bg-[#60a5fa]"
-                      style={{ height: total > 0 ? `${Math.max(8, (item.video / maxChartValue) * 100)}%` : "8%" }}
+                      style={{
+                        height: total > 0 ? `${Math.max(8, (item.video / maxChartValue) * 100)}%` : "8%",
+                      }}
                     />
                     <div
                       className="w-3 rounded-full bg-[#a78bfa]"
-                      style={{ height: total > 0 ? `${Math.max(8, (item.prompt / maxChartValue) * 100)}%` : "8%" }}
+                      style={{
+                        height: total > 0 ? `${Math.max(8, (item.prompt / maxChartValue) * 100)}%` : "8%",
+                      }}
                     />
                   </div>
                   <div className="text-center">
@@ -141,9 +147,9 @@ export function AnalyticsPageClient() {
         <SurfaceCard className="rounded-[var(--radius-shell)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium text-[var(--heading)]">Tieu thu credits</h2>
+              <h2 className="text-lg font-medium text-[var(--heading)]">Tiêu thụ credits</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Chuc nang nao dang dung nhieu credits nhat trong tai khoan nay.
+                Chức năng nào đang dùng nhiều credits nhất trong tài khoản này.
               </p>
             </div>
             <Coins className="h-5 w-5 text-[var(--highlight)]" />
@@ -176,9 +182,9 @@ export function AnalyticsPageClient() {
         <SurfaceCard>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium text-[var(--heading)]">Ha tang AI dang dung</h2>
+              <h2 className="text-lg font-medium text-[var(--heading)]">Hạ tầng AI đang dùng</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Tong hop theo provider va model xuat hien trong cac job gan day.
+                Tổng hợp theo provider và model xuất hiện trong các job gần đây.
               </p>
             </div>
             <Workflow className="h-5 w-5 text-[var(--highlight)]" />
@@ -202,9 +208,9 @@ export function AnalyticsPageClient() {
         <SurfaceCard>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-medium text-[var(--heading)]">Model dung nhieu nhat</h2>
+              <h2 className="text-lg font-medium text-[var(--heading)]">Model dùng nhiều nhất</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Top model xuat hien trong quick generations gan day.
+                Top model xuất hiện trong quick generations gần đây.
               </p>
             </div>
             <Layers3 className="h-5 w-5 text-[var(--highlight)]" />
@@ -219,7 +225,7 @@ export function AnalyticsPageClient() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-[var(--heading)]">{item.label}</p>
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                    Hang {index + 1} trong 30 ngay gan day
+                    Hạng {index + 1} trong 30 ngày gần đây
                   </p>
                 </div>
                 <span className="text-sm text-[var(--foreground)]">{item.value}</span>
@@ -232,9 +238,9 @@ export function AnalyticsPageClient() {
       <SurfaceCard className="rounded-[var(--radius-shell)]">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-medium text-[var(--heading)]">Hoat dong gan day</h2>
+            <h2 className="text-lg font-medium text-[var(--heading)]">Hoạt động gần đây</h2>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              Gop nhanh job tao noi dung, render du an va bien dong credits.
+              Gộp nhanh job tạo nội dung, render dự án và biến động credits.
             </p>
           </div>
           <BarChart3 className="h-5 w-5 text-[var(--highlight)]" />
@@ -280,12 +286,12 @@ function StatIcon({ index }: { index: number }) {
 
 function formatStatus(status: string) {
   const labels: Record<string, string> = {
-    queued: "Cho hang",
-    processing: "Dang xu ly",
-    completed: "Hoan thanh",
-    failed: "Loi",
-    success: "Hoan thanh",
-    pending: "Cho hang",
+    queued: "Chờ hàng",
+    processing: "Đang xử lý",
+    completed: "Hoàn thành",
+    failed: "Lỗi",
+    success: "Hoàn thành",
+    pending: "Chờ hàng",
   };
 
   return labels[status] ?? status;
