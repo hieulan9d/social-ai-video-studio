@@ -87,6 +87,43 @@ export default async function DashboardPage() {
         ))}
       </div>
 
+      <div className="grid gap-5 lg:grid-cols-3">
+        {[
+          {
+            href: "/quick-create/prompt",
+            title: "Tạo Prompt AI",
+            description:
+              "Biến ý tưởng ngắn thành prompt chi tiết cho ảnh hoặc video, có cấu trúc rõ ràng trước khi generate.",
+          },
+          {
+            href: "/quick-create/image",
+            title: "Tạo ảnh nhanh",
+            description:
+              "Dùng prompt đã tối ưu để tạo ảnh AI ngay, xem preview và lưu về dự án khi cần.",
+          },
+          {
+            href: "/quick-create/video",
+            title: "Tạo video nhanh",
+            description:
+              "Tạo video bằng prompt hoặc hình tham chiếu, phù hợp cho flow thử ý tưởng nhanh ngoài project mode.",
+          },
+        ].map((item) => (
+          <Link key={item.href} href={item.href}>
+            <SurfaceCard>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold">{item.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
+                    {item.description}
+                  </p>
+                </div>
+                <ArrowRight className="mt-1 h-5 w-5 text-[var(--accent)]" />
+              </div>
+            </SurfaceCard>
+          </Link>
+        ))}
+      </div>
+
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <SurfaceCard>
           <div className="flex items-center justify-between">

@@ -1,6 +1,10 @@
 import "server-only";
 
 import { requireAdminProfile } from "@/lib/auth/server";
+import {
+  normalizeFeatureCreditCost,
+  normalizeFeaturePriceRecord,
+} from "@/lib/pricing/policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   AdminCreditPackageRecord,
@@ -123,7 +127,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     failedRenders: renderJobsResult.data,
     failedExports: exportJobsResult.data,
     creditPackages: packagesResult.data,
-    featurePrices: featurePricesResult.data,
+    featurePrices: featurePricesResult.data.map(normalizeFeaturePriceRecord),
     templates: templatesResult.data,
     analyticsEvents: analyticsEventsResult.data,
     metrics: {
@@ -163,7 +167,7 @@ export async function updateFeaturePrice(input: {
     .update({
       name: input.name,
       description: input.description ?? null,
-      credit_cost: Math.max(0, Math.trunc(input.creditCost)),
+      credit_cost: normalizeFeatureCreditCost(input.featureKey, input.creditCost),
       is_active: input.isActive,
     })
     .eq("feature_key", input.featureKey);

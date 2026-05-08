@@ -2,10 +2,12 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 
+export type QuickGenerationType = "image" | "video" | "prompt";
+
 export type QuickGenerationRecord = {
   id: string;
   user_id: string;
-  type: "image" | "video";
+  type: QuickGenerationType;
   prompt: string;
   model: string;
   output_url: string | null;
@@ -20,8 +22,49 @@ export type QuickGenerationRecord = {
   updated_at: string;
 };
 
+type CreateQuickGenerationInput = {
+  userId: string;
+  type: QuickGenerationType;
+  prompt: string;
+  model: string;
+  outputUrl?: string | null;
+  status?: QuickGenerationRecord["status"];
+  aspectRatio?: string | null;
+  durationSeconds?: number | null;
+  quantity?: number;
+  referenceFileName?: string | null;
+  errorMessage?: string | null;
+  metadata?: Record<string, unknown>;
+};
+
 const QUICK_GENERATION_SELECT =
   "id, user_id, type, prompt, model, output_url, status, aspect_ratio, duration_seconds, quantity, reference_file_name, error_message, metadata, created_at, updated_at";
+
+function isMissingQuickGenerationsTableError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const record = error as Record<string, unknown>;
+  const message = typeof record.message === "string" ? record.message : "";
+  const details = typeof record.details === "string" ? record.details : "";
+  return `${message} ${details}`.includes("public.quick_generations");
+}
+
+export async function isQuickGenerationHistoryAvailable() {
+  const supabase = await createClient();
+  const { error } = await supabase.from("quick_generations").select("id").limit(1);
+
+  if (error) {
+    if (isMissingQuickGenerationsTableError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+
+  return true;
+}
 
 export async function listQuickGenerations({
   userId,
@@ -29,7 +72,7 @@ export async function listQuickGenerations({
   limit = 30,
 }: {
   userId: string;
-  type?: "image" | "video";
+  type?: QuickGenerationType;
   limit?: number;
 }) {
   const supabase = await createClient();
@@ -47,6 +90,42 @@ export async function listQuickGenerations({
   const { data, error } = await query.returns<QuickGenerationRecord[]>();
 
   if (error) {
+    if (isMissingQuickGenerationsTableError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return data;
+}
+
+export async function createQuickGeneration(input: CreateQuickGenerationInput) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("quick_generations")
+    .insert({
+      user_id: input.userId,
+      type: input.type,
+      prompt: input.prompt,
+      model: input.model,
+      output_url: input.outputUrl ?? null,
+      status: input.status ?? "completed",
+      aspect_ratio: input.aspectRatio ?? null,
+      duration_seconds: input.durationSeconds ?? null,
+      quantity: Math.max(1, Math.trunc(input.quantity ?? 1)),
+      reference_file_name: input.referenceFileName ?? null,
+      error_message: input.errorMessage ?? null,
+      metadata: input.metadata ?? {},
+    })
+    .select(QUICK_GENERATION_SELECT)
+    .single<QuickGenerationRecord>();
+
+  if (error) {
+    if (isMissingQuickGenerationsTableError(error)) {
+      return null;
+    }
+
     throw error;
   }
 
@@ -92,7 +171,7 @@ export async function getQuickGeneration({
   }
 
   if (!data) {
-    throw new Error("Không tìm thấy lịch sử tạo nhanh.");
+    throw new Error("Khong tim thay lich su tao nhanh.");
   }
 
   return data;

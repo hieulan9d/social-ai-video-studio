@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Download, Save, Trash2 } from "lucide-react";
+import { Copy, Download, Save, Trash2 } from "lucide-react";
 import type { QuickGenerationRecord } from "@/lib/ai/quick-generations";
 import type { Project } from "@/lib/projects/types";
 
 const actionClass =
   "inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
+
+function readGeneratedText(metadata: Record<string, unknown>) {
+  return typeof metadata.generated_text === "string" ? metadata.generated_text : "";
+}
 
 export function QuickHistoryList({
   initialGenerations,
@@ -28,17 +32,17 @@ export function QuickHistoryList({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Không thể xóa lịch sử.");
+      setError(payload.error ?? "Khong the xoa lich su.");
       return;
     }
 
     setGenerations((current) => current.filter((item) => item.id !== id));
-    setMessage("Đã xóa lịch sử.");
+    setMessage("Da xoa lich su.");
   }
 
   async function saveToProject(id: string) {
     if (!projectId) {
-      setError("Vui lòng chọn dự án.");
+      setError("Vui long chon du an.");
       return;
     }
 
@@ -50,11 +54,11 @@ export function QuickHistoryList({
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      setError(payload.error ?? "Không thể lưu vào dự án.");
+      setError(payload.error ?? "Khong the luu vao du an.");
       return;
     }
 
-    setMessage("Đã lưu output vào dự án.");
+    setMessage("Da luu output vao du an.");
   }
 
   return (
@@ -62,9 +66,9 @@ export function QuickHistoryList({
       <div className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Lịch sử tạo nhanh</h2>
+            <h2 className="text-xl font-semibold">Lich su tao nhanh</h2>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              Xem lại ảnh/video đã tạo, tải xuống hoặc lưu vào dự án.
+              Xem lai prompt, anh va video da tao nhanh.
             </p>
           </div>
           {projects.length > 0 ? (
@@ -87,7 +91,7 @@ export function QuickHistoryList({
 
       {generations.length === 0 ? (
         <div className="rounded-[28px] border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center text-sm text-[var(--muted-foreground)]">
-          Chưa có lịch sử tạo nhanh.
+          Chua co lich su tao nhanh.
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -109,12 +113,32 @@ export function QuickHistoryList({
               ) : null}
 
               {item.type === "video" && item.output_url ? (
-                <video src={item.output_url} controls className="aspect-video w-full rounded-2xl bg-black" />
+                <video
+                  src={item.output_url}
+                  controls
+                  className="aspect-video w-full rounded-2xl bg-black"
+                />
+              ) : null}
+
+              {item.type === "prompt" ? (
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                    Prompt output
+                  </p>
+                  <pre className="mt-3 line-clamp-8 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
+                    {readGeneratedText(item.metadata)}
+                  </pre>
+                </div>
               ) : null}
 
               <div className="mt-4 space-y-2">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-                  {item.type === "image" ? "Image" : "Video"} / {item.model}
+                  {item.type === "image"
+                    ? "Image"
+                    : item.type === "video"
+                      ? "Video"
+                      : "Prompt"}{" "}
+                  / {item.model}
                 </p>
                 <p className="line-clamp-3 text-sm leading-6 text-[var(--muted-foreground)]">
                   {item.prompt}
@@ -128,16 +152,29 @@ export function QuickHistoryList({
                 {item.output_url ? (
                   <a href={item.output_url} download className={actionClass}>
                     <Download className="h-4 w-4" />
-                    Tải lại
+                    Tai lai
                   </a>
                 ) : null}
-                <button type="button" onClick={() => saveToProject(item.id)} className={actionClass}>
-                  <Save className="h-4 w-4" />
-                  Lưu vào dự án
-                </button>
+
+                {item.type === "prompt" ? (
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(readGeneratedText(item.metadata))}
+                    className={actionClass}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy output
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => saveToProject(item.id)} className={actionClass}>
+                    <Save className="h-4 w-4" />
+                    Luu vao du an
+                  </button>
+                )}
+
                 <button type="button" onClick={() => deleteItem(item.id)} className={actionClass}>
                   <Trash2 className="h-4 w-4" />
-                  Xóa
+                  Xoa
                 </button>
               </div>
             </article>

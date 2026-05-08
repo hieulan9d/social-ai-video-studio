@@ -1,10 +1,8 @@
 import "server-only";
 
+import { normalizeFeatureCreditCost, normalizeFeaturePriceRecord } from "@/lib/pricing/policy";
 import { createClient } from "@/lib/supabase/server";
-import type {
-  FeaturePriceKey,
-  FeaturePriceRecord,
-} from "@/lib/pricing/types";
+import type { FeaturePriceKey, FeaturePriceRecord } from "@/lib/pricing/types";
 
 const FEATURE_PRICE_SELECT =
   "id, feature_key, name, description, credit_cost, is_active, metadata, created_at, updated_at";
@@ -20,15 +18,13 @@ export async function getFeaturePricing() {
 
   if (error) {
     console.error("PRICING SUPABASE ERROR:", error);
-    return []; // trả mảng rỗng thay vì crash app
+    return [];
   }
 
-  return data ?? [];
+  return (data ?? []).map(normalizeFeaturePriceRecord);
 }
 
-export async function getFeatureCreditCost(
-  featureKey: FeaturePriceKey
-) {
+export async function getFeatureCreditCost(featureKey: FeaturePriceKey) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -42,22 +38,18 @@ export async function getFeatureCreditCost(
 
   if (error) {
     console.error("PRICING CREDIT ERROR:", error);
-    return 0; // tránh crash
+    return 0;
   }
 
   if (!data) {
-    console.error(
-      `Feature pricing not found: ${featureKey}`
-    );
+    console.error(`Feature pricing not found: ${featureKey}`);
     return 0;
   }
 
   if (!data.is_active) {
-    console.error(
-      `Feature pricing inactive: ${featureKey}`
-    );
+    console.error(`Feature pricing inactive: ${featureKey}`);
     return 0;
   }
 
-  return data.credit_cost ?? 0;
+  return normalizeFeatureCreditCost(featureKey, data.credit_cost ?? 0);
 }

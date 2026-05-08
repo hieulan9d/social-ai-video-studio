@@ -177,7 +177,7 @@ export async function getProjectDetail(projectId: string, userId: string) {
     supabase
       .from("scenes")
       .select(
-        "id, project_id, scene_order, duration_seconds, visual_description, camera_angle, camera_movement, subject_action, background, lighting, voiceover, on_screen_text, notes, created_at, updated_at",
+        "id, project_id, scene_order, duration_seconds, visual_description, camera_angle, camera_movement, subject_action, background, lighting, voiceover:voice_script, on_screen_text, notes, created_at, updated_at",
       )
       .eq("project_id", projectId)
       .order("scene_order", { ascending: true })
@@ -377,13 +377,13 @@ export async function replaceScenesForProject(
         subject_action: scene.subjectAction,
         background: scene.background,
         lighting: scene.lighting,
-        voiceover: scene.voiceover,
+        voice_script: scene.voiceover,
         on_screen_text: scene.onScreenText,
         notes: scene.notes,
       })),
     )
     .select(
-      "id, project_id, scene_order, duration_seconds, visual_description, camera_angle, camera_movement, subject_action, background, lighting, voiceover, on_screen_text, notes, created_at, updated_at",
+      "id, project_id, scene_order, duration_seconds, visual_description, camera_angle, camera_movement, subject_action, background, lighting, voiceover:voice_script, on_screen_text, notes, created_at, updated_at",
     )
     .order("scene_order", { ascending: true })
     .returns<SceneRecord[]>();

@@ -1,16 +1,21 @@
 import Link from "next/link";
 
 const links = [
-  { href: "/quick-create/image", label: "Tạo ảnh nhanh" },
-  { href: "/quick-create/video", label: "Tạo video nhanh" },
-  { href: "/quick-create/history", label: "History" },
-];
+  { href: "/quick-create/prompt", label: "Tạo Prompt AI", active: "prompt" },
+  { href: "/quick-create/image", label: "Tạo ảnh nhanh", active: "image" },
+  { href: "/quick-create/video", label: "Tạo video nhanh", active: "video" },
+  { href: "/quick-create/history", label: "History", active: "history" },
+] as const;
 
-export function QuickStudioNav({ active }: { active: "image" | "video" | "history" }) {
+export function QuickStudioNav({
+  active,
+}: {
+  active: "prompt" | "image" | "video" | "history";
+}) {
   return (
     <nav className="flex flex-wrap gap-2">
       {links.map((link) => {
-        const isActive = link.href.endsWith(active);
+        const isActive = link.active === active;
 
         return (
           <Link

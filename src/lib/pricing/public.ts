@@ -1,5 +1,6 @@
 import "server-only";
 
+import { normalizeFeaturePriceRecord } from "@/lib/pricing/policy";
 import { createClient } from "@/lib/supabase/server";
 import type { FeaturePriceRecord } from "@/lib/pricing/types";
 import type { CreditPackageRecord, CreditPackage } from "@/lib/wallet/types";
@@ -38,7 +39,7 @@ export async function getPublicPricingData(): Promise<PublicPricingData> {
   }
 
   return {
-    featurePrices: featurePricesResult.data,
+    featurePrices: featurePricesResult.data.map(normalizeFeaturePriceRecord),
     packages: packagesResult.data.map((record) => ({
       id: record.id,
       slug: record.slug,

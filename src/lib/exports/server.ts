@@ -485,26 +485,30 @@ export async function createVideoExport(input: {
   }
 
   const creditCost = await getFeatureCreditCost("export");
-  const wallet = await getUserWallet(input.userId);
+  if (creditCost > 0) {
+    const wallet = await getUserWallet(input.userId);
 
-  if (wallet.balanceCredit < creditCost) {
-    throw new Error(`Insufficient credits. Video export costs ${creditCost} credits.`);
+    if (wallet.balanceCredit < creditCost) {
+      throw new Error(`Insufficient credits. Video export costs ${creditCost} credits.`);
+    }
   }
 
   const referenceId = `${input.projectId}:export:${Date.now()}`;
 
-  await deductCredits({
-    userId: input.userId,
-    amount: creditCost,
-    reason: "Video export",
-    referenceType: "video_export",
-    referenceId,
-    metadata: {
-      project_id: input.projectId,
-      input_video_ids: videoIds,
-      export_ratio: input.exportRatio,
-    },
-  });
+  if (creditCost > 0) {
+    await deductCredits({
+      userId: input.userId,
+      amount: creditCost,
+      reason: "Video export",
+      referenceType: "video_export",
+      referenceId,
+      metadata: {
+        project_id: input.projectId,
+        input_video_ids: videoIds,
+        export_ratio: input.exportRatio,
+      },
+    });
+  }
 
   const supabase = await createClient();
   const { data: job, error } = await supabase
@@ -525,17 +529,19 @@ export async function createVideoExport(input: {
     .single<ExportJobRecord>();
 
   if (error) {
-    await refundCredits({
-      userId: input.userId,
-      amount: creditCost,
-      reason: "Refund for failed export job creation",
-      referenceType: "video_export_refund",
-      referenceId,
-      metadata: {
-        project_id: input.projectId,
-        input_video_ids: videoIds,
-      },
-    });
+    if (creditCost > 0) {
+      await refundCredits({
+        userId: input.userId,
+        amount: creditCost,
+        reason: "Refund for failed export job creation",
+        referenceType: "video_export_refund",
+        referenceId,
+        metadata: {
+          project_id: input.projectId,
+          input_video_ids: videoIds,
+        },
+      });
+    }
 
     throw error;
   }

@@ -9,6 +9,7 @@ import {
   Rocket,
   Settings,
   ShieldCheck,
+  Sparkles,
   Video,
 } from "lucide-react";
 
@@ -21,7 +22,9 @@ export type NavLink = {
 export const appNavigation: NavLink[] = [
   { href: "/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
   { href: "/onboarding", label: "Hướng dẫn bắt đầu", icon: Rocket },
-  { href: "/quick-create/image", label: "AI Studio nhanh", icon: Images },
+  { href: "/quick-create/prompt", label: "Tạo Prompt AI", icon: Sparkles },
+  { href: "/quick-create/image", label: "Tạo ảnh nhanh", icon: Images },
+  { href: "/quick-create/video", label: "Tạo video nhanh", icon: Video },
   { href: "/projects", label: "Dự án", icon: FolderKanban },
   { href: "/render-history", label: "Lịch sử render", icon: Video },
   { href: "/wallet", label: "Ví tín dụng", icon: CreditCard },

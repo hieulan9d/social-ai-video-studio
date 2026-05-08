@@ -26,35 +26,37 @@ export async function generateScriptAction(formData: FormData) {
   const productType = readString(formData, "productType");
 
   if (!projectId || !idea || !productType) {
-    throw new Error("Vui lòng cung cấp dự án, ý tưởng và loại sản phẩm.");
+    throw new Error("Vui long cung cap du an, y tuong va loai san pham.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Không tìm thấy dự án.");
+    throw new Error("Khong tim thay du an.");
   }
 
   const referenceId = `${projectId}:${Date.now()}`;
   const creditCost = await getFeatureCreditCost("text_generation");
 
-  await deductCredits({
-    userId: user.id,
-    amount: creditCost,
-    reason: "Tạo kịch bản AI",
-    referenceType: "script_generation",
-    referenceId,
-    metadata: {
-      project_id: projectId,
-    },
-  });
+  if (creditCost > 0) {
+    await deductCredits({
+      userId: user.id,
+      amount: creditCost,
+      reason: "Tao kich ban AI",
+      referenceType: "script_generation",
+      referenceId,
+      metadata: {
+        project_id: projectId,
+      },
+    });
+  }
 
   try {
     const providerMetadata = getAITextProviderMetadata();
     const result = await generateFullScript({
       platform: project.platform,
       duration: project.duration,
-      style: project.style || "Quảng cáo social hiện đại",
+      style: project.style || "Quang cao social hien dai",
       language: project.language,
       productType,
       idea,
@@ -83,7 +85,7 @@ export async function generateScriptAction(formData: FormData) {
       generatedOutput: result,
       provider: providerMetadata.provider,
       model: providerMetadata.model,
-      version: (project.status === "script_ready" ? 2 : 1),
+      version: project.status === "script_ready" ? 2 : 1,
     });
 
     const savedScenes = await replaceScenesForProject(
@@ -123,16 +125,18 @@ export async function generateScriptAction(formData: FormData) {
     revalidatePath(`/projects/${projectId}`);
     revalidatePath("/projects");
   } catch (error) {
-    await refundCredits({
-      userId: user.id,
-      amount: creditCost,
-      reason: "Hoàn tín dụng do tạo kịch bản AI thất bại",
-      referenceType: "script_generation_refund",
-      referenceId,
-      metadata: {
-        project_id: projectId,
-      },
-    });
+    if (creditCost > 0) {
+      await refundCredits({
+        userId: user.id,
+        amount: creditCost,
+        reason: "Hoan tin dung do tao kich ban AI that bai",
+        referenceType: "script_generation_refund",
+        referenceId,
+        metadata: {
+          project_id: projectId,
+        },
+      });
+    }
 
     throw error;
   }
@@ -143,13 +147,13 @@ export async function updateScriptAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Vui lòng chọn dự án.");
+    throw new Error("Vui long chon du an.");
   }
 
   const project = await getProjectById(projectId, user.id);
 
   if (!project) {
-    throw new Error("Không tìm thấy dự án.");
+    throw new Error("Khong tim thay du an.");
   }
 
   const title = readString(formData, "title");
@@ -213,13 +217,13 @@ export async function addManualScriptCredits(formData: FormData) {
   const amount = Number.parseInt(readString(formData, "amount"), 10);
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error("Số tín dụng nạp thử không hợp lệ.");
+    throw new Error("So tin dung nap thu khong hop le.");
   }
 
   await addCredits({
     userId: user.id,
     amount,
-    reason: "Nạp thử tín dụng thủ công cho kịch bản",
+    reason: "Nap thu tin dung thu cong cho kich ban",
     referenceType: "manual_topup",
     referenceId: `${user.id}:${Date.now()}`,
   });

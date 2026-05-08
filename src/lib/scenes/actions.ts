@@ -63,32 +63,34 @@ export async function generateScenesAction(formData: FormData) {
   const projectId = readString(formData, "projectId");
 
   if (!projectId) {
-    throw new Error("Vui lòng chọn dự án.");
+    throw new Error("Vui long chon du an.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Không tìm thấy dự án.");
+    throw new Error("Khong tim thay du an.");
   }
 
   if (!detail.script) {
-    throw new Error("Hãy tạo kịch bản trước khi tạo cảnh.");
+    throw new Error("Hay tao kich ban truoc khi tao canh.");
   }
 
   const referenceId = `${projectId}:scene:${Date.now()}`;
   const creditCost = await getFeatureCreditCost("scene_generation");
 
-  await deductCredits({
-    userId: user.id,
-    amount: creditCost,
-    reason: "Tạo tách cảnh bằng AI",
-    referenceType: "scene_generation",
-    referenceId,
-    metadata: {
-      project_id: projectId,
-    },
-  });
+  if (creditCost > 0) {
+    await deductCredits({
+      userId: user.id,
+      amount: creditCost,
+      reason: "Tao tach canh bang AI",
+      referenceType: "scene_generation",
+      referenceId,
+      metadata: {
+        project_id: projectId,
+      },
+    });
+  }
 
   try {
     const generatedOutput = detail.script.generated_output as Partial<GeneratedScript>;
@@ -97,9 +99,9 @@ export async function generateScenesAction(formData: FormData) {
       context: {
         platform: detail.project.platform,
         duration: detail.project.duration,
-        style: detail.project.style || "Quảng cáo social hiện đại",
+        style: detail.project.style || "Quang cao social hien dai",
         language: detail.project.language,
-        productType: detail.script.product_type || "Ưu đãi chung",
+        productType: detail.script.product_type || "Uu dai chung",
         idea: detail.script.idea || detail.project.brief || "",
       },
       script: {
@@ -138,16 +140,18 @@ export async function generateScenesAction(formData: FormData) {
 
     revalidatePath(`/projects/${projectId}`);
   } catch (error) {
-    await refundCredits({
-      userId: user.id,
-      amount: creditCost,
-      reason: "Hoàn tín dụng do tạo tách cảnh AI thất bại",
-      referenceType: "scene_generation_refund",
-      referenceId,
-      metadata: {
-        project_id: projectId,
-      },
-    });
+    if (creditCost > 0) {
+      await refundCredits({
+        userId: user.id,
+        amount: creditCost,
+        reason: "Hoan tin dung do tao tach canh AI that bai",
+        referenceType: "scene_generation_refund",
+        referenceId,
+        metadata: {
+          project_id: projectId,
+        },
+      });
+    }
 
     throw error;
   }
@@ -159,19 +163,19 @@ export async function saveScenesAction(formData: FormData) {
   const rawScenes = readString(formData, "scenes");
 
   if (!projectId || !rawScenes) {
-    throw new Error("Vui lòng cung cấp dự án và danh sách cảnh.");
+    throw new Error("Vui long cung cap du an va danh sach canh.");
   }
 
   const detail = await getProjectDetail(projectId, user.id);
 
   if (!detail) {
-    throw new Error("Không tìm thấy dự án.");
+    throw new Error("Khong tim thay du an.");
   }
 
   const parsed = JSON.parse(rawScenes) as EditableScene[];
 
   if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error("Cần có ít nhất một cảnh.");
+    throw new Error("Can co it nhat mot canh.");
   }
 
   const normalizedScenes = normalizeScenes(parsed);
