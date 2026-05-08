@@ -17,6 +17,43 @@ function isMissingQuickGenerationsTableError(error: unknown) {
   return `${message} ${details}`.includes("public.quick_generations");
 }
 
+async function generateImageOutputs(input: {
+  prompt: string;
+  model: string;
+  aspectRatio: string;
+  quantity: number;
+  referenceImage?: File | null;
+}) {
+  const firstResult = await generateImageWithNineRouter({
+    prompt: input.prompt,
+    model: input.model,
+    aspectRatio: input.aspectRatio,
+    quantity: input.quantity,
+    referenceImage: input.referenceImage,
+  });
+
+  const outputUrls = [...firstResult.outputUrls];
+  const rawResponses: Record<string, unknown>[] = [firstResult.rawResponse];
+
+  while (outputUrls.length < input.quantity) {
+    const fallbackResult = await generateImageWithNineRouter({
+      prompt: input.prompt,
+      model: input.model,
+      aspectRatio: input.aspectRatio,
+      quantity: 1,
+      referenceImage: input.referenceImage,
+    });
+
+    outputUrls.push(...fallbackResult.outputUrls);
+    rawResponses.push(fallbackResult.rawResponse);
+  }
+
+  return {
+    outputUrls: outputUrls.slice(0, input.quantity),
+    rawResponses,
+  };
+}
+
 export async function generateImage({
   userId,
   prompt,
@@ -54,7 +91,7 @@ export async function generateImage({
   });
 
   try {
-    const result = await generateImageWithNineRouter({
+    const result = await generateImageOutputs({
       prompt: normalizedPrompt,
       model,
       aspectRatio,
@@ -74,7 +111,7 @@ export async function generateImage({
             outputUrl,
             metadata: {
               aspect_ratio: aspectRatio,
-              provider_response: result.rawResponse,
+              provider_response: result.rawResponses,
             },
           }),
         ),
@@ -97,7 +134,7 @@ export async function generateImage({
           aspect_ratio: aspectRatio,
           quantity: normalizedQuantity,
           reference_file_name: referenceImage?.name ?? null,
-          metadata: { provider_response: result.rawResponse },
+          metadata: { provider_response: result.rawResponses },
         })),
       )
       .select("*");

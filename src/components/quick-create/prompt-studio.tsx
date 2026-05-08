@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, History, Sparkles } from "lucide-react";
+import { Check, Copy, History, Sparkles } from "lucide-react";
 
 import type { QuickGenerationRecord } from "@/lib/ai/quick-generations";
 import {
@@ -148,6 +148,14 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
   const [warning, setWarning] = useState("");
   const [model, setModel] = useState("");
   const [history, setHistory] = useState(initialHistory);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  function flashCopied(key: string) {
+    setCopiedKey(key);
+    window.setTimeout(() => {
+      setCopiedKey((current) => (current === key ? null : current));
+    }, 1800);
+  }
 
   async function persistPromptHistory(generatedText: string, usedModel: string) {
     const response = await fetch("/api/quick-generations", {
@@ -268,6 +276,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
     }
 
     await navigator.clipboard.writeText(result);
+    flashCopied("result");
   }
 
   function loadHistoryItem(item: QuickGenerationRecord) {
@@ -451,10 +460,19 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
               type="button"
               onClick={handleCopyResult}
               disabled={!result}
-              className="inline-flex items-center gap-2 rounded-2xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] disabled:opacity-50"
+              className={[
+                "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition disabled:opacity-50",
+                copiedKey === "result"
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600"
+                  : "border-[var(--border)] text-[var(--muted-foreground)]",
+              ].join(" ")}
             >
-              <Copy className="h-4 w-4" />
-              Sao chep
+              {copiedKey === "result" ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copiedKey === "result" ? "Da copy" : "Sao chep"}
             </button>
           </div>
 
@@ -551,17 +569,33 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(item.prompt)}
-                      className="rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(item.prompt);
+                        flashCopied(`idea:${item.id}`);
+                      }}
+                      className={[
+                        "rounded-xl border px-3 py-2 text-xs font-medium transition",
+                        copiedKey === `idea:${item.id}`
+                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600"
+                          : "border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+                      ].join(" ")}
                     >
-                      Copy y tuong
+                      {copiedKey === `idea:${item.id}` ? "Da copy" : "Copy y tuong"}
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigator.clipboard.writeText(generatedText)}
-                      className="rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(generatedText);
+                        flashCopied(`output:${item.id}`);
+                      }}
+                      className={[
+                        "rounded-xl border px-3 py-2 text-xs font-medium transition",
+                        copiedKey === `output:${item.id}`
+                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600"
+                          : "border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+                      ].join(" ")}
                     >
-                      Copy output
+                      {copiedKey === `output:${item.id}` ? "Da copy" : "Copy output"}
                     </button>
                   </div>
                 </article>
