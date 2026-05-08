@@ -1,13 +1,18 @@
 import "server-only";
 
-import { normalizeFeatureCreditCost, normalizeFeaturePriceRecord } from "@/lib/pricing/policy";
+import { cache } from "react";
+import {
+  getDefaultFeatureCreditCost,
+  normalizeFeatureCreditCost,
+  normalizeFeaturePriceRecord,
+} from "@/lib/pricing/policy";
 import { createClient } from "@/lib/supabase/server";
 import type { FeaturePriceKey, FeaturePriceRecord } from "@/lib/pricing/types";
 
 const FEATURE_PRICE_SELECT =
   "id, feature_key, name, description, credit_cost, is_active, metadata, created_at, updated_at";
 
-export async function getFeaturePricing() {
+export const getFeaturePricing = cache(async () => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -22,9 +27,9 @@ export async function getFeaturePricing() {
   }
 
   return (data ?? []).map(normalizeFeaturePriceRecord);
-}
+});
 
-export async function getFeatureCreditCost(featureKey: FeaturePriceKey) {
+export const getFeatureCreditCost = cache(async (featureKey: FeaturePriceKey) => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -38,18 +43,16 @@ export async function getFeatureCreditCost(featureKey: FeaturePriceKey) {
 
   if (error) {
     console.error("PRICING CREDIT ERROR:", error);
-    return 0;
+    return getDefaultFeatureCreditCost(featureKey);
   }
 
   if (!data) {
-    console.error(`Feature pricing not found: ${featureKey}`);
-    return 0;
+    return getDefaultFeatureCreditCost(featureKey);
   }
 
   if (!data.is_active) {
-    console.error(`Feature pricing inactive: ${featureKey}`);
-    return 0;
+    return getDefaultFeatureCreditCost(featureKey);
   }
 
   return normalizeFeatureCreditCost(featureKey, data.credit_cost ?? 0);
-}
+});

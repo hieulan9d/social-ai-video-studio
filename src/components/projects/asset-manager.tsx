@@ -41,9 +41,11 @@ type ApiAssetResponse = {
 export function AssetManager({
   projectId,
   initialAssets,
+  onAssetsChange,
 }: {
   projectId: string;
   initialAssets: ProjectAssetRecord[];
+  onAssetsChange?: (assets: ProjectAssetRecord[]) => void;
 }) {
   const [assets, setAssets] = useState(initialAssets);
   const [drafts, setDrafts] = useState<Partial<Record<ProjectAssetType, UploadDraft>>>({});
@@ -122,7 +124,11 @@ export function AssetManager({
       }
 
       URL.revokeObjectURL(draft.previewUrl);
-      setAssets((current) => [payload.asset as ProjectAssetRecord, ...current]);
+      setAssets((current) => {
+        const nextAssets = [payload.asset as ProjectAssetRecord, ...current];
+        onAssetsChange?.(nextAssets);
+        return nextAssets;
+      });
       setDrafts((current) => ({
         ...current,
         [assetType]: undefined,
@@ -148,7 +154,11 @@ export function AssetManager({
         throw new Error(payload.error || "Xóa thất bại.");
       }
 
-      setAssets((current) => current.filter((asset) => asset.id !== assetId));
+      setAssets((current) => {
+        const nextAssets = current.filter((asset) => asset.id !== assetId);
+        onAssetsChange?.(nextAssets);
+        return nextAssets;
+      });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Xóa thất bại.");
     } finally {

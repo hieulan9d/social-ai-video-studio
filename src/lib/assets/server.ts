@@ -62,16 +62,30 @@ async function attachSignedUrls(records: ProjectAssetRecord[]) {
         };
       }
 
-      const provider = getAssetStorageProvider(record.storage_provider);
-      const signedUrl = await provider.createSignedReadUrl({
-        bucket: record.storage_bucket,
-        path: record.storage_path,
-      });
+      try {
+        const provider = getAssetStorageProvider(record.storage_provider);
+        const signedUrl = await provider.createSignedReadUrl({
+          bucket: record.storage_bucket,
+          path: record.storage_path,
+        });
 
-      return {
-        ...record,
-        file_url: signedUrl,
-      };
+        return {
+          ...record,
+          file_url: signedUrl,
+        };
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to create signed asset url.";
+
+        return {
+          ...record,
+          file_url: record.file_url,
+          metadata: {
+            ...record.metadata,
+            signed_url_error: message,
+          },
+        };
+      }
     }),
   );
 }

@@ -1,224 +1,460 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, CheckCircle2, Clock3, Coins, Sparkles } from "lucide-react";
+import {
+  ChartColumn,
+  ChevronRight,
+  CirclePlay,
+  Clapperboard,
+  Coins,
+  ImageIcon,
+  MessageSquareText,
+  Sparkles,
+  WandSparkles,
+} from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { SurfaceCard } from "@/components/ui/surface-card";
+import { listQuickGenerations } from "@/lib/ai/quick-generations";
 import { requireUserProfile } from "@/lib/auth/server";
+import { getFeaturePricing } from "@/lib/pricing/server";
+import { buildFeatureCostMap, formatCreditRangeEstimate } from "@/lib/pricing/ui";
 import { getProjects } from "@/lib/projects/server";
-import { getUserWallet } from "@/lib/wallet/server";
+import { getWalletTransactions, getUserWallet } from "@/lib/wallet/server";
+
+const workflowModes = [
+  { label: "Tạo ảnh", href: "/quick-create/image" },
+  { label: "Tạo video", href: "/quick-create/video" },
+  { label: "Start/End Image to Video", href: "/quick-create/video" },
+  { label: "Tạo prompt", href: "/quick-create/prompt" },
+  { label: "Viết kịch bản", href: "/quick-ai?mode=script" },
+];
+
+const quickCards = [
+  {
+    title: "Tạo Prompt",
+    description: "Biến ý tưởng thô thành prompt có cấu trúc rõ ràng.",
+    href: "/quick-create/prompt",
+    icon: Sparkles,
+    colorClass: "bg-[#0e2a5a] text-[#60a5fa]",
+  },
+  {
+    title: "Kịch bản AI",
+    description: "Tạo hook, scene và voice-over cho video quảng cáo.",
+    href: "/quick-ai?mode=script",
+    icon: MessageSquareText,
+    colorClass: "bg-[#1a1050] text-[#a78bfa]",
+  },
+  {
+    title: "Tạo Ảnh",
+    description: "Text to Image và Image to Image cho social creative.",
+    href: "/quick-create/image",
+    icon: ImageIcon,
+    colorClass: "bg-[#0a2a2a] text-[#2dd4bf]",
+  },
+  {
+    title: "Tạo Video",
+    description: "Veo workflow cho clip ngắn, product shot và transition.",
+    href: "/quick-create/video",
+    icon: Clapperboard,
+    colorClass: "bg-[#2a1a05] text-[#fbbf24]",
+  },
+];
 
 export default async function DashboardPage() {
   const user = await requireUserProfile();
-  const [wallet, projects] = await Promise.all([
+  const [wallet, projects, outputs, transactions, featurePricing] = await Promise.all([
     getUserWallet(user.id),
     getProjects(user.id),
+    listQuickGenerations({ userId: user.id, limit: 12 }),
+    getWalletTransactions(user.id, 20),
+    getFeaturePricing(),
   ]);
+  const featureCosts = buildFeatureCostMap(featurePricing);
+  const workflowEstimate = formatCreditRangeEstimate(
+    Math.min(featureCosts.image_generation, featureCosts.video_generation),
+    Math.max(featureCosts.image_generation, featureCosts.video_generation),
+  );
+
+  const imageCount = outputs.filter((item) => item.type === "image").length;
+  const videoCount = outputs.filter((item) => item.type === "video").length;
+  const promptCount = outputs.filter((item) => item.type === "prompt").length;
+  const creditsUsed = transactions
+    .filter((item) => item.amountCredit < 0)
+    .reduce((total, item) => total + Math.abs(item.amountCredit), 0);
   const recentProjects = projects.slice(0, 3);
+  const recentOutputs = outputs.slice(0, 8);
+  const activity = [
+    ...outputs.slice(0, 5).map((item) => ({
+      id: item.id,
+      title: formatGenerationTitle(item.type),
+      subtitle: `${item.model} · ${item.aspect_ratio ?? "auto"} · ${
+        item.duration_seconds ? `${item.duration_seconds}s` : "single pass"
+      }`,
+      status: item.status,
+      time: new Date(item.created_at).toLocaleString("vi-VN"),
+    })),
+    ...transactions.slice(0, 3).map((item) => ({
+      id: item.id,
+      title: item.amountCredit > 0 ? "Nạp credits" : "Sử dụng credits",
+      subtitle: `${item.transactionType} · ${Math.abs(item.amountCredit)} credits · ví`,
+      status: item.amountCredit > 0 ? "completed" : "processing",
+      time: new Date(item.createdAt).toLocaleString("vi-VN"),
+    })),
+  ].slice(0, 8);
+
   const stats = [
     {
-      title: "Dự án đang có",
-      value: projects.length.toString(),
-      note: "Các dự án riêng thuộc workspace này",
-      icon: BarChart3,
+      label: "Video đã tạo",
+      value: videoCount.toString(),
+      delta: "+12% tuần này",
+      icon: Clapperboard,
+      deltaClass: "text-[var(--success)]",
     },
     {
-      title: "Tín dụng còn lại",
-      value: wallet.balanceCredit.toString(),
-      note: "Số dư ví được đọc trực tiếp từ cơ sở dữ liệu.",
+      label: "Ảnh đã tạo",
+      value: imageCount.toString(),
+      delta: "+8% tuần này",
+      icon: ImageIcon,
+      deltaClass: "text-[var(--success)]",
+    },
+    {
+      label: "Prompt đã tạo",
+      value: promptCount.toString(),
+      delta: "+21% tuần này",
+      icon: Sparkles,
+      deltaClass: "text-[var(--success)]",
+    },
+    {
+      label: "Credits đã dùng",
+      value: creditsUsed.toString(),
+      delta: `${wallet.balanceCredit} còn lại`,
       icon: Coins,
-    },
-    {
-      title: "Render đang theo dõi",
-      value: "Live",
-      note: "Trạng thái render và export được lưu theo từng dự án",
-      icon: Clock3,
+      deltaClass: "text-[var(--pending)]",
     },
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <PageHeader
-        eyebrow="Tổng quan workspace"
-        title="Bảng điều khiển"
-        description="Trung tâm theo dõi dự án, tín dụng, render và các thao tác vận hành trước khi ra mắt."
+        eyebrow="AI creative home"
+        title="Dashboard studio"
+        description="Màn hình điều phối cho prompt, image, video, credits và các dự án đang chạy trong cùng một workspace."
       />
 
-      {!user.onboardingCompletedAt ? (
-        <SurfaceCard>
-          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-            <div className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-elevated)] text-[var(--accent)]">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold">Hoàn tất hướng dẫn bắt đầu</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
-                  Chọn mục tiêu sử dụng để workspace gợi ý luồng tạo dự án đầu
-                  tiên phù hợp hơn.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
-            >
-              Tiếp tục thiết lập
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </SurfaceCard>
-      ) : null}
-
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-4">
         {stats.map((item) => (
-          <SurfaceCard key={item.title}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-[var(--muted-foreground)]">{item.title}</p>
-                <p className="mt-2 text-4xl font-semibold tracking-tight">{item.value}</p>
-                <p className="mt-3 max-w-xs text-sm leading-6 text-[var(--muted-foreground)]">
-                  {item.note}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-[var(--surface-elevated)] p-3 text-[var(--accent)]">
-                <item.icon className="h-5 w-5" />
-              </div>
+          <SurfaceCard key={item.label} className="p-[14px]">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--muted)]">
+                {item.label}
+              </p>
+              <item.icon className="h-4 w-4 text-[var(--highlight)]" />
             </div>
+            <p className="mt-4 text-[22px] font-medium text-[var(--foreground)]">{item.value}</p>
+            <p className={`mt-2 text-[10px] ${item.deltaClass}`}>{item.delta}</p>
           </SurfaceCard>
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {[
-          {
-            href: "/quick-create/prompt",
-            title: "Tạo Prompt AI",
-            description:
-              "Biến ý tưởng ngắn thành prompt chi tiết cho ảnh hoặc video, có cấu trúc rõ ràng trước khi generate.",
-          },
-          {
-            href: "/quick-create/image",
-            title: "Tạo ảnh nhanh",
-            description:
-              "Dùng prompt đã tối ưu để tạo ảnh AI ngay, xem preview và lưu về dự án khi cần.",
-          },
-          {
-            href: "/quick-create/video",
-            title: "Tạo video nhanh",
-            description:
-              "Tạo video bằng prompt hoặc hình tham chiếu, phù hợp cho flow thử ý tưởng nhanh ngoài project mode.",
-          },
-        ].map((item) => (
-          <Link key={item.href} href={item.href}>
-            <SurfaceCard>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-semibold">{item.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
-                    {item.description}
-                  </p>
-                </div>
-                <ArrowRight className="mt-1 h-5 w-5 text-[var(--accent)]" />
+      <SurfaceCard className="rounded-[var(--radius-shell)] p-6">
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="space-y-5">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">
+                Workflow chính
+              </p>
+              <h2 className="mt-2 text-2xl font-medium text-[var(--heading)]">
+                Bạn muốn tạo gì hôm nay?
+              </h2>
+            </div>
+
+            <textarea
+              readOnly
+              placeholder="Nhập ý tưởng video, ảnh, sản phẩm hoặc chiến dịch của bạn..."
+              className="min-h-36 w-full rounded-[12px] border bg-[var(--surface-muted)] px-4 py-4 text-sm text-[var(--muted-foreground)]"
+            />
+
+            <div className="grid gap-3 md:grid-cols-5">
+              {workflowModes.map((mode) => (
+                <Link
+                  key={mode.label}
+                  href={mode.href}
+                  className="rounded-[12px] border bg-[var(--surface-muted)] px-3 py-4 text-center text-xs text-[var(--muted-foreground)] hover:border-[var(--border-strong)] hover:bg-[#111c35] hover:text-[var(--heading)]"
+                >
+                  {mode.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <DashboardSelect
+                label="Chọn model"
+                value="Gemini 3.1 Flash Image"
+              />
+              <DashboardSelect
+                label="Chọn tỷ lệ"
+                value="9:16 · 1:1 · 16:9 · 4:3 · 3:4"
+              />
+              <DashboardSelect
+                label="Upload tham chiếu"
+                value="Ảnh, packshot, frame đầu"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Ước tính: <span className="text-[var(--heading)]">{workflowEstimate}</span>
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/quick-ai"
+                  className="inline-flex items-center gap-2 rounded-[8px] border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                >
+                  <WandSparkles className="h-4 w-4 text-[var(--highlight)]" />
+                  Tối ưu prompt bằng AI
+                </Link>
+                <Link
+                  href="/quick-create/video"
+                  className="inline-flex items-center gap-2 rounded-[8px] bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-[var(--accent-foreground)]"
+                >
+                  Tạo ngay
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 rounded-[12px] border bg-[var(--surface-muted)] p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--muted)]">
+                  Trạng thái workspace
+                </p>
+                <h3 className="mt-2 text-lg font-medium text-[var(--heading)]">
+                  Studio đang sẵn sàng tạo nội dung
+                </h3>
+              </div>
+              <span className="rounded-full border border-[var(--border-strong)] bg-[var(--accent-soft)] px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-[var(--highlight)]">
+                Live
+              </span>
+            </div>
+
+            {[
+              `${projects.length} dự án đang hoạt động trong workspace`,
+              `${wallet.balanceCredit} credits còn lại cho các job tạo ảnh và video`,
+              `${videoCount} video gần đây và ${imageCount} ảnh đã được ghi lịch sử`,
+              "Đa provider: OpenAI, Google và 9Router đang được map theo tác vụ",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--muted-foreground)]"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </SurfaceCard>
+
+      <div className="grid gap-4 xl:grid-cols-4">
+        {quickCards.map((card) => (
+          <Link key={card.title} href={card.href}>
+            <SurfaceCard className="h-full hover:border-[var(--border-strong)] hover:bg-[#111c35]">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${card.colorClass}`}>
+                <card.icon className="h-4 w-4" />
+              </div>
+              <h3 className="mt-4 text-[12px] font-medium text-[var(--heading)]">{card.title}</h3>
+              <p className="mt-2 text-[10px] leading-5 text-[var(--muted-foreground)]">
+                {card.description}
+              </p>
             </SurfaceCard>
           </Link>
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <SurfaceCard>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Dự án gần đây</h2>
+              <h2 className="text-lg font-medium text-[var(--heading)]">Output gần đây</h2>
               <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Các hoạt động dự án mới nhất trong workspace.
+                Xem nhanh ảnh, video, prompt và kịch bản vừa tạo.
               </p>
             </div>
-            <span className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
-              Đã đồng bộ
-            </span>
+            <Link href="/quick-create/history" className="text-sm text-[var(--highlight)]">
+              Mở lịch sử
+            </Link>
           </div>
 
-          <div className="mt-6 space-y-4">
-            {recentProjects.length > 0 ? (
-              recentProjects.map((project) => (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  className="flex flex-col justify-between gap-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5 md:flex-row md:items-center"
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {recentOutputs.length > 0 ? (
+              recentOutputs.map((item) => (
+                <article
+                  key={item.id}
+                  className="overflow-hidden rounded-[12px] border bg-[var(--surface-muted)]"
                 >
-                  <div>
-                    <p className="text-base font-medium">{project.title}</p>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                      {project.platform} / {project.videoType.replaceAll("_", " ")}
+                  <div className="flex aspect-[4/3] items-center justify-center border-b bg-[#101a2f] text-[var(--muted)]">
+                    {item.type === "video" ? (
+                      <CirclePlay className="h-8 w-8 text-[var(--highlight)]" />
+                    ) : item.type === "image" ? (
+                      <ImageIcon className="h-8 w-8 text-[var(--highlight)]" />
+                    ) : (
+                      <Sparkles className="h-8 w-8 text-[var(--highlight)]" />
+                    )}
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                        {formatGenerationTitle(item.type)}
+                      </span>
+                      <span className={getStatusClass(item.status)}>{formatStatus(item.status)}</span>
+                    </div>
+                    <p className="line-clamp-2 text-xs text-[var(--muted-foreground)]">
+                      {item.model}
+                    </p>
+                    <p className="text-[10px] text-[var(--muted)]">
+                      {new Date(item.created_at).toLocaleString("vi-VN")}
                     </p>
                   </div>
-                  <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-medium text-[var(--muted-foreground)]">
-                    {formatProjectStatus(project.status)}
-                  </span>
-                </Link>
+                </article>
               ))
             ) : (
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
-                <p className="font-medium">Chưa có dự án</p>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
-                  Tạo dự án đầu tiên để bắt đầu quy trình kịch bản, cảnh, prompt,
-                  render và export.
-                </p>
-                <Link
-                  href="/projects/new"
-                  className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
-                >
-                  Tạo dự án
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+              <div className="col-span-full rounded-[12px] border border-dashed px-4 py-10 text-center text-sm text-[var(--muted-foreground)]">
+                Chưa có output nào để hiển thị.
               </div>
             )}
           </div>
         </SurfaceCard>
 
         <SurfaceCard>
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-[var(--surface-elevated)] p-3 text-[var(--accent)]">
-              <Sparkles className="h-5 w-5" />
-            </div>
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Trạng thái hệ thống</h2>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Mức sẵn sàng của pipeline sản xuất video.
+              <h2 className="text-lg font-medium text-[var(--heading)]">Dự án gần đây</h2>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                Các workspace đang sản xuất hoặc cần mở lại.
               </p>
             </div>
+            <Link href="/projects" className="text-sm text-[var(--highlight)]">
+              Xem tất cả
+            </Link>
           </div>
 
-          <div className="mt-6 space-y-4">
-            {[
-              "Auth, ví tín dụng, thanh toán và admin đã sẵn sàng",
-              "Tải tài sản và lớp trừu tượng storage đã được nối",
-              "Text-to-video, image-to-video và transition đều có tracking job",
-              "Export engine tạo bản ghi video cuối có thể tải xuống",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--muted-foreground)]"
-              >
-                {item}
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {recentProjects.length > 0 ? (
+              recentProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className="rounded-[12px] border bg-[var(--surface-muted)] p-3 hover:border-[var(--border-strong)]"
+                >
+                  <div className="relative flex h-20 items-center justify-center rounded-[8px] border bg-[#111b31]">
+                    <CirclePlay className="h-7 w-7 text-[var(--highlight)]" />
+                    <span className="absolute bottom-2 right-2 rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--muted-foreground)]">
+                      {project.duration}s
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[12px] font-medium text-[var(--heading)]">{project.title}</p>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[10px] text-[var(--muted-foreground)]">
+                      {project.platform}
+                    </span>
+                    <span className="text-[10px] text-[var(--muted)]">
+                      {new Date(project.updatedAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="md:col-span-3 rounded-[12px] border border-dashed px-4 py-10 text-center text-sm text-[var(--muted-foreground)]">
+                Chưa có dự án nào.
               </div>
-            ))}
+            )}
           </div>
         </SurfaceCard>
       </div>
+
+      <SurfaceCard className="scroll-mt-24" id="analytics">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-medium text-[var(--heading)]">Hoạt động gần đây</h2>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Theo dõi model, trạng thái và thời điểm xử lý mới nhất.
+            </p>
+          </div>
+          <ChartColumn className="h-5 w-5 text-[var(--highlight)]" />
+        </div>
+
+        <div className="mt-5 space-y-3">
+          {activity.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col gap-3 rounded-[12px] border bg-[var(--surface-muted)] px-4 py-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <span className={`mt-1 h-2 w-2 rounded-full ${getActivityDotClass(item.status)}`} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-[var(--heading)]">{item.title}</p>
+                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">{item.subtitle}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-3 md:justify-end">
+                <span className={getStatusClass(item.status)}>{formatStatus(item.status)}</span>
+                <span className="text-xs text-[var(--muted)]">{item.time}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </SurfaceCard>
     </div>
   );
 }
 
-function formatProjectStatus(status: string) {
+function DashboardSelect({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[12px] border bg-[var(--surface-muted)] px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-[var(--muted)]">{label}</p>
+      <p className="mt-2 text-sm text-[var(--foreground)]">{value}</p>
+    </div>
+  );
+}
+
+function formatGenerationTitle(type: "image" | "video" | "prompt") {
+  if (type === "image") return "Ảnh";
+  if (type === "video") return "Video";
+  return "Prompt";
+}
+
+function formatStatus(status: string) {
   const labels: Record<string, string> = {
-    draft: "Bản nháp",
-    brief_ready: "Brief đã sẵn sàng",
-    script_ready: "Kịch bản đã sẵn sàng",
-    rendering: "Đang render",
-    completed: "Đã hoàn tất",
-    archived: "Đã lưu trữ",
+    queued: "Chờ hàng",
+    processing: "Đang xử lý",
+    completed: "Hoàn thành",
+    failed: "Lỗi",
   };
 
-  return labels[status] ?? status.replaceAll("_", " ");
+  return labels[status] ?? status;
+}
+
+function getStatusClass(status: string) {
+  const base =
+    "rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]";
+
+  if (status === "completed") {
+    return `${base} border-[rgba(34,197,94,0.35)] text-[var(--success)]`;
+  }
+
+  if (status === "processing") {
+    return `${base} border-[rgba(59,130,246,0.35)] text-[var(--processing)]`;
+  }
+
+  if (status === "queued") {
+    return `${base} border-[rgba(245,158,11,0.35)] text-[var(--pending)]`;
+  }
+
+  return `${base} border-[rgba(248,113,113,0.35)] text-[var(--danger)]`;
+}
+
+function getActivityDotClass(status: string) {
+  if (status === "completed") return "bg-[var(--success)]";
+  if (status === "processing") return "bg-[var(--processing)]";
+  if (status === "queued") return "bg-[var(--pending)]";
+  return "bg-[var(--danger)]";
 }

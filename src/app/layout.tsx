@@ -1,25 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { AnalyticsTracker } from "@/components/analytics/analytics-tracker";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: {
     default: "Social AI Video Studio",
     template: "%s | Social AI Video Studio",
   },
-  description: "Nền tảng SaaS tạo video ngắn bằng AI cho thị trường Việt Nam.",
+  description: "Nền tảng SaaS tạo ảnh và video AI đa model cho workflow social content.",
 };
 
 export default function RootLayout({
@@ -28,15 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="vi"
-  suppressHydrationWarning
-  className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
->
-      <body
-  suppressHydrationWarning
-  className="min-h-full bg-[var(--background)] text-[var(--foreground)]"
->
+    <html lang="vi" suppressHydrationWarning className="h-full antialiased">
+      <body suppressHydrationWarning className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <Suspense fallback={null}>
           <AnalyticsTracker />
         </Suspense>

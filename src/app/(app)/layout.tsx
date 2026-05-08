@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { requireUserProfile } from "@/lib/auth/server";
-import { getProjects } from "@/lib/projects/server";
+import { getUserWallet } from "@/lib/wallet/server";
 
 export default async function DashboardLayout({
   children,
@@ -8,10 +8,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const user = await requireUserProfile();
-  const projects = await getProjects(user.id);
+  const wallet = await getUserWallet(user.id);
 
   return (
-    <AppShell user={user} projects={projects}>
+    <AppShell user={user} credits={wallet.balanceCredit}>
       {children}
     </AppShell>
   );

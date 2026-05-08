@@ -10,13 +10,11 @@ export function CreditPackageCard({
   primaryProvider?: "mock";
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+    <div className="rounded-[12px] border border-[var(--border)] bg-[var(--surface-muted)] p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-lg font-semibold">{item.name}</p>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {item.description}
-          </p>
+          <p className="text-lg font-medium text-[var(--heading)]">{item.name}</p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">{item.description}</p>
         </div>
         <div className="rounded-full border border-[var(--border)] px-3 py-1 text-xs text-[var(--muted-foreground)]">
           {item.currency}
@@ -25,16 +23,12 @@ export function CreditPackageCard({
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-            Tín dụng
-          </p>
-          <p className="mt-2 text-3xl font-semibold">{item.credits}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Tín dụng</p>
+          <p className="mt-2 text-3xl font-medium text-[var(--heading)]">{item.credits}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-            Giá
-          </p>
-          <p className="mt-2 text-3xl font-semibold">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Giá</p>
+          <p className="mt-2 text-3xl font-medium text-[var(--heading)]">
             {item.currency} {item.priceAmount.toFixed(2)}
           </p>
         </div>
@@ -46,7 +40,7 @@ export function CreditPackageCard({
           <input type="hidden" name="provider" value={primaryProvider} />
           <FormSubmitButton
             pendingLabel="Đang mở thanh toán..."
-            className="rounded-2xl bg-[var(--foreground)] px-4 py-3 text-sm font-medium text-[var(--background)]"
+            className="rounded-[8px] bg-[var(--accent)] px-4 py-3 text-sm font-medium text-[var(--accent-foreground)]"
           >
             Nạp bằng Mock
           </FormSubmitButton>
@@ -57,7 +51,7 @@ export function CreditPackageCard({
             key={provider}
             type="button"
             disabled
-            className="rounded-2xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--muted-foreground)] opacity-60"
+            className="rounded-[8px] border border-[var(--border)] px-4 py-3 text-sm text-[var(--muted-foreground)] opacity-60"
           >
             {provider} placeholder
           </button>

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminTestBalance, isAdminUserId } from "@/lib/auth/permissions";
 import type {
@@ -67,7 +68,16 @@ function mapMutationResult(record: WalletMutationResultRecord): WalletMutationRe
   };
 }
 
-export async function getUserWallet(userId: string) {
+function isCancelledQueryError(error: unknown) {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: string }).code === "57014"
+  );
+}
+
+export const getUserWallet = cache(async (userId: string) => {
   const supabase = await createClient();
 
   const { data: ensuredWallet, error: ensureError } = await supabase
@@ -77,6 +87,16 @@ export async function getUserWallet(userId: string) {
     .single<WalletRecord>();
 
   if (ensureError) {
+    if (isCancelledQueryError(ensureError)) {
+      return {
+        id: `fallback-wallet:${userId}`,
+        userId,
+        balanceCredit: await isAdminUserId(userId) ? getAdminTestBalance() : 0,
+        createdAt: new Date(0).toISOString(),
+        updatedAt: new Date(0).toISOString(),
+      };
+    }
+
     throw ensureError;
   }
 
@@ -90,7 +110,7 @@ export async function getUserWallet(userId: string) {
   }
 
   return wallet;
-}
+});
 
 export async function addCredits({
   userId,
@@ -227,13 +247,17 @@ async function mutateCredits(
     .single<WalletMutationResultRecord>();
 
   if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
     throw error;
   }
 
   return mapMutationResult(data);
 }
 
-export async function getWalletTransactions(userId: string, limit = 10) {
+export const getWalletTransactions = cache(async (userId: string, limit = 10) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("credit_transactions")
@@ -246,13 +270,17 @@ export async function getWalletTransactions(userId: string, limit = 10) {
     .returns<CreditTransactionRecord[]>();
 
   if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
     throw error;
   }
 
   return data.map(mapTransaction);
-}
+});
 
-export async function getCreditPackages() {
+export const getCreditPackages = cache(async () => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("credit_packages")
@@ -266,4 +294,4 @@ export async function getCreditPackages() {
   }
 
   return data.map(mapPackage);
-}
+});

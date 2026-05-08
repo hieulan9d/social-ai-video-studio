@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { listProjectAssets } from "@/lib/assets/server";
 import { getAssetStorageProvider } from "@/lib/assets/storage";
@@ -28,6 +29,15 @@ function mapProject(record: ProjectRecord): Project {
     createdAt: record.created_at,
     updatedAt: record.updated_at,
   };
+}
+
+function isCancelledQueryError(error: unknown) {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: string }).code === "57014"
+  );
 }
 
 async function attachGeneratedVideoDownloadUrls(videos: GeneratedVideoRecord[]) {
@@ -115,7 +125,7 @@ export async function createProject(input: {
   return mapProject(data);
 }
 
-export async function getProjects(userId: string) {
+export const getProjects = cache(async (userId: string) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("projects")
@@ -131,7 +141,56 @@ export async function getProjects(userId: string) {
   }
 
   return data.map(mapProject);
-}
+});
+
+export const searchProjects = cache(async ({
+  userId,
+  query,
+  limit = 6,
+}: {
+  userId: string;
+  query: string;
+  limit?: number;
+}) => {
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) {
+    return [] as Project[];
+  }
+
+  const escaped = normalizedQuery.replace(/[,%]/g, "");
+  const pattern = `%${escaped}%`;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select(
+      "id, user_id, title, platform, video_type, duration, style, language, status, brief, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .or(
+      [
+        `title.ilike.${pattern}`,
+        `brief.ilike.${pattern}`,
+        `platform.ilike.${pattern}`,
+        `video_type.ilike.${pattern}`,
+        `language.ilike.${pattern}`,
+        `style.ilike.${pattern}`,
+      ].join(","),
+    )
+    .order("updated_at", { ascending: false })
+    .limit(limit)
+    .returns<ProjectRecord[]>();
+
+  if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return data.map(mapProject);
+});
 
 export async function getProjectById(projectId: string, userId: string) {
   const supabase = await createClient();
@@ -237,6 +296,115 @@ export async function getProjectDetail(projectId: string, userId: string) {
     generatedVideos,
     exportJobs,
   } satisfies ProjectDetail;
+}
+
+export async function getProjectScript(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scripts")
+    .select(
+      "id, project_id, title, idea, product_type, content, hook, problem, solution, target_audience, voiceover, cta, generation_input, generated_output, provider, model, version, created_at, updated_at",
+    )
+    .eq("project_id", projectId)
+    .maybeSingle<ScriptRecord>();
+
+  if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getProjectScenes(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scenes")
+    .select(
+      "id, project_id, scene_order, duration_seconds, visual_description, camera_angle, camera_movement, subject_action, background, lighting, voiceover:voice_script, on_screen_text, notes, created_at, updated_at",
+    )
+    .eq("project_id", projectId)
+    .order("scene_order", { ascending: true })
+    .returns<SceneRecord[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getProjectPrompts(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("prompts")
+    .select("id, project_id, scene_id, prompt_type, content, created_at, updated_at")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true })
+    .returns<PromptRecord[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getProjectRenderJobs(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("render_jobs")
+    .select(
+      "id, project_id, user_id, scene_id, prompt_id, source_asset_id, end_asset_id, status, provider, provider_job_id, render_mode, motion_style, credit_cost, prompt_snapshot, provider_operation_name, provider_request, provider_response, output_storage_provider, output_storage_bucket, output_storage_path, output_mime_type, error_message, started_at, completed_at, metadata, created_at, updated_at",
+    )
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .returns<RenderJobRecord[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getProjectGeneratedVideos(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("generated_videos")
+    .select(
+      "id, project_id, user_id, render_job_id, file_url, thumbnail_url, duration_seconds, status, provider, provider_job_id, storage_provider, storage_bucket, storage_path, mime_type, metadata, created_at, updated_at",
+    )
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .returns<GeneratedVideoRecord[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return attachGeneratedVideoDownloadUrls(data);
+}
+
+export async function getProjectExportJobs(projectId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("export_jobs")
+    .select(
+      "id, project_id, user_id, status, export_ratio, credit_cost, input_video_ids, options, output_storage_provider, output_storage_bucket, output_storage_path, output_mime_type, error_message, started_at, completed_at, metadata, created_at, updated_at",
+    )
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false })
+    .returns<ExportJobRecord[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return attachExportJobDownloadUrls(data);
 }
 
 export async function deleteProject(projectId: string, userId: string) {

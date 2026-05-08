@@ -2,80 +2,159 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Clapperboard } from "lucide-react";
+import { useState } from "react";
+import { Clapperboard, MoreHorizontal, X } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { useAuth } from "@/hooks/use-auth";
-import { appNavigation, secondaryNavigation } from "@/lib/navigation";
+import { navigationSections, secondaryNavigation } from "@/lib/navigation";
 
-export function AppSidebar() {
+export function AppSidebar({
+  mobileOpen = false,
+  onClose,
+}: {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
   const user = useAuth();
-  const userLabel = user.fullName || user.workspaceName || "Người dùng workspace";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const userLabel = user.fullName || user.workspaceName || "Nguoi dung";
+  const initials = userLabel
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-[var(--border)] bg-[var(--surface)] px-5 py-6 lg:block">
-      <Link href="/" className="flex items-center gap-3 px-2">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--foreground)] text-[var(--background)]">
-          <Clapperboard className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold">Social AI Video Studio</p>
-          <p className="text-xs text-[var(--muted-foreground)]">Nền tảng MVP</p>
-        </div>
-      </Link>
-
-      <div className="mt-8 space-y-2">
-        {appNavigation.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={getNavClass(pathname, item.href)}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </div>
-
-      <div className="mt-10 border-t border-[var(--border)] pt-6">
-        <p className="px-2 text-xs font-medium uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
-          Hỗ trợ
-        </p>
-        <div className="mt-3 space-y-2">
-          {secondaryNavigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={getNavClass(pathname, item.href)}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
+    <>
+      <div
+        onClick={onClose}
+        className={[
+          "fixed inset-0 z-30 bg-black/50 lg:hidden",
+          mobileOpen ? "block" : "hidden",
+        ].join(" ")}
+      />
+      <aside
+        className={[
+          "fixed inset-y-0 left-0 z-40 flex w-[220px] flex-col border-r bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--surface-tint)_10%)] lg:sticky lg:top-0 lg:flex",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        ].join(" ")}
+      >
+        <div className="flex h-full flex-col px-4 py-5">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/dashboard" className="flex min-w-0 items-center gap-3" onClick={onClose}>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-[rgba(96,165,250,0.32)] bg-[color:color-mix(in_srgb,var(--accent)_74%,var(--highlight-teal)_26%)] text-[var(--accent-foreground)]">
+                <Clapperboard className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-[var(--heading)]">
+                  Social AI Video Studio
+                </p>
+                <p className="truncate text-[11px] text-[var(--muted-foreground)]">
+                  AI creative studio
+                </p>
+              </div>
             </Link>
-          ))}
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-[8px] border border-[var(--border)] p-2 text-[var(--muted-foreground)] lg:hidden"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-      <div className="mt-10 rounded-[28px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-        <p className="text-sm font-semibold">{userLabel}</p>
-        <p className="mt-1 break-all text-xs text-[var(--muted-foreground)]">
-          {user.email}
-        </p>
-        <div className="mt-4">
-          <SignOutButton />
+          <div className="mt-8 flex-1 space-y-6 overflow-y-auto">
+            {navigationSections.map((section) => (
+              <div key={section.label}>
+                <p className="px-2 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
+                  {section.label}
+                </p>
+                <div className="mt-3 space-y-1.5">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={onClose}
+                      className={getNavClass(pathname, item.href)}
+                    >
+                      <item.icon className="h-[15px] w-[15px] shrink-0" />
+                      <span className="truncate text-[12px]">{item.label}</span>
+                      {item.badge ? (
+                        <span className="ml-auto rounded-full border border-[rgba(96,165,250,0.28)] bg-[color:color-mix(in_srgb,var(--accent-soft)_76%,var(--highlight-violet)_24%)] px-2 py-0.5 text-[10px] text-[var(--heading)]">
+                          {item.badge}
+                        </span>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 rounded-[12px] border bg-[color:color-mix(in_srgb,var(--surface-muted)_82%,var(--accent-soft)_18%)] p-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(96,165,250,0.28)] bg-[color:color-mix(in_srgb,var(--accent-soft)_72%,var(--highlight-teal)_28%)] text-xs font-medium text-[var(--heading)]">
+                {initials || "AI"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-medium text-[var(--heading)]">
+                  {userLabel}
+                </p>
+                <p className="truncate text-[11px] text-[var(--muted-foreground)]">
+                  Goi workspace
+                </p>
+              </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((current) => !current)}
+                  className="rounded-[8px] border border-[var(--border)] p-2 text-[var(--muted-foreground)]"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+
+                {menuOpen ? (
+                  <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-20 w-44 overflow-hidden rounded-[12px] border border-[rgba(96,165,250,0.16)] bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--surface-tint)_10%)] p-1.5">
+                    {secondaryNavigation.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onClose?.();
+                        }}
+                        className="flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[12px] text-[var(--muted-foreground)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]"
+                      >
+                        <item.icon className="h-[14px] w-[14px] shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-3">
+              <SignOutButton />
+            </div>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
 function getNavClass(pathname: string, href: string) {
+  const normalizedHref = href.split("?")[0];
   const isActive =
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+    pathname === normalizedHref ||
+    (normalizedHref !== "/dashboard" && pathname.startsWith(`${normalizedHref}/`));
 
   return [
-    "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
+    "flex items-center gap-3 rounded-[8px] border px-3 py-2.5",
     isActive
-      ? "bg-[var(--foreground)] text-[var(--background)]"
-      : "text-[var(--muted-foreground)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)]",
+      ? "border-[rgba(96,165,250,0.24)] bg-[color:color-mix(in_srgb,var(--accent)_76%,var(--highlight-teal)_24%)] text-[var(--heading)]"
+      : "border-transparent text-[var(--muted-foreground)] hover:border-[rgba(96,165,250,0.14)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]",
   ].join(" ");
 }

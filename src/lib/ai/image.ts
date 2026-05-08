@@ -34,7 +34,6 @@ export async function generateImage(
     prompt,
     size = "1024x1024",
     quality = "high",
-    outputFormat = "png",
   } = params;
 
   const model = getModelByTask("image");

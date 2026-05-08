@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type QuickGenerationType = "image" | "video" | "prompt";
@@ -40,6 +41,15 @@ type CreateQuickGenerationInput = {
 const QUICK_GENERATION_SELECT =
   "id, user_id, type, prompt, model, output_url, status, aspect_ratio, duration_seconds, quantity, reference_file_name, error_message, metadata, created_at, updated_at";
 
+function isCancelledQueryError(error: unknown) {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: string }).code === "57014"
+  );
+}
+
 function isMissingQuickGenerationsTableError(error: unknown) {
   if (!error || typeof error !== "object") {
     return false;
@@ -51,11 +61,15 @@ function isMissingQuickGenerationsTableError(error: unknown) {
   return `${message} ${details}`.includes("public.quick_generations");
 }
 
-export async function isQuickGenerationHistoryAvailable() {
+export const isQuickGenerationHistoryAvailable = cache(async () => {
   const supabase = await createClient();
   const { error } = await supabase.from("quick_generations").select("id").limit(1);
 
   if (error) {
+    if (isCancelledQueryError(error)) {
+      return false;
+    }
+
     if (isMissingQuickGenerationsTableError(error)) {
       return false;
     }
@@ -64,9 +78,9 @@ export async function isQuickGenerationHistoryAvailable() {
   }
 
   return true;
-}
+});
 
-export async function listQuickGenerations({
+export const listQuickGenerations = cache(async ({
   userId,
   type,
   limit = 30,
@@ -74,7 +88,7 @@ export async function listQuickGenerations({
   userId: string;
   type?: QuickGenerationType;
   limit?: number;
-}) {
+}) => {
   const supabase = await createClient();
   let query = supabase
     .from("quick_generations")
@@ -90,6 +104,10 @@ export async function listQuickGenerations({
   const { data, error } = await query.returns<QuickGenerationRecord[]>();
 
   if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
     if (isMissingQuickGenerationsTableError(error)) {
       return [];
     }
@@ -98,7 +116,7 @@ export async function listQuickGenerations({
   }
 
   return data;
-}
+});
 
 export async function createQuickGeneration(input: CreateQuickGenerationInput) {
   const supabase = await createClient();

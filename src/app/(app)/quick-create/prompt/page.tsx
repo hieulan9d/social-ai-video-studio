@@ -21,15 +21,14 @@ export default async function PromptStudioPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.25em] text-[var(--muted-foreground)]">
-            AI Studio nhanh
+          <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
+            Prompt lab
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Tao Prompt AI
+          <h1 className="mt-3 text-3xl font-medium tracking-[-0.03em] text-[var(--heading)] sm:text-4xl">
+            Tạo Prompt AI
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
-            Nhap mot y tuong don gian de ChatGPT phan tich va chuyen thanh prompt chi
-            tiet cho AI image hoac video generation.
+            Nhập một ý tưởng đơn giản để AI phân tích và chuyển thành prompt chi tiết cho image, video hoặc shot list.
           </p>
         </div>
         <QuickStudioNav active="prompt" />

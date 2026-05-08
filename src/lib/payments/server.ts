@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/env";
@@ -13,6 +14,15 @@ import type {
 } from "@/lib/payments/types";
 import type { CreditPackage } from "@/lib/wallet/types";
 import { getUserWallet } from "@/lib/wallet/server";
+
+function isCancelledQueryError(error: unknown) {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: string }).code === "57014"
+  );
+}
 
 function mapPayment(record: PaymentRecord): Payment {
   return {
@@ -39,7 +49,7 @@ function mapPayment(record: PaymentRecord): Payment {
   };
 }
 
-export async function getCreditPackageById(packageId: string) {
+export const getCreditPackageById = cache(async (packageId: string) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("credit_packages")
@@ -49,6 +59,10 @@ export async function getCreditPackageById(packageId: string) {
     .single();
 
   if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
     throw error;
   }
 
@@ -62,9 +76,9 @@ export async function getCreditPackageById(packageId: string) {
     currency: data.currency,
     isActive: data.is_active,
   } as CreditPackage;
-}
+});
 
-export async function getPaymentHistory(userId: string, limit = 12) {
+export const getPaymentHistory = cache(async (userId: string, limit = 12) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("payments")
@@ -81,7 +95,7 @@ export async function getPaymentHistory(userId: string, limit = 12) {
   }
 
   return data.map(mapPayment);
-}
+});
 
 export async function getPaymentForUser(paymentId: string, userId: string) {
   const supabase = await createClient();

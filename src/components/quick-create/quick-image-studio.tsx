@@ -9,6 +9,7 @@ import {
   type AspectRatio,
   type ImageModel,
 } from "@/lib/ai/models";
+import { formatCreditEstimate } from "@/lib/pricing/ui";
 import type { Project } from "@/lib/projects/types";
 
 type OutputItem = {
@@ -25,9 +26,11 @@ const actionClass =
 export function QuickImageStudio({
   projects,
   projectId,
+  estimatedCreditCost,
 }: {
   projects: Project[];
   projectId?: string;
+  estimatedCreditCost: number;
 }) {
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ImageModel>(
@@ -221,6 +224,13 @@ export function QuickImageStudio({
               className="aspect-video w-full rounded-2xl border border-[var(--border)] object-cover"
             />
           ) : null}
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
+            Uoc tinh credits:{" "}
+            <span className="font-medium text-[var(--foreground)]">
+              {formatCreditEstimate(estimatedCreditCost * Math.max(1, quantity))}
+            </span>
+          </div>
 
           <button
             type="button"

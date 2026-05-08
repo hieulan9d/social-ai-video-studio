@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ensureConfiguredAdminRole } from "@/lib/auth/permissions";
 import type { AuthUserProfile, ProfileRecord } from "@/lib/auth/types";
@@ -43,7 +44,7 @@ function asOptionalString(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-export async function getCurrentUserProfile() {
+export const getCurrentUserProfile = cache(async () => {
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const claims = claimsData?.claims;
@@ -90,7 +91,7 @@ export async function getCurrentUserProfile() {
   }
 
   return mapProfile(createdProfile);
-}
+});
 
 export async function requireUserProfile() {
   const profile = await getCurrentUserProfile();

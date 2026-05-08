@@ -9,6 +9,7 @@ import {
   type AspectRatio,
   type VideoModel,
 } from "@/lib/ai/models";
+import { formatCreditEstimate } from "@/lib/pricing/ui";
 import type { Project } from "@/lib/projects/types";
 
 type VideoMode = "text-to-video" | "image-to-video" | "start-end-image-to-video";
@@ -45,9 +46,15 @@ const actionClass =
 export function QuickVideoStudio({
   projects,
   projectId,
+  estimatedCreditCost,
+  imageToVideoCreditCost,
+  transitionVideoCreditCost,
 }: {
   projects: Project[];
   projectId?: string;
+  estimatedCreditCost: number;
+  imageToVideoCreditCost: number;
+  transitionVideoCreditCost: number;
 }) {
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<VideoModel>("veo-3-fast");
@@ -67,6 +74,12 @@ export function QuickVideoStudio({
     () => (referenceAsset ? URL.createObjectURL(referenceAsset) : null),
     [referenceAsset],
   );
+  const activeCreditCost =
+    videoMode === "image-to-video"
+      ? imageToVideoCreditCost || estimatedCreditCost
+      : videoMode === "start-end-image-to-video"
+        ? transitionVideoCreditCost || estimatedCreditCost
+        : estimatedCreditCost;
 
   async function submit() {
     setLoading(true);
@@ -288,6 +301,13 @@ export function QuickVideoStudio({
               className="aspect-video w-full rounded-2xl border border-[var(--border)]"
             />
           ) : null}
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
+            Uoc tinh credits:{" "}
+            <span className="font-medium text-[var(--foreground)]">
+              {formatCreditEstimate(activeCreditCost)}
+            </span>
+          </div>
 
           <button
             type="button"

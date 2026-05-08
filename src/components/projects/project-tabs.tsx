@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { ProjectTab } from "@/lib/projects/types";
 
 const tabLabels: Record<ProjectTab, string> = {
-  overview: "Overview",
-  images: "Images",
-  videos: "Videos",
+  overview: "Tổng quan",
+  images: "Tạo ảnh",
+  videos: "Tạo video",
   assets: "Assets",
-  prompts: "Prompts",
+  prompts: "Prompt AI",
 };
 
 export function ProjectTabs({
@@ -17,16 +17,16 @@ export function ProjectTabs({
   activeTab: ProjectTab;
 }) {
   return (
-    <nav className="flex gap-2 overflow-x-auto pb-2">
+    <nav className="flex gap-2 overflow-x-auto pb-1">
       {(Object.keys(tabLabels) as ProjectTab[]).map((tab) => (
         <Link
           key={tab}
           href={`/projects/${projectId}?tab=${tab}`}
           className={[
-            "whitespace-nowrap rounded-full border px-4 py-2 text-sm transition",
+            "whitespace-nowrap rounded-[8px] border px-4 py-2.5 text-sm",
             tab === activeTab
-              ? "border-transparent bg-[var(--foreground)] text-[var(--background)]"
-              : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+              ? "border-[#29508d] bg-[#1a3a7a] text-[var(--heading)]"
+              : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted-foreground)] hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]",
           ].join(" ")}
         >
           {tabLabels[tab]}
