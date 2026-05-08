@@ -45,6 +45,28 @@ async function blobToBase64(blob: Blob) {
   return buffer.toString("base64");
 }
 
+async function readErrorPayload(response: Response) {
+  try {
+    return JSON.stringify((await response.json()) as Record<string, unknown>);
+  } catch {
+    return await response.text().catch(() => response.statusText);
+  }
+}
+
+async function requestGoogleVeo(input: RequestInfo | URL, init: RequestInit, context: string) {
+  try {
+    return await fetch(input, init);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        `Khong the ket noi toi Google Veo (${context}). Kiem tra mang hoac cau hinh API.`,
+      );
+    }
+
+    throw error;
+  }
+}
+
 export class GoogleVeoProvider implements VideoProvider {
   readonly name = "google-veo";
   readonly model: string;
@@ -68,7 +90,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
     };
 
-    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+    const response = await requestGoogleVeo(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,13 +100,11 @@ export class GoogleVeoProvider implements VideoProvider {
       cache: "no-store",
     });
 
-    const rawResponse = (await response.json()) as Record<string, unknown>;
-
     if (!response.ok) {
-      throw new Error(
-        `Google Veo request failed: ${response.status} ${JSON.stringify(rawResponse)}`,
-      );
+      throw new Error(`Google Veo request failed: ${response.status} ${await readErrorPayload(response)}`);
     }
+
+    const rawResponse = (await response.json()) as Record<string, unknown>;
 
     const operationName = String(rawResponse.name ?? "");
 
@@ -118,7 +138,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
     };
 
-    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+    const response = await requestGoogleVeo(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -128,13 +148,13 @@ export class GoogleVeoProvider implements VideoProvider {
       cache: "no-store",
     });
 
-    const rawResponse = (await response.json()) as Record<string, unknown>;
-
     if (!response.ok) {
       throw new Error(
-        `Google Veo image-to-video request failed: ${response.status} ${JSON.stringify(rawResponse)}`,
+        `Google Veo image-to-video request failed: ${response.status} ${await readErrorPayload(response)}`,
       );
     }
+
+    const rawResponse = (await response.json()) as Record<string, unknown>;
 
     const operationName = String(rawResponse.name ?? "");
 
@@ -174,7 +194,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
     };
 
-    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+    const response = await requestGoogleVeo(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -184,13 +204,13 @@ export class GoogleVeoProvider implements VideoProvider {
       cache: "no-store",
     });
 
-    const rawResponse = (await response.json()) as Record<string, unknown>;
-
     if (!response.ok) {
       throw new Error(
-        `Google Veo start-end transition request failed: ${response.status} ${JSON.stringify(rawResponse)}`,
+        `Google Veo start-end transition request failed: ${response.status} ${await readErrorPayload(response)}`,
       );
     }
+
+    const rawResponse = (await response.json()) as Record<string, unknown>;
 
     const operationName = String(rawResponse.name ?? "");
 
@@ -210,13 +230,13 @@ export class GoogleVeoProvider implements VideoProvider {
     operationName: string;
     providerJobId?: string | null;
   }): Promise<PolledVideoRender> {
-    const response = await fetch(`${this.baseUrl}/${input.operationName}`, {
+    const response = await requestGoogleVeo(`${this.baseUrl}/${input.operationName}`, {
       method: "GET",
       headers: {
         "x-goog-api-key": this.apiKey,
       },
       cache: "no-store",
-    });
+    }, "poll render status");
     const rawResponse = (await response.json()) as Record<string, unknown>;
 
     if (!response.ok) {
@@ -267,12 +287,12 @@ export class GoogleVeoProvider implements VideoProvider {
   }
 
   async downloadVideo(input: { videoUri: string }): Promise<DownloadedVideo> {
-    const response = await fetch(input.videoUri, {
+    const response = await requestGoogleVeo(input.videoUri, {
       headers: {
         "x-goog-api-key": this.apiKey,
       },
       cache: "no-store",
-    });
+    }, "download video");
 
     if (!response.ok) {
       throw new Error(`Google Veo video download failed: ${response.status}`);

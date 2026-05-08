@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Download, ImagePlus, Loader2, Save, Trash2 } from "lucide-react";
+import { CameraAngleSelector } from "@/components/quick-create/camera-angle-selector";
 import {
   ASPECT_RATIOS,
   IMAGE_MODELS,
   type AspectRatio,
   type ImageModel,
 } from "@/lib/ai/models";
+import { type CameraAngle } from "@/lib/ai/camera-angle";
 import { formatCreditEstimate } from "@/lib/pricing/ui";
 import type { Project } from "@/lib/projects/types";
 
@@ -37,6 +39,7 @@ export function QuickImageStudio({
     "gemini/gemini-3.1-flash-image-preview",
   );
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1");
+  const [cameraAngle, setCameraAngle] = useState<CameraAngle>("center");
   const [quantity, setQuantity] = useState(1);
   const [referenceImage, setReferenceImage] = useState<File | null>(null);
   const [outputs, setOutputs] = useState<OutputItem[]>([]);
@@ -62,6 +65,7 @@ export function QuickImageStudio({
       formData.set("prompt", prompt);
       formData.set("model", model);
       formData.set("aspectRatio", aspectRatio);
+      formData.set("cameraAngle", cameraAngle);
       formData.set("quantity", String(quantity));
 
       if (projectId) {
@@ -191,6 +195,8 @@ export function QuickImageStudio({
               ))}
             </Select>
           </div>
+
+          <CameraAngleSelector value={cameraAngle} onChange={setCameraAngle} />
 
           <label className="block">
             <span className="text-sm font-medium">Số lượng ảnh</span>

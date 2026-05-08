@@ -3,12 +3,16 @@
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Download, Film, Loader2, Save, Trash2, UploadCloud } from "lucide-react";
+import { CameraAngleSelector } from "@/components/quick-create/camera-angle-selector";
+import { CameraMotionSelector } from "@/components/quick-create/camera-motion-selector";
 import {
   ASPECT_RATIOS,
   VIDEO_MODELS,
   type AspectRatio,
   type VideoModel,
 } from "@/lib/ai/models";
+import { type CameraAngle } from "@/lib/ai/camera-angle";
+import { type CameraMotion } from "@/lib/ai/camera-motion";
 import { formatCreditEstimate } from "@/lib/pricing/ui";
 import type { Project } from "@/lib/projects/types";
 
@@ -43,6 +47,20 @@ const QUICK_VIDEO_DURATIONS = [4, 6, 8] as const;
 const actionClass =
   "inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
 
+function getDisplayError(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    const normalized = error.message.trim().toLowerCase();
+
+    if (normalized === "fetch failed" || normalized === "failed to fetch") {
+      return "Không thể kết nối tới API tạo video. Hãy kiểm tra server và cấu hình provider.";
+    }
+
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export function QuickVideoStudio({
   projects,
   projectId,
@@ -60,6 +78,8 @@ export function QuickVideoStudio({
   const [model, setModel] = useState<VideoModel>("veo-3-fast");
   const [videoMode, setVideoMode] = useState<VideoMode>("text-to-video");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
+  const [cameraAngle, setCameraAngle] = useState<CameraAngle>("center");
+  const [cameraMotion, setCameraMotion] = useState<CameraMotion>("push-in");
   const [duration, setDuration] = useState(5);
   const [referenceAsset, setReferenceAsset] = useState<File | null>(null);
   const [startImage, setStartImage] = useState<ImageSlotState>(emptySlot);
@@ -97,6 +117,8 @@ export function QuickVideoStudio({
       formData.set("prompt", prompt);
       formData.set("model", model);
       formData.set("aspectRatio", aspectRatio);
+      formData.set("cameraAngle", cameraAngle);
+      formData.set("cameraMotion", cameraMotion);
       formData.set("duration", String(duration));
       formData.set("videoMode", videoMode);
 
@@ -168,7 +190,7 @@ export function QuickVideoStudio({
             : "Đã tạo video nhanh.",
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Tạo video thất bại.");
+      setError(getDisplayError(caught, "Tạo video thất bại."));
     } finally {
       setLoading(false);
     }
@@ -265,6 +287,9 @@ export function QuickVideoStudio({
               ))}
             </Select>
           </div>
+
+          <CameraAngleSelector value={cameraAngle} onChange={setCameraAngle} />
+          <CameraMotionSelector value={cameraMotion} onChange={setCameraMotion} />
 
           {videoMode === "start-end-image-to-video" ? (
             <div className="grid gap-4 lg:grid-cols-2">

@@ -1,6 +1,14 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import {
+  applyCameraAngleToPrompt,
+  type CameraAngle,
+} from "@/lib/ai/camera-angle";
+import {
+  applyCameraMotionToPrompt,
+  type CameraMotion,
+} from "@/lib/ai/camera-motion";
 import { createClient } from "@/lib/supabase/server";
 import { getAssetStorageProvider } from "@/lib/assets/storage";
 import { getRoutedModelCandidates } from "@/lib/ai/smart-routing";
@@ -318,6 +326,8 @@ export async function generateVideo({
   userId,
   prompt,
   model,
+  cameraAngle,
+  cameraMotion,
   duration,
   aspectRatio,
   referenceAsset,
@@ -331,6 +341,8 @@ export async function generateVideo({
   userId: string;
   prompt: string;
   model: string;
+  cameraAngle?: CameraAngle | null;
+  cameraMotion?: CameraMotion | null;
   duration: number;
   aspectRatio: string;
   referenceAsset?: File | null;
@@ -342,6 +354,8 @@ export async function generateVideo({
   projectId?: string | null;
 }) {
   const normalizedPrompt = prompt.trim();
+  const anglePrompt = applyCameraAngleToPrompt(normalizedPrompt, cameraAngle);
+  const finalPrompt = applyCameraMotionToPrompt(anglePrompt, cameraMotion);
 
   if (normalizedPrompt.length < 3) {
     throw new Error("Prompt phải có ít nhất 3 ký tự.");
@@ -381,6 +395,8 @@ export async function generateVideo({
       routed_model: primaryModel,
       duration: normalizedDuration,
       video_mode: resolvedVideoMode,
+      camera_angle: cameraAngle ?? null,
+      camera_motion: cameraMotion ?? null,
     },
   });
 
@@ -398,7 +414,7 @@ export async function generateVideo({
     for (const candidateModel of candidateModels) {
       try {
         generationResult = await runVideoGeneration({
-          prompt: normalizedPrompt,
+          prompt: finalPrompt,
           selectedModel: candidateModel,
           duration: normalizedDuration,
           aspectRatio: normalizedAspectRatio,
@@ -430,6 +446,8 @@ export async function generateVideo({
 
     const metadata = {
       aspect_ratio: normalizedAspectRatio,
+      camera_angle: cameraAngle ?? null,
+      camera_motion: cameraMotion ?? null,
       duration_seconds: normalizedDuration,
       video_mode: resolvedVideoMode,
       provider: generationResult.provider.name,
@@ -444,7 +462,7 @@ export async function generateVideo({
       const asset = await insertGeneratedProjectVideoAsset({
         userId,
         projectId,
-        prompt: normalizedPrompt,
+        prompt: finalPrompt,
         model: generationResult.provider.model,
         signedUrl: uploaded.signedUrl,
         storageProvider: uploaded.storageProvider,
@@ -462,7 +480,7 @@ export async function generateVideo({
       .insert({
         user_id: userId,
         type: "video",
-        prompt: normalizedPrompt,
+        prompt: finalPrompt,
         model: generationResult.provider.model,
         output_url: uploaded.signedUrl,
         status: "completed",
@@ -483,7 +501,7 @@ export async function generateVideo({
           output: {
             id: `ephemeral-video-${Date.now()}`,
             output_url: uploaded.signedUrl,
-            prompt: normalizedPrompt,
+            prompt: finalPrompt,
             model: generationResult.provider.model,
           },
           outputUrl: uploaded.signedUrl,
@@ -502,7 +520,7 @@ export async function generateVideo({
       const { error: insertError } = await supabase.from("quick_generations").insert({
         user_id: userId,
         type: "video",
-        prompt: normalizedPrompt,
+        prompt: finalPrompt,
         model: primaryModel,
         output_url: null,
         status: "failed",
@@ -513,6 +531,8 @@ export async function generateVideo({
           referenceAsset?.name ?? startImage?.name ?? endImage?.name ?? null,
         metadata: {
           video_mode: resolvedVideoMode,
+          camera_angle: cameraAngle ?? null,
+          camera_motion: cameraMotion ?? null,
           start_image_url: startImageUrl ?? null,
           end_image_url: endImageUrl ?? null,
         },
@@ -530,7 +550,12 @@ export async function generateVideo({
       reason: "Hoàn tín dụng do tạo video thất bại",
       referenceType: "video_generation_refund",
       referenceId,
-      metadata: { project_id: projectId ?? null, model: primaryModel },
+      metadata: {
+        project_id: projectId ?? null,
+        model: primaryModel,
+        camera_angle: cameraAngle ?? null,
+        camera_motion: cameraMotion ?? null,
+      },
     });
 
     throw error;

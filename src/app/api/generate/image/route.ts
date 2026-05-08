@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/server";
+import { isCameraAngle } from "@/lib/ai/camera-angle";
 import { generateImage } from "@/lib/ai/generate-image";
 import { isAspectRatio, isImageModel } from "@/lib/ai/models";
 
@@ -51,6 +52,7 @@ export async function POST(request: NextRequest) {
     const prompt = String(formData.get("prompt") ?? "");
     const model = String(formData.get("model") ?? "");
     const aspectRatio = String(formData.get("aspectRatio") ?? "1:1");
+    const cameraAngle = String(formData.get("cameraAngle") ?? "");
     const quantity = Number.parseInt(String(formData.get("quantity") ?? "1"), 10);
     const projectId = String(formData.get("projectId") ?? "") || null;
     const referenceImage = formData.get("referenceImage");
@@ -63,11 +65,16 @@ export async function POST(request: NextRequest) {
       throw new Error("Tỷ lệ ảnh không hợp lệ.");
     }
 
+    if (cameraAngle && !isCameraAngle(cameraAngle)) {
+      throw new Error("Góc máy ảnh không hợp lệ.");
+    }
+
     const result = await generateImage({
       userId: user.id,
       prompt,
       model,
       aspectRatio,
+      cameraAngle: cameraAngle && isCameraAngle(cameraAngle) ? cameraAngle : null,
       quantity,
       projectId,
       referenceImage:

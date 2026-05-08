@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  applyCameraAngleToPrompt,
+  type CameraAngle,
+} from "@/lib/ai/camera-angle";
 import { createClient } from "@/lib/supabase/server";
 import { saveGeneratedProjectAsset } from "@/lib/ai/generated-assets";
 import { generateImageWithNineRouter } from "@/lib/ai/nine-router-media-provider";
@@ -59,6 +63,7 @@ export async function generateImage({
   userId,
   prompt,
   model,
+  cameraAngle,
   referenceImage,
   aspectRatio,
   quantity,
@@ -67,12 +72,14 @@ export async function generateImage({
   userId: string;
   prompt: string;
   model: string;
+  cameraAngle?: CameraAngle | null;
   referenceImage?: File | null;
   aspectRatio: string;
   quantity: number;
   projectId?: string | null;
 }) {
   const normalizedPrompt = prompt.trim();
+  const finalPrompt = applyCameraAngleToPrompt(normalizedPrompt, cameraAngle);
 
   if (normalizedPrompt.length < 3) {
     throw new Error("Prompt phải có ít nhất 3 ký tự.");
@@ -99,6 +106,7 @@ export async function generateImage({
       requested_model: model,
       routed_model: primaryModel,
       quantity: normalizedQuantity,
+      camera_angle: cameraAngle ?? null,
     },
   });
 
@@ -115,7 +123,7 @@ export async function generateImage({
     for (const candidateModel of candidateModels) {
       try {
         result = await generateImageOutputs({
-          prompt: normalizedPrompt,
+          prompt: finalPrompt,
           model: candidateModel,
           aspectRatio,
           quantity: normalizedQuantity,
@@ -139,11 +147,12 @@ export async function generateImage({
             userId,
             projectId,
             type: "image",
-            prompt: normalizedPrompt,
+            prompt: finalPrompt,
             model: resolvedModel,
             outputUrl,
             metadata: {
               aspect_ratio: aspectRatio,
+              camera_angle: cameraAngle ?? null,
               provider_response: result.rawResponses,
             },
           }),
@@ -160,14 +169,17 @@ export async function generateImage({
         result.outputUrls.map((outputUrl) => ({
           user_id: userId,
           type: "image",
-          prompt: normalizedPrompt,
+          prompt: finalPrompt,
           model: resolvedModel,
           output_url: outputUrl,
           status: "completed",
           aspect_ratio: aspectRatio,
           quantity: normalizedQuantity,
           reference_file_name: referenceImage?.name ?? null,
-          metadata: { provider_response: result.rawResponses },
+          metadata: {
+            camera_angle: cameraAngle ?? null,
+            provider_response: result.rawResponses,
+          },
         })),
       )
       .select("*");
@@ -179,7 +191,7 @@ export async function generateImage({
           outputs: result.outputUrls.map((outputUrl, index) => ({
             id: `ephemeral-image-${Date.now()}-${index}`,
             output_url: outputUrl,
-            prompt: normalizedPrompt,
+            prompt: finalPrompt,
             model: resolvedModel,
           })),
           outputUrls: result.outputUrls,
@@ -198,13 +210,16 @@ export async function generateImage({
       const { error: insertError } = await supabase.from("quick_generations").insert({
         user_id: userId,
         type: "image",
-        prompt: normalizedPrompt,
+        prompt: finalPrompt,
         model: primaryModel,
         output_url: null,
         status: "failed",
         aspect_ratio: aspectRatio,
         quantity: normalizedQuantity,
         reference_file_name: referenceImage?.name ?? null,
+        metadata: {
+          camera_angle: cameraAngle ?? null,
+        },
         error_message: error instanceof Error ? error.message : "Tạo ảnh thất bại.",
       });
 
@@ -219,7 +234,11 @@ export async function generateImage({
       reason: "Hoàn tín dụng do tạo ảnh thất bại",
       referenceType: "image_generation_refund",
       referenceId,
-      metadata: { project_id: projectId ?? null, model: primaryModel },
+      metadata: {
+        project_id: projectId ?? null,
+        model: primaryModel,
+        camera_angle: cameraAngle ?? null,
+      },
     });
 
     throw error;

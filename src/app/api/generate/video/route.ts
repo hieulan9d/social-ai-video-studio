@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUserProfile } from "@/lib/auth/server";
+import { isCameraAngle } from "@/lib/ai/camera-angle";
+import { isCameraMotion } from "@/lib/ai/camera-motion";
 import { generateVideo } from "@/lib/ai/generate-video";
 import { isAspectRatio, isVideoModel } from "@/lib/ai/models";
 
@@ -25,6 +27,8 @@ export async function POST(request: NextRequest) {
     const prompt = String(formData.get("prompt") ?? "");
     const model = String(formData.get("model") ?? "");
     const aspectRatio = String(formData.get("aspectRatio") ?? "9:16");
+    const cameraAngle = String(formData.get("cameraAngle") ?? "");
+    const cameraMotion = String(formData.get("cameraMotion") ?? "");
     const duration = Number.parseInt(String(formData.get("duration") ?? "5"), 10);
     const projectId = String(formData.get("projectId") ?? "") || null;
     const referenceAsset = formData.get("referenceAsset");
@@ -42,10 +46,21 @@ export async function POST(request: NextRequest) {
       throw new Error("Tỷ lệ video không hợp lệ.");
     }
 
+    if (cameraAngle && !isCameraAngle(cameraAngle)) {
+      throw new Error("Góc máy video không hợp lệ.");
+    }
+
+    if (cameraMotion && !isCameraMotion(cameraMotion)) {
+      throw new Error("Chuyển động camera không hợp lệ.");
+    }
+
     const result = await generateVideo({
       userId: user.id,
       prompt,
       model,
+      cameraAngle: cameraAngle && isCameraAngle(cameraAngle) ? cameraAngle : null,
+      cameraMotion:
+        cameraMotion && isCameraMotion(cameraMotion) ? cameraMotion : null,
       duration,
       aspectRatio,
       projectId,
@@ -59,9 +74,10 @@ export async function POST(request: NextRequest) {
         videoMode === "start-end-image-to-video"
           ? videoMode
           : undefined,
-      referenceAsset: referenceAsset instanceof File && referenceAsset.size > 0
-        ? referenceAsset
-        : null,
+      referenceAsset:
+        referenceAsset instanceof File && referenceAsset.size > 0
+          ? referenceAsset
+          : null,
     });
 
     return NextResponse.json({ ok: true, result });
