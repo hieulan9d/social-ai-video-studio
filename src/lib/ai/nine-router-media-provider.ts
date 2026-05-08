@@ -13,7 +13,12 @@ type GenerateVideoInput = {
   model: string;
   aspectRatio: string;
   duration: number;
+  videoMode: "text-to-video" | "image-to-video" | "start-end-image-to-video";
   referenceAsset?: File | null;
+  startImage?: File | null;
+  endImage?: File | null;
+  startImageUrl?: string | null;
+  endImageUrl?: string | null;
 };
 
 type GeneratedMediaOutput = {
@@ -48,6 +53,14 @@ async function fileToDataUrl(file?: File | null) {
 
   const buffer = Buffer.from(await file.arrayBuffer());
   return `data:${file.type || "application/octet-stream"};base64,${buffer.toString("base64")}`;
+}
+
+async function mediaInputToProviderValue(file?: File | null, url?: string | null) {
+  if (file) {
+    return fileToDataUrl(file);
+  }
+
+  return url?.trim() || undefined;
 }
 
 function extractOutputUrls(response: Record<string, unknown>) {
@@ -161,9 +174,12 @@ export async function generateVideoWithNineRouter(input: GenerateVideoInput) {
   return requestNineRouter("/videos/generations", {
     model: input.model,
     prompt: input.prompt,
+    video_mode: input.videoMode,
     duration: input.duration,
     aspect_ratio: input.aspectRatio,
     response_format: "url",
     reference_asset: await fileToDataUrl(input.referenceAsset),
+    start_image: await mediaInputToProviderValue(input.startImage, input.startImageUrl),
+    end_image: await mediaInputToProviderValue(input.endImage, input.endImageUrl),
   });
 }

@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
     const duration = Number.parseInt(String(formData.get("duration") ?? "5"), 10);
     const projectId = String(formData.get("projectId") ?? "") || null;
     const referenceAsset = formData.get("referenceAsset");
+    const startImage = formData.get("startImage");
+    const endImage = formData.get("endImage");
+    const startImageUrl = String(formData.get("startImageUrl") ?? "").trim();
+    const endImageUrl = String(formData.get("endImageUrl") ?? "").trim();
+    const videoMode = String(formData.get("videoMode") ?? "");
 
     if (!isVideoModel(model)) {
       throw new Error("Model video không hợp lệ.");
@@ -44,6 +49,16 @@ export async function POST(request: NextRequest) {
       duration,
       aspectRatio,
       projectId,
+      startImage: startImage instanceof File && startImage.size > 0 ? startImage : null,
+      endImage: endImage instanceof File && endImage.size > 0 ? endImage : null,
+      startImageUrl: startImageUrl || null,
+      endImageUrl: endImageUrl || null,
+      videoMode:
+        videoMode === "text-to-video" ||
+        videoMode === "image-to-video" ||
+        videoMode === "start-end-image-to-video"
+          ? videoMode
+          : undefined,
       referenceAsset: referenceAsset instanceof File && referenceAsset.size > 0
         ? referenceAsset
         : null,

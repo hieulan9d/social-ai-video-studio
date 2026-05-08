@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Download, Film, Loader2, Save } from "lucide-react";
+import { Download, Film, Loader2, Save, Trash2, UploadCloud } from "lucide-react";
 import {
   ASPECT_RATIOS,
   VIDEO_DURATIONS,
@@ -12,12 +12,31 @@ import {
 } from "@/lib/ai/models";
 import type { Project } from "@/lib/projects/types";
 
+type VideoMode = "text-to-video" | "image-to-video" | "start-end-image-to-video";
+
 type VideoOutput = {
   id: string;
   output_url: string;
   prompt: string;
   model: string;
 };
+
+type ImageSlotState = {
+  file: File | null;
+  url: string;
+  error: string | null;
+  loading: boolean;
+};
+
+const emptySlot: ImageSlotState = {
+  file: null,
+  url: "",
+  error: null,
+  loading: false,
+};
+
+const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const allowedUrlPattern = /\.(jpe?g|png|webp)(\?.*)?$/i;
 
 const actionClass =
   "inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
@@ -31,9 +50,12 @@ export function QuickVideoStudio({
 }) {
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<VideoModel>("veo");
+  const [videoMode, setVideoMode] = useState<VideoMode>("text-to-video");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [duration, setDuration] = useState(5);
   const [referenceAsset, setReferenceAsset] = useState<File | null>(null);
+  const [startImage, setStartImage] = useState<ImageSlotState>(emptySlot);
+  const [endImage, setEndImage] = useState<ImageSlotState>(emptySlot);
   const [output, setOutput] = useState<VideoOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -50,12 +72,19 @@ export function QuickVideoStudio({
     setError(null);
     setMessage(null);
 
+    if (videoMode === "start-end-image-to-video" && (startImage.error || endImage.error)) {
+      setError("Vui lòng sửa ảnh Start/End chưa hợp lệ trước khi tạo video.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.set("prompt", prompt);
       formData.set("model", model);
       formData.set("aspectRatio", aspectRatio);
       formData.set("duration", String(duration));
+      formData.set("videoMode", videoMode);
 
       if (projectId) {
         formData.set("projectId", projectId);
@@ -63,6 +92,22 @@ export function QuickVideoStudio({
 
       if (referenceAsset) {
         formData.set("referenceAsset", referenceAsset);
+      }
+
+      if (videoMode === "start-end-image-to-video" && startImage.file) {
+        formData.set("startImage", startImage.file);
+      }
+
+      if (videoMode === "start-end-image-to-video" && endImage.file) {
+        formData.set("endImage", endImage.file);
+      }
+
+      if (videoMode === "start-end-image-to-video" && startImage.url.trim()) {
+        formData.set("startImageUrl", startImage.url.trim());
+      }
+
+      if (videoMode === "start-end-image-to-video" && endImage.url.trim()) {
+        formData.set("endImageUrl", endImage.url.trim());
       }
 
       const response = await fetch("/api/generate/video", {
@@ -140,7 +185,23 @@ export function QuickVideoStudio({
             />
           </label>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Select
+              label="Chế độ video"
+              value={videoMode}
+              onChange={(value) => {
+                const nextMode = value as VideoMode;
+                setVideoMode(nextMode);
+                if (nextMode !== "start-end-image-to-video") {
+                  setStartImage(emptySlot);
+                  setEndImage(emptySlot);
+                }
+              }}
+            >
+              <option value="text-to-video">Text to Video</option>
+              <option value="image-to-video">Image to Video</option>
+              <option value="start-end-image-to-video">Start-End Image to Video</option>
+            </Select>
             <Select label="Model" value={model} onChange={(value) => setModel(value as VideoModel)}>
               {VIDEO_MODELS.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -174,6 +235,17 @@ export function QuickVideoStudio({
             </Select>
           </div>
 
+          {videoMode === "start-end-image-to-video" ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <ImageDropCard
+                title="Start Image"
+                state={startImage}
+                onChange={setStartImage}
+              />
+              <ImageDropCard title="End Image" state={endImage} onChange={setEndImage} />
+            </div>
+          ) : null}
+
           <label className="block">
             <span className="text-sm font-medium">Ảnh/video tham chiếu tùy chọn</span>
             <input
@@ -196,7 +268,11 @@ export function QuickVideoStudio({
           ) : null}
 
           {referencePreview && referenceAsset?.type.startsWith("video/") ? (
-            <video src={referencePreview} controls className="aspect-video w-full rounded-2xl border border-[var(--border)]" />
+            <video
+              src={referencePreview}
+              controls
+              className="aspect-video w-full rounded-2xl border border-[var(--border)]"
+            />
           ) : null}
 
           <button
@@ -256,6 +332,169 @@ export function QuickVideoStudio({
       </section>
     </div>
   );
+}
+
+function ImageDropCard({
+  title,
+  state,
+  onChange,
+}: {
+  title: string;
+  state: ImageSlotState;
+  onChange: (next: ImageSlotState) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = useMemo(
+    () => (state.file ? URL.createObjectURL(state.file) : state.url.trim()),
+    [state.file, state.url],
+  );
+
+  function setFile(file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    onChange({ ...emptySlot, loading: true });
+
+    if (!allowedImageTypes.includes(file.type)) {
+      onChange({
+        ...emptySlot,
+        error: "Ảnh phải là JPG, JPEG, PNG hoặc WEBP.",
+      });
+      return;
+    }
+
+    onChange({
+      file,
+      url: "",
+      error: null,
+      loading: false,
+    });
+  }
+
+  function setUrl(url: string) {
+    const trimmed = url.trim();
+
+    if (!trimmed) {
+      onChange({ ...state, url: "", error: null });
+      return;
+    }
+
+    try {
+      new URL(trimmed);
+    } catch {
+      onChange({ ...state, url: trimmed, file: null, error: "Link ảnh không hợp lệ." });
+      return;
+    }
+
+    if (!allowedUrlPattern.test(trimmed)) {
+      onChange({
+        ...state,
+        url: trimmed,
+        file: null,
+        error: "Link phải trỏ tới ảnh JPG, JPEG, PNG hoặc WEBP.",
+      });
+      return;
+    }
+
+    onChange({ file: null, url: trimmed, error: null, loading: false });
+  }
+
+  function clear() {
+    onChange(emptySlot);
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {hasImageInput(state) ? (
+          <button
+            type="button"
+            onClick={clear}
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted-foreground)]"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Xóa
+          </button>
+        ) : null}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault();
+          setFile(event.dataTransfer.files[0] ?? null);
+        }}
+        className="mt-3 flex aspect-[4/3] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] text-center"
+      >
+        {previewUrl && !state.error ? (
+          <Image
+            src={previewUrl}
+            alt={title}
+            width={720}
+            height={540}
+            unoptimized
+            onError={() =>
+              onChange({
+                ...state,
+                error: "Không thể tải preview ảnh. Hãy kiểm tra lại link hoặc file.",
+              })
+            }
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span className="flex flex-col items-center gap-3 px-4 text-sm text-[var(--muted-foreground)]">
+            {state.loading ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : (
+              <UploadCloud className="h-8 w-8" />
+            )}
+            Kéo ảnh vào đây hoặc nhấn để chọn ảnh
+          </span>
+        )}
+      </button>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+      />
+
+      <label className="mt-3 block">
+        <span className="text-xs font-medium text-[var(--muted-foreground)]">
+          Hoặc dán link ảnh
+        </span>
+        <input
+          value={state.url}
+          onChange={(event) => setUrl(event.target.value)}
+          placeholder="https://example.com/image.webp"
+          className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none"
+        />
+      </label>
+
+      {state.error ? (
+        <p className="mt-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-600">
+          {state.error}
+        </p>
+      ) : hasImageInput(state) ? (
+        <p className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-600">
+          Ảnh đã sẵn sàng.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function hasImageInput(state: ImageSlotState) {
+  return Boolean(state.file || state.url.trim());
 }
 
 function Select({

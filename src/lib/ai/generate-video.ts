@@ -13,6 +13,11 @@ export async function generateVideo({
   duration,
   aspectRatio,
   referenceAsset,
+  startImage,
+  endImage,
+  startImageUrl,
+  endImageUrl,
+  videoMode,
   projectId,
 }: {
   userId: string;
@@ -21,6 +26,11 @@ export async function generateVideo({
   duration: number;
   aspectRatio: string;
   referenceAsset?: File | null;
+  startImage?: File | null;
+  endImage?: File | null;
+  startImageUrl?: string | null;
+  endImageUrl?: string | null;
+  videoMode?: "text-to-video" | "image-to-video" | "start-end-image-to-video";
   projectId?: string | null;
 }) {
   const normalizedPrompt = prompt.trim();
@@ -30,6 +40,17 @@ export async function generateVideo({
   }
 
   const normalizedDuration = Math.min(30, Math.max(1, Math.trunc(duration || 5)));
+  const resolvedVideoMode =
+    videoMode ??
+    (startImage || endImage || startImageUrl || endImageUrl
+      ? startImage || startImageUrl
+        ? endImage || endImageUrl
+          ? "start-end-image-to-video"
+          : "image-to-video"
+        : "image-to-video"
+      : referenceAsset
+        ? "image-to-video"
+        : "text-to-video");
   const creditCost = await getFeatureCreditCost("video_generation");
   const referenceId = `${projectId ?? "quick"}:video:${Date.now()}`;
 
@@ -39,7 +60,12 @@ export async function generateVideo({
     reason: projectId ? "Tạo video trong dự án" : "Tạo video nhanh",
     referenceType: "video_generation",
     referenceId,
-    metadata: { project_id: projectId ?? null, model, duration: normalizedDuration },
+    metadata: {
+      project_id: projectId ?? null,
+      model,
+      duration: normalizedDuration,
+      video_mode: resolvedVideoMode,
+    },
   });
 
   try {
@@ -49,6 +75,11 @@ export async function generateVideo({
       duration: normalizedDuration,
       aspectRatio,
       referenceAsset,
+      startImage,
+      endImage,
+      startImageUrl,
+      endImageUrl,
+      videoMode: resolvedVideoMode,
     });
 
     const outputUrl = result.outputUrls[0];
@@ -64,6 +95,7 @@ export async function generateVideo({
         metadata: {
           aspect_ratio: aspectRatio,
           duration_seconds: normalizedDuration,
+          video_mode: resolvedVideoMode,
           provider_response: result.rawResponse,
         },
       });
@@ -84,8 +116,16 @@ export async function generateVideo({
         aspect_ratio: aspectRatio,
         duration_seconds: normalizedDuration,
         quantity: 1,
-        reference_file_name: referenceAsset?.name ?? null,
-        metadata: { provider_response: result.rawResponse },
+        reference_file_name:
+          referenceAsset?.name ?? startImage?.name ?? endImage?.name ?? null,
+        metadata: {
+          provider_response: result.rawResponse,
+          video_mode: resolvedVideoMode,
+          start_image_file_name: startImage?.name ?? null,
+          end_image_file_name: endImage?.name ?? null,
+          start_image_url: startImageUrl ?? null,
+          end_image_url: endImageUrl ?? null,
+        },
       })
       .select("*")
       .single();
@@ -108,7 +148,15 @@ export async function generateVideo({
         aspect_ratio: aspectRatio,
         duration_seconds: normalizedDuration,
         quantity: 1,
-        reference_file_name: referenceAsset?.name ?? null,
+        reference_file_name:
+          referenceAsset?.name ?? startImage?.name ?? endImage?.name ?? null,
+        metadata: {
+          video_mode: resolvedVideoMode,
+          start_image_file_name: startImage?.name ?? null,
+          end_image_file_name: endImage?.name ?? null,
+          start_image_url: startImageUrl ?? null,
+          end_image_url: endImageUrl ?? null,
+        },
         error_message: error instanceof Error ? error.message : "Tạo video thất bại.",
       });
     }
