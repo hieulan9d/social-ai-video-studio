@@ -47,37 +47,36 @@ async function blobToBase64(blob: Blob) {
 
 export class GoogleVeoProvider implements VideoProvider {
   readonly name = "google-veo";
-  readonly model = process.env.GOOGLE_VEO_MODEL ?? "veo-3.1-fast-generate-preview";
+  readonly model: string;
   private readonly apiKey = getApiKey();
   private readonly baseUrl = process.env.GOOGLE_VEO_BASE_URL ?? DEFAULT_BASE_URL;
 
+  constructor(modelOverride?: string) {
+    this.model =
+      modelOverride?.trim() ||
+      process.env.GOOGLE_VEO_MODEL ||
+      "veo-3.1-fast-generate-preview";
+  }
+
   async startTextToVideo(input: StartTextToVideoInput): Promise<StartedVideoRender> {
     const requestBody = {
-      instances: [
-        {
-          prompt: input.prompt,
-        },
-      ],
+      instances: [{ prompt: input.prompt }],
       parameters: {
-        numberOfVideos: 1,
         aspectRatio: input.aspectRatio,
         durationSeconds: input.durationSeconds,
         ...(input.negativePrompt ? { negativePrompt: input.negativePrompt } : {}),
       },
     };
 
-    const response = await fetch(
-      `${this.baseUrl}/models/${this.model}:predictLongRunning`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": this.apiKey,
-        },
-        body: JSON.stringify(requestBody),
-        cache: "no-store",
+    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": this.apiKey,
       },
-    );
+      body: JSON.stringify(requestBody),
+      cache: "no-store",
+    });
 
     const rawResponse = (await response.json()) as Record<string, unknown>;
 
@@ -113,25 +112,21 @@ export class GoogleVeoProvider implements VideoProvider {
         },
       ],
       parameters: {
-        numberOfVideos: 1,
         aspectRatio: input.aspectRatio,
         durationSeconds: input.durationSeconds,
         ...(input.negativePrompt ? { negativePrompt: input.negativePrompt } : {}),
       },
     };
 
-    const response = await fetch(
-      `${this.baseUrl}/models/${this.model}:predictLongRunning`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": this.apiKey,
-        },
-        body: JSON.stringify(requestBody),
-        cache: "no-store",
+    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": this.apiKey,
       },
-    );
+      body: JSON.stringify(requestBody),
+      cache: "no-store",
+    });
 
     const rawResponse = (await response.json()) as Record<string, unknown>;
 
@@ -173,25 +168,21 @@ export class GoogleVeoProvider implements VideoProvider {
         },
       ],
       parameters: {
-        numberOfVideos: 1,
         aspectRatio: input.aspectRatio,
         durationSeconds: input.durationSeconds,
         ...(input.negativePrompt ? { negativePrompt: input.negativePrompt } : {}),
       },
     };
 
-    const response = await fetch(
-      `${this.baseUrl}/models/${this.model}:predictLongRunning`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": this.apiKey,
-        },
-        body: JSON.stringify(requestBody),
-        cache: "no-store",
+    const response = await fetch(`${this.baseUrl}/models/${this.model}:predictLongRunning`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": this.apiKey,
       },
-    );
+      body: JSON.stringify(requestBody),
+      cache: "no-store",
+    });
 
     const rawResponse = (await response.json()) as Record<string, unknown>;
 

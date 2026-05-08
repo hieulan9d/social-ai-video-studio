@@ -28,11 +28,13 @@ type GeneratedMediaOutput = {
 
 const DEFAULT_NINE_ROUTER_BASE_URL = "http://localhost:20128/v1";
 const REQUEST_TIMEOUT_MS = 120_000;
+const RESPONSE_PREVIEW_LIMIT = 240;
 
 function getNineRouterConfig() {
   const apiKey = process.env.NINE_ROUTER_API_KEY || process.env["9ROUTER_API_KEY"];
   const baseUrl =
     process.env.NINE_ROUTER_BASE_URL ||
+    process.env.AI_BASE_URL ||
     process.env["9ROUTER_BASE_URL"] ||
     DEFAULT_NINE_ROUTER_BASE_URL;
 
@@ -106,6 +108,13 @@ function extractOutputUrls(response: Record<string, unknown>) {
   return Array.from(new Set(outputs));
 }
 
+function previewResponseBody(rawText: string) {
+  const compact = rawText.replace(/\s+/g, " ").trim();
+  return compact.length > RESPONSE_PREVIEW_LIMIT
+    ? `${compact.slice(0, RESPONSE_PREVIEW_LIMIT)}...`
+    : compact;
+}
+
 async function requestNineRouter(
   endpoint: "/images/generations" | "/videos/generations",
   body: Record<string, unknown>,
@@ -127,9 +136,27 @@ async function requestNineRouter(
     });
 
     const rawText = await response.text();
-    const rawResponse = rawText
-      ? (JSON.parse(rawText) as Record<string, unknown>)
-      : {};
+    const contentType = response.headers.get("content-type") ?? "unknown";
+    let rawResponse: Record<string, unknown> = {};
+
+    if (rawText) {
+      try {
+        rawResponse = JSON.parse(rawText) as Record<string, unknown>;
+      } catch {
+        const preview = previewResponseBody(rawText);
+        const endpointUrl = `${baseUrl}${endpoint}`;
+        const isHtmlResponse =
+          contentType.includes("text/html") ||
+          rawText.trimStart().startsWith("<!DOCTYPE") ||
+          rawText.trimStart().startsWith("<html");
+
+        throw new Error(
+          isHtmlResponse
+            ? `9router endpoint ${endpointUrl} tráº£ vá» HTML thay vÃ¬ JSON. HÃ£y kiá»ƒm tra NINE_ROUTER_BASE_URL, route ${endpoint}, hoáº·c provider video trÃªn 9Router. Content-Type: ${contentType}. Preview: ${preview}`
+            : `9router endpoint ${endpointUrl} khÃ´ng tráº£ vá» JSON há»£p lá»‡. Content-Type: ${contentType}. Preview: ${preview}`,
+        );
+      }
+    }
 
     if (!response.ok) {
       throw new Error(

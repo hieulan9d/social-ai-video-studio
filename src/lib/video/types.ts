@@ -9,8 +9,8 @@ export type VideoRenderStatus = (typeof VIDEO_RENDER_STATUSES)[number];
 
 export type StartTextToVideoInput = {
   prompt: string;
-  aspectRatio: "9:16" | "16:9";
-  durationSeconds: 4 | 6 | 8;
+  aspectRatio: "9:16" | "16:9" | "1:1";
+  durationSeconds: number;
   negativePrompt?: string;
 };
 

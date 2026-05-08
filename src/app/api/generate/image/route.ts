@@ -3,11 +3,37 @@ import { getCurrentUserProfile } from "@/lib/auth/server";
 import { generateImage } from "@/lib/ai/generate-image";
 import { isAspectRatio, isImageModel } from "@/lib/ai/models";
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    const message = typeof record.message === "string" ? record.message : null;
+    const details = typeof record.details === "string" ? record.details : null;
+    const hint = typeof record.hint === "string" ? record.hint : null;
+    const summary = [message, details, hint].filter(Boolean).join(" | ");
+
+    if (summary) {
+      return summary;
+    }
+
+    try {
+      return JSON.stringify(record);
+    } catch {
+      return "Tao anh that bai.";
+    }
+  }
+
+  return "Tao anh that bai.";
+}
+
 function errorResponse(error: unknown, status = 400) {
   return NextResponse.json(
     {
       ok: false,
-      error: error instanceof Error ? error.message : "Tạo ảnh thất bại.",
+      error: getErrorMessage(error),
     },
     { status },
   );
@@ -18,7 +44,7 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUserProfile();
 
     if (!user) {
-      return errorResponse(new Error("Bạn cần đăng nhập."), 401);
+      return errorResponse(new Error("Ban can dang nhap."), 401);
     }
 
     const formData = await request.formData();
@@ -30,11 +56,11 @@ export async function POST(request: NextRequest) {
     const referenceImage = formData.get("referenceImage");
 
     if (!isImageModel(model)) {
-      throw new Error("Model ảnh không hợp lệ.");
+      throw new Error("Model anh khong hop le.");
     }
 
     if (!isAspectRatio(aspectRatio)) {
-      throw new Error("Tỷ lệ ảnh không hợp lệ.");
+      throw new Error("Ty le anh khong hop le.");
     }
 
     const result = await generateImage({
@@ -44,9 +70,10 @@ export async function POST(request: NextRequest) {
       aspectRatio,
       quantity,
       projectId,
-      referenceImage: referenceImage instanceof File && referenceImage.size > 0
-        ? referenceImage
-        : null,
+      referenceImage:
+        referenceImage instanceof File && referenceImage.size > 0
+          ? referenceImage
+          : null,
     });
 
     return NextResponse.json({ ok: true, result });

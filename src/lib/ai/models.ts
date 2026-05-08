@@ -1,10 +1,7 @@
 /**
- * AI Models Registry
- * Danh sách model dùng trong Social AI Video Studio
- * Chỉ dùng OpenAI/ChatGPT và Google/Gemini qua 9Router
+ * AI model registry used by the app UI and route validation.
  */
 
-// ── Text models ──────────────────────────────────────────────
 export const TEXT_MODELS = [
   "gpt-4o-mini",
   "gpt-4.1",
@@ -14,65 +11,64 @@ export const TEXT_MODELS = [
 
 export type TextModel = (typeof TEXT_MODELS)[number];
 
-// ── Image models — dạng object {id, label} ───────────────────
 export const IMAGE_MODELS = [
-  { id: "gpt-image-1", label: "GPT Image 1 (OpenAI)" },
-  { id: "gpt-image",   label: "GPT Image (OpenAI)" },
+  {
+    id: "gemini/gemini-3.1-flash-image-preview",
+    label: "Gemini 3.1 Flash Image Preview",
+  },
+  {
+    id: "gemini/gemini-3-pro-image-preview",
+    label: "Gemini 3 Pro Image Preview",
+  },
+  {
+    id: "gemini/gemini-2.5-flash-image",
+    label: "Gemini 2.5 Flash Image",
+  },
 ] as const;
 
 export type ImageModel = (typeof IMAGE_MODELS)[number]["id"];
 
-// ── Video models — dạng object {id, label} ───────────────────
 export const VIDEO_MODELS = [
-  { id: "veo-3",      label: "Veo 3 (Google)" },
-  { id: "veo-3-fast", label: "Veo 3 Fast (Google, nhanh)" },
-  { id: "veo",        label: "Veo (Google)" },
+  { id: "veo-3", label: "Veo 3 (Google)" },
+  { id: "veo-3-fast", label: "Veo 3 Fast (Google)" },
+  { id: "veo", label: "Veo (Google)" },
 ] as const;
 
 export type VideoModel = (typeof VIDEO_MODELS)[number]["id"];
 
-// ── Video durations — số giây ────────────────────────────────
 export const VIDEO_DURATIONS = [5, 8, 10, 15, 30] as const;
 
 export type VideoDuration = (typeof VIDEO_DURATIONS)[number];
 
-// ── Aspect ratios — string thuần ─────────────────────────────
-export const ASPECT_RATIOS = [
-  "1:1",
-  "16:9",
-  "9:16",
-  "4:3",
-  "3:4",
-] as const;
+export const ASPECT_RATIOS = ["1:1", "16:9", "9:16", "4:3", "3:4"] as const;
 
 export type AspectRatio = (typeof ASPECT_RATIOS)[number];
 
-// ── Misc ─────────────────────────────────────────────────────
 export type AnyModel = TextModel | ImageModel | VideoModel;
 
 export const MODEL_LABELS: Record<string, string> = {
-  "gpt-4o-mini":      "GPT-4o Mini (nhanh, tiết kiệm)",
-  "gpt-4.1":          "GPT-4.1 (chất lượng cao)",
-  "gemini-2.5-pro":   "Gemini 2.5 Pro (Google)",
-  "gemini-2.5-flash": "Gemini 2.5 Flash (Google, nhanh)",
-  "gpt-image-1":      "GPT Image 1 (tạo ảnh)",
-  "gpt-image":        "GPT Image (tạo ảnh)",
-  "veo-3":            "Veo 3 (tạo video Google)",
-  "veo-3-fast":       "Veo 3 Fast (tạo video nhanh)",
-  "veo":              "Veo (Google)",
+  "gpt-4o-mini": "GPT-4o Mini",
+  "gpt-4.1": "GPT-4.1",
+  "gemini-2.5-pro": "Gemini 2.5 Pro",
+  "gemini-2.5-flash": "Gemini 2.5 Flash",
+  "gemini/gemini-3.1-flash-image-preview": "Gemini 3.1 Flash Image Preview",
+  "gemini/gemini-3-pro-image-preview": "Gemini 3 Pro Image Preview",
+  "gemini/gemini-2.5-flash-image": "Gemini 2.5 Flash Image",
+  "veo-3": "Veo 3",
+  "veo-3-fast": "Veo 3 Fast",
+  veo: "Veo",
 };
 
-// ── Type guards ───────────────────────────────────────────────
 export function isAspectRatio(value: unknown): value is AspectRatio {
   return ASPECT_RATIOS.includes(value as AspectRatio);
 }
 
 export function isVideoModel(value: unknown): value is VideoModel {
-  return VIDEO_MODELS.some((m) => m.id === value);
+  return VIDEO_MODELS.some((model) => model.id === value);
 }
 
 export function isImageModel(value: unknown): value is ImageModel {
-  return IMAGE_MODELS.some((m) => m.id === value);
+  return IMAGE_MODELS.some((model) => model.id === value);
 }
 
 export function isVideoDuration(value: unknown): value is VideoDuration {

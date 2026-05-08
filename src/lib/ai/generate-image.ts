@@ -6,6 +6,17 @@ import { generateImageWithNineRouter } from "@/lib/ai/nine-router-media-provider
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { deductCredits, refundCredits } from "@/lib/wallet/server";
 
+function isMissingQuickGenerationsTableError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const record = error as Record<string, unknown>;
+  const message = typeof record.message === "string" ? record.message : "";
+  const details = typeof record.details === "string" ? record.details : "";
+  return `${message} ${details}`.includes("public.quick_generations");
+}
+
 export async function generateImage({
   userId,
   prompt,
@@ -26,7 +37,7 @@ export async function generateImage({
   const normalizedPrompt = prompt.trim();
 
   if (normalizedPrompt.length < 3) {
-    throw new Error("Prompt phải có ít nhất 3 ký tự.");
+    throw new Error("Prompt phai co it nhat 3 ky tu.");
   }
 
   const normalizedQuantity = Math.min(4, Math.max(1, Math.trunc(quantity || 1)));
@@ -36,7 +47,7 @@ export async function generateImage({
   await deductCredits({
     userId,
     amount: creditCost,
-    reason: projectId ? "Tạo ảnh trong dự án" : "Tạo ảnh nhanh",
+    reason: projectId ? "Tao anh trong du an" : "Tao anh nhanh",
     referenceType: "image_generation",
     referenceId,
     metadata: { project_id: projectId ?? null, model, quantity: normalizedQuantity },
@@ -92,6 +103,21 @@ export async function generateImage({
       .select("*");
 
     if (error) {
+      if (isMissingQuickGenerationsTableError(error)) {
+        return {
+          type: "ephemeral" as const,
+          outputs: result.outputUrls.map((outputUrl, index) => ({
+            id: `ephemeral-image-${Date.now()}-${index}`,
+            output_url: outputUrl,
+            prompt: normalizedPrompt,
+            model,
+          })),
+          outputUrls: result.outputUrls,
+          warning:
+            "Bang quick_generations chua ton tai. Output da duoc tao nhung chua luu vao lich su nhanh.",
+        };
+      }
+
       throw error;
     }
 
@@ -99,7 +125,7 @@ export async function generateImage({
   } catch (error) {
     if (!projectId) {
       const supabase = await createClient();
-      await supabase.from("quick_generations").insert({
+      const { error: insertError } = await supabase.from("quick_generations").insert({
         user_id: userId,
         type: "image",
         prompt: normalizedPrompt,
@@ -109,14 +135,18 @@ export async function generateImage({
         aspect_ratio: aspectRatio,
         quantity: normalizedQuantity,
         reference_file_name: referenceImage?.name ?? null,
-        error_message: error instanceof Error ? error.message : "Tạo ảnh thất bại.",
+        error_message: error instanceof Error ? error.message : "Tao anh that bai.",
       });
+
+      if (insertError && !isMissingQuickGenerationsTableError(insertError)) {
+        throw insertError;
+      }
     }
 
     await refundCredits({
       userId,
       amount: creditCost,
-      reason: "Hoàn tín dụng do tạo ảnh thất bại",
+      reason: "Hoan tin dung do tao anh that bai",
       referenceType: "image_generation_refund",
       referenceId,
       metadata: { project_id: projectId ?? null, model },
