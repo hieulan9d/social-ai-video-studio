@@ -124,10 +124,10 @@ export async function createTopUpPayment({
   packageId: string;
   providerName: PaymentProviderName;
 }) {
-  const [wallet, creditPackage] = await Promise.all([
+  const [wallet, creditPackage] = (await Promise.all([
     getUserWallet(userId),
     getCreditPackageById(packageId),
-  ]);
+  ])) as [Awaited<ReturnType<typeof getUserWallet>>, CreditPackage];
   const admin = createAdminClient();
   const returnUrl = new URL("/wallet", getSiteUrl()).toString();
 

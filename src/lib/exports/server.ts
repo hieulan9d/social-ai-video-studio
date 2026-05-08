@@ -3,6 +3,7 @@ import "server-only";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getProjectAsset } from "@/lib/assets/server";
 import { getAssetStorageProvider } from "@/lib/assets/storage";
@@ -23,6 +24,8 @@ const EXPORT_JOB_SELECT =
 
 const GENERATED_VIDEO_SELECT =
   "id, project_id, user_id, render_job_id, file_url, thumbnail_url, duration_seconds, status, provider, provider_job_id, storage_provider, storage_bucket, storage_path, mime_type, metadata, created_at, updated_at";
+
+const EXPORT_WORK_DIR_ROOT = join(tmpdir(), "social-ai-video-studio", "exports");
 
 type ExportOptions = {
   subtitles?: string;
@@ -286,7 +289,7 @@ async function renderWithFfmpeg({
   clips: GeneratedVideoRecord[];
   options: ExportOptions;
 }) {
-  const workDir = join(/*turbopackIgnore: true*/ process.cwd(), ".tmp", "exports", job.id);
+  const workDir = join(EXPORT_WORK_DIR_ROOT, job.id);
   await mkdir(workDir, { recursive: true });
 
   try {

@@ -76,22 +76,23 @@ export default async function ProjectDetailPage({
   let transitionVideoCreditCost = 0;
 
   if (activeTab === "overview") {
-    [script, scenes] = await Promise.all([
+    const overviewData = (await Promise.all([
       getProjectScript(projectId),
       getProjectScenes(projectId),
-    ]);
+    ])) as [ScriptRecord | null, SceneRecord[]];
+    [script, scenes] = overviewData;
   }
 
   if (activeTab === "images") {
-    [assets, imageCreditCost] = await Promise.all([
+    const imagesData = (await Promise.all([
       listProjectAssets(projectId, user.id),
       getFeatureCreditCost("image_generation"),
-    ]);
+    ])) as [ProjectAssetRecord[], number];
+    [assets, imageCreditCost] = imagesData;
   }
 
   if (activeTab === "videos") {
-    [assets, scenes, prompts, renderJobs, generatedVideos, exportJobs, videoCreditCost, imageToVideoCreditCost, transitionVideoCreditCost] =
-      await Promise.all([
+    const videosData = (await Promise.all([
         listProjectAssets(projectId, user.id),
         getProjectScenes(projectId),
         getProjectPrompts(projectId),
@@ -101,16 +102,29 @@ export default async function ProjectDetailPage({
         getFeatureCreditCost("video_generation"),
         getFeatureCreditCost("image_to_video"),
         getFeatureCreditCost("transition_video"),
-      ]);
+      ])) as [
+        ProjectAssetRecord[],
+        SceneRecord[],
+        PromptRecord[],
+        RenderJobRecord[],
+        GeneratedVideoRecord[],
+        ExportJobRecord[],
+        number,
+        number,
+        number,
+      ];
+    [assets, scenes, prompts, renderJobs, generatedVideos, exportJobs, videoCreditCost, imageToVideoCreditCost, transitionVideoCreditCost] =
+      videosData;
   }
 
   if (activeTab === "prompts") {
-    [assets, script, scenes, prompts] = await Promise.all([
+    const promptsData = (await Promise.all([
       listProjectAssets(projectId, user.id),
       getProjectScript(projectId),
       getProjectScenes(projectId),
       getProjectPrompts(projectId),
-    ]);
+    ])) as [ProjectAssetRecord[], ScriptRecord | null, SceneRecord[], PromptRecord[]];
+    [assets, script, scenes, prompts] = promptsData;
   }
 
   const previewAsset = resolvePreviewAsset(assets);
@@ -259,14 +273,14 @@ export default async function ProjectDetailPage({
               </div>
               <div className="flex flex-wrap gap-2">
                 {[
-                  ["Fit", Expand],
-                  ["Zoom", ScanSearch],
-                  ["Compare", Layers3],
-                  ["Download", Download],
-                  ["Export", Sparkles],
-                ].map(([label, Icon]) => (
+                  { label: "Fit", icon: Expand },
+                  { label: "Zoom", icon: ScanSearch },
+                  { label: "Compare", icon: Layers3 },
+                  { label: "Download", icon: Download },
+                  { label: "Export", icon: Sparkles },
+                ].map(({ label, icon: Icon }) => (
                   <button
-                    key={String(label)}
+                    key={label}
                     type="button"
                     className="inline-flex items-center gap-2 rounded-[8px] border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted-foreground)]"
                   >
