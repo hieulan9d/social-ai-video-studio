@@ -4,11 +4,12 @@ import {
   FileText,
   FolderKanban,
   HelpCircle,
+  Images,
   LayoutDashboard,
   Rocket,
+  Settings,
   ShieldCheck,
   Video,
-  Settings,
 } from "lucide-react";
 
 export type NavLink = {
@@ -20,6 +21,7 @@ export type NavLink = {
 export const appNavigation: NavLink[] = [
   { href: "/dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
   { href: "/onboarding", label: "Hướng dẫn bắt đầu", icon: Rocket },
+  { href: "/quick-create/image", label: "AI Studio nhanh", icon: Images },
   { href: "/projects", label: "Dự án", icon: FolderKanban },
   { href: "/render-history", label: "Lịch sử render", icon: Video },
   { href: "/wallet", label: "Ví tín dụng", icon: CreditCard },

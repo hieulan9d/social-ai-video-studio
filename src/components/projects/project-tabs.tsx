@@ -2,13 +2,11 @@ import Link from "next/link";
 import type { ProjectTab } from "@/lib/projects/types";
 
 const tabLabels: Record<ProjectTab, string> = {
-  brief: "Brief",
-  script: "Kịch bản",
-  scenes: "Cảnh",
-  prompts: "Prompt",
-  assets: "Tài sản",
-  render: "Render",
-  export: "Export",
+  overview: "Overview",
+  images: "Images",
+  videos: "Videos",
+  assets: "Assets",
+  prompts: "Prompts",
 };
 
 export function ProjectTabs({

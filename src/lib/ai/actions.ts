@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUserProfile } from "@/lib/auth/server";
 import { generateFullScript } from "@/lib/ai/server";
+import { getAITextProviderMetadata } from "@/lib/ai/providers";
 import {
   getProjectById,
   replacePromptsForProject,
@@ -49,6 +50,7 @@ export async function generateScriptAction(formData: FormData) {
   });
 
   try {
+    const providerMetadata = getAITextProviderMetadata();
     const result = await generateFullScript({
       platform: project.platform,
       duration: project.duration,
@@ -79,8 +81,8 @@ export async function generateScriptAction(formData: FormData) {
         language: project.language,
       },
       generatedOutput: result,
-      provider: "openai-compatible",
-      model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+      provider: providerMetadata.provider,
+      model: providerMetadata.model,
       version: (project.status === "script_ready" ? 2 : 1),
     });
 

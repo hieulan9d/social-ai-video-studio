@@ -10,7 +10,7 @@ import type {
 import { sanitizeFileName, validateAssetFile } from "@/lib/assets/validation";
 
 const ASSET_SELECT =
-  "id, project_id, user_id, asset_type, storage_provider, storage_bucket, storage_path, file_name, file_url, mime_type, file_size, width, height, metadata, created_at, updated_at";
+  "id, project_id, user_id, asset_type, type, storage_provider, storage_bucket, storage_path, file_name, file_url, mime_type, file_size, width, height, metadata, prompt, model, output_url, status, created_at, updated_at";
 
 function buildStoragePath({
   userId,
@@ -54,6 +54,13 @@ async function assertProjectOwnership(projectId: string, userId: string) {
 async function attachSignedUrls(records: ProjectAssetRecord[]) {
   return Promise.all(
     records.map(async (record) => {
+      if (record.storage_provider === "remote" || record.output_url) {
+        return {
+          ...record,
+          file_url: record.output_url ?? record.file_url,
+        };
+      }
+
       const provider = getAssetStorageProvider(record.storage_provider);
       const signedUrl = await provider.createSignedReadUrl({
         bucket: record.storage_bucket,
@@ -209,11 +216,13 @@ export async function deleteProjectAsset({
     throw new Error("Asset not found.");
   }
 
-  const provider = getAssetStorageProvider(asset.storage_provider);
-  await provider.delete({
-    bucket: asset.storage_bucket,
-    path: asset.storage_path,
-  });
+  if (asset.storage_provider !== "remote") {
+    const provider = getAssetStorageProvider(asset.storage_provider);
+    await provider.delete({
+      bucket: asset.storage_bucket,
+      path: asset.storage_path,
+    });
+  }
 
   const { error: deleteError } = await supabase
     .from("project_assets")

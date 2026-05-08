@@ -6,6 +6,8 @@ export const FEATURE_PRICE_KEYS = [
   "image_to_video",
   "transition_video",
   "export",
+  "image_generation",
+  "video_generation",
 ] as const;
 
 export type FeaturePriceKey = (typeof FEATURE_PRICE_KEYS)[number];

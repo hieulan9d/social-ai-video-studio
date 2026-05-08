@@ -10,13 +10,19 @@ export const PROJECT_ASSET_TYPES = [
 ] as const;
 
 export type ProjectAssetType = (typeof PROJECT_ASSET_TYPES)[number];
-export type StoredProjectAssetType = ProjectAssetType | "reference_image" | "audio";
+export type GeneratedProjectAssetType = "generated_image" | "generated_video";
+export type StoredProjectAssetType =
+  | ProjectAssetType
+  | "reference_image"
+  | "audio"
+  | GeneratedProjectAssetType;
 
 export type ProjectAssetRecord = {
   id: string;
   project_id: string;
   user_id: string;
   asset_type: StoredProjectAssetType;
+  type?: "image" | "video" | "audio" | "file";
   storage_provider: string;
   storage_bucket: string;
   storage_path: string;
@@ -27,6 +33,10 @@ export type ProjectAssetRecord = {
   width: number | null;
   height: number | null;
   metadata: Record<string, unknown>;
+  prompt?: string | null;
+  model?: string | null;
+  output_url?: string | null;
+  status?: "queued" | "processing" | "completed" | "failed";
   created_at: string;
   updated_at: string;
 };

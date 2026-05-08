@@ -1,0 +1,78 @@
+import "server-only";
+
+import { randomUUID } from "node:crypto";
+import { createClient } from "@/lib/supabase/server";
+import type { ProjectAssetRecord } from "@/lib/assets/types";
+
+const PROJECT_ASSET_SELECT =
+  "id, project_id, user_id, asset_type, type, storage_provider, storage_bucket, storage_path, file_name, file_url, mime_type, file_size, width, height, metadata, prompt, model, output_url, status, created_at, updated_at";
+
+export async function assertProjectOwnership(projectId: string, userId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", userId)
+    .maybeSingle<{ id: string }>();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("Không tìm thấy dự án hoặc bạn không có quyền truy cập.");
+  }
+}
+
+export async function saveGeneratedProjectAsset({
+  userId,
+  projectId,
+  type,
+  prompt,
+  model,
+  outputUrl,
+  metadata,
+}: {
+  userId: string;
+  projectId: string;
+  type: "image" | "video";
+  prompt: string;
+  model: string;
+  outputUrl: string;
+  metadata?: Record<string, unknown>;
+}) {
+  await assertProjectOwnership(projectId, userId);
+
+  const supabase = await createClient();
+  const id = randomUUID();
+  const { data, error } = await supabase
+    .from("project_assets")
+    .insert({
+      id,
+      project_id: projectId,
+      user_id: userId,
+      asset_type: type === "image" ? "generated_image" : "generated_video",
+      type,
+      storage_provider: "remote",
+      storage_bucket: "9router",
+      storage_path: `generated/${id}`,
+      file_name: `${type}-${id}.${type === "image" ? "png" : "mp4"}`,
+      file_url: outputUrl,
+      output_url: outputUrl,
+      mime_type: type === "image" ? "image/png" : "video/mp4",
+      file_size: 0,
+      prompt,
+      model,
+      status: "completed",
+      metadata: metadata ?? {},
+    })
+    .select(PROJECT_ASSET_SELECT)
+    .single<ProjectAssetRecord>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}

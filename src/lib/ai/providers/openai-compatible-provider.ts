@@ -8,14 +8,18 @@ import type {
 } from "@/lib/ai/types";
 import type { AITextProvider } from "@/lib/ai/providers/text-provider";
 
-function getAiConfig() {
+export type OpenAICompatibleTextProviderConfig = {
+  name?: string;
+  apiKey: string | undefined;
+  baseUrl: string;
+  model: string;
+  missingApiKeyMessage?: string;
+};
+
+function getAiConfig(): OpenAICompatibleTextProviderConfig {
   const apiKey = process.env.OPENAI_API_KEY;
   const baseUrl = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
   const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
-
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY for AI script generation.");
-  }
 
   return { apiKey, baseUrl, model };
 }
@@ -26,15 +30,21 @@ type ChatMessage = {
 };
 
 export class OpenAICompatibleTextProvider implements AITextProvider {
-  readonly name = "openai-compatible";
+  readonly name: string;
   readonly model: string;
   private readonly apiKey: string;
   private readonly baseUrl: string;
 
-  constructor() {
-    const config = getAiConfig();
+  constructor(config: OpenAICompatibleTextProviderConfig = getAiConfig()) {
+    if (!config.apiKey) {
+      throw new Error(
+        config.missingApiKeyMessage ?? "Missing OPENAI_API_KEY for AI script generation.",
+      );
+    }
+
+    this.name = config.name ?? "openai-compatible";
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl;
+    this.baseUrl = config.baseUrl.replace(/\/$/, "");
     this.model = config.model;
   }
 
