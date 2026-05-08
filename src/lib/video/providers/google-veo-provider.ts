@@ -98,7 +98,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
       body: JSON.stringify(requestBody),
       cache: "no-store",
-    });
+    }, "start text-to-video");
 
     if (!response.ok) {
       throw new Error(`Google Veo request failed: ${response.status} ${await readErrorPayload(response)}`);
@@ -146,7 +146,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
       body: JSON.stringify(requestBody),
       cache: "no-store",
-    });
+    }, "start image-to-video");
 
     if (!response.ok) {
       throw new Error(
@@ -202,7 +202,7 @@ export class GoogleVeoProvider implements VideoProvider {
       },
       body: JSON.stringify(requestBody),
       cache: "no-store",
-    });
+    }, "start start-end transition");
 
     if (!response.ok) {
       throw new Error(
