@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAdminTestBalance, isAdminUserId } from "@/lib/auth/permissions";
 import type {
   CreditPackage,
   CreditPackageRecord,
@@ -79,7 +80,16 @@ export async function getUserWallet(userId: string) {
     throw ensureError;
   }
 
-  return mapWallet(ensuredWallet);
+  const wallet = mapWallet(ensuredWallet);
+
+  if (await isAdminUserId(userId)) {
+    return {
+      ...wallet,
+      balanceCredit: getAdminTestBalance(),
+    };
+  }
+
+  return wallet;
 }
 
 export async function addCredits({
@@ -177,6 +187,29 @@ async function mutateCredits(
 ) {
   const supabase = await createClient();
   const normalizedAmount = Math.abs(Math.trunc(amount));
+
+  if (
+    (functionName === "deduct_credits" || functionName === "refund_credits") &&
+    (await isAdminUserId(userId))
+  ) {
+    return {
+      walletId: `admin-bypass:${userId}`,
+      userId,
+      balanceCredit: getAdminTestBalance(),
+      transactionId: `admin-bypass:${functionName}:${referenceId ?? Date.now()}`,
+      transactionType: functionName === "deduct_credits" ? "admin_bypass_debit" : "admin_bypass_refund",
+      amountCredit: 0,
+      reason: reason ?? "Admin bypass",
+      referenceType: referenceType ?? "admin_bypass",
+      referenceId: referenceId ?? null,
+      metadata: {
+        ...(metadata ?? {}),
+        admin_bypass: true,
+        requested_amount: amount,
+      },
+      createdAt: new Date().toISOString(),
+    };
+  }
 
   if (normalizedAmount <= 0) {
     throw new Error("Số tín dụng phải lớn hơn 0.");

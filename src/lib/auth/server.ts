@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ensureConfiguredAdminRole } from "@/lib/auth/permissions";
 import type { AuthUserProfile, ProfileRecord } from "@/lib/auth/types";
 
 function toProfilePayload(user: {
@@ -18,14 +19,20 @@ function toProfilePayload(user: {
   };
 }
 
-function mapProfile(profile: ProfileRecord): AuthUserProfile {
+async function mapProfile(profile: ProfileRecord): Promise<AuthUserProfile> {
+  const role = await ensureConfiguredAdminRole({
+    userId: profile.id,
+    email: profile.email,
+    currentRole: profile.role ?? "user",
+  });
+
   return {
     id: profile.id,
     email: profile.email,
     fullName: profile.full_name,
     avatarUrl: profile.avatar_url,
     workspaceName: profile.workspace_name,
-    role: profile.role ?? "user",
+    role,
     accountStatus: profile.account_status ?? "active",
     onboardingCompletedAt: profile.onboarding_completed_at ?? null,
     onboardingMetadata: profile.onboarding_metadata ?? {},

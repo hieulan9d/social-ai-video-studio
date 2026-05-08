@@ -40,7 +40,11 @@ export function validateAssetType(value: string): ProjectAssetType {
   return value;
 }
 
-export function validateAssetFile(file: File, assetType?: ProjectAssetType) {
+export function validateAssetFile(
+  file: File,
+  assetType?: ProjectAssetType,
+  options?: { bypassSizeLimit?: boolean },
+) {
   if (file.size <= 0) {
     throw new Error("Uploaded file is empty.");
   }
@@ -58,7 +62,7 @@ export function validateAssetFile(file: File, assetType?: ProjectAssetType) {
       file.type as (typeof ALLOWED_PROJECT_IMAGE_MIME_TYPES)[number],
     )
   ) {
-    if (file.size > MAX_PROJECT_IMAGE_ASSET_SIZE_BYTES) {
+    if (!options?.bypassSizeLimit && file.size > MAX_PROJECT_IMAGE_ASSET_SIZE_BYTES) {
       throw new Error("Uploaded image must be 10MB or smaller.");
     }
     return;
@@ -69,7 +73,7 @@ export function validateAssetFile(file: File, assetType?: ProjectAssetType) {
       file.type as (typeof ALLOWED_PROJECT_AUDIO_MIME_TYPES)[number],
     )
   ) {
-    if (file.size > MAX_PROJECT_AUDIO_ASSET_SIZE_BYTES) {
+    if (!options?.bypassSizeLimit && file.size > MAX_PROJECT_AUDIO_ASSET_SIZE_BYTES) {
       throw new Error("Uploaded audio must be 50MB or smaller.");
     }
     return;

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import { isAdminUserId } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { getAssetStorageBucket, getAssetStorageProvider } from "@/lib/assets/storage";
 import type {
@@ -136,7 +137,9 @@ export async function uploadProjectAsset({
   assetType: ProjectAssetType;
   file: File;
 }) {
-  validateAssetFile(file, assetType);
+  validateAssetFile(file, assetType, {
+    bypassSizeLimit: await isAdminUserId(userId),
+  });
   await assertProjectOwnership(projectId, userId);
 
   const provider = getAssetStorageProvider();
