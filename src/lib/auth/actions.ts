@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getSiteUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -28,7 +29,7 @@ export async function loginWithPassword(
   });
 
   if (error) {
-    return { error: error.message, success: null };
+    return { error: "Email hoặc mật khẩu không đúng.", success: null };
   }
 
   redirect(next);
@@ -44,7 +45,7 @@ export async function registerWithPassword(
   const workspaceName = readString(formData, "workspaceName");
 
   const supabase = await createClient();
-  const redirectTo = new URL("/auth/callback", process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
+  const redirectTo = new URL("/auth/callback", getSiteUrl());
   redirectTo.searchParams.set("next", "/dashboard");
 
   const { error } = await supabase.auth.signUp({
@@ -60,18 +61,18 @@ export async function registerWithPassword(
   });
 
   if (error) {
-    return { error: error.message, success: null };
+    return { error: "Không thể đăng ký tài khoản.", success: null };
   }
 
   return {
     error: null,
     success:
-      "Tài khoản đã được tạo. Nếu Supabase đang bật xác nhận email, hãy kiểm tra hộp thư trước khi đăng nhập.",
+      "Đăng ký thành công. Nếu Supabase đang bật xác nhận email, hãy kiểm tra hộp thư trước khi đăng nhập.",
   };
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/auth");
+  redirect("/login");
 }

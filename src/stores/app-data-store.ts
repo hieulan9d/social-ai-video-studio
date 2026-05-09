@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { QuickGenerationRecord } from "@/lib/ai/quick-generations";
 import type { AnalyticsDashboardSummary } from "@/lib/analytics/dashboard";
+import type { DashboardSummary } from "@/lib/dashboard/summary";
 import type { ProjectAssetRecord } from "@/lib/projects/types";
 import type { AuthUserProfile } from "@/lib/auth/types";
 import type { Project } from "@/lib/projects/types";
@@ -21,18 +22,21 @@ type ShellState = {
 
 type AppDataStore = {
   shell: ShellState;
+  dashboard: CachedResource<DashboardSummary | null>;
   projects: CachedResource<Project[]>;
   quickHistory: CachedResource<QuickGenerationRecord[]>;
   analytics: CachedResource<AnalyticsDashboardSummary | null>;
   projectAssets: Record<string, CachedResource<ProjectAssetRecord[]>>;
   setShell: (payload: ShellState) => void;
-  startLoading: (key: "projects" | "quickHistory" | "analytics") => void;
+  setCredits: (credits: number) => void;
+  startLoading: (key: "dashboard" | "projects" | "quickHistory" | "analytics") => void;
   startProjectAssetsLoading: (projectId: string) => void;
+  setDashboard: (summary: DashboardSummary) => void;
   setProjects: (projects: Project[]) => void;
   setQuickHistory: (generations: QuickGenerationRecord[]) => void;
   setAnalytics: (summary: AnalyticsDashboardSummary) => void;
   setProjectAssets: (projectId: string, assets: ProjectAssetRecord[]) => void;
-  setError: (key: "projects" | "quickHistory" | "analytics", error: string) => void;
+  setError: (key: "dashboard" | "projects" | "quickHistory" | "analytics", error: string) => void;
   setProjectAssetsError: (projectId: string, error: string) => void;
 };
 
@@ -50,6 +54,7 @@ export const useAppDataStore = create<AppDataStore>((set) => ({
     user: null,
     credits: 0,
   },
+  dashboard: createCachedResource<DashboardSummary | null>(null),
   projects: createCachedResource<Project[]>([]),
   quickHistory: createCachedResource<QuickGenerationRecord[]>([]),
   analytics: createCachedResource<AnalyticsDashboardSummary | null>(null),
@@ -67,6 +72,13 @@ export const useAppDataStore = create<AppDataStore>((set) => ({
         shell: payload,
       };
     }),
+  setCredits: (credits) =>
+    set((state) => ({
+      shell: {
+        ...state.shell,
+        credits,
+      },
+    })),
   startLoading: (key) =>
     set((state) => ({
       [key]: {
@@ -84,6 +96,15 @@ export const useAppDataStore = create<AppDataStore>((set) => ({
           loading: true,
           error: null,
         },
+      },
+    })),
+  setDashboard: (summary) =>
+    set(() => ({
+      dashboard: {
+        loaded: true,
+        loading: false,
+        data: summary,
+        error: null,
       },
     })),
   setProjects: (projects) =>

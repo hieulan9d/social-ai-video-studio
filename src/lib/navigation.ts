@@ -52,9 +52,11 @@ export const navigationSections: NavSection[] = [
     label: "Quản lý",
     items: [
       { href: "/analytics", label: "Analytics", icon: ChartColumn },
-      { href: "/wallet", label: "Credits", icon: Coins },
+      { href: "/credits", label: "Credits", icon: Coins },
       { href: "/settings", label: "Cài đặt AI", icon: Settings2 },
       { href: "/admin", label: "Admin", icon: ShieldCheck },
+      { href: "/admin/users", label: "Người dùng", icon: ShieldCheck },
+      { href: "/admin/payments", label: "Thanh toán", icon: Coins },
     ],
   },
 ];

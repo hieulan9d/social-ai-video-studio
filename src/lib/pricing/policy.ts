@@ -5,6 +5,8 @@ const FREE_FEATURE_KEYS = new Set<FeaturePriceKey>([
   "scene_generation",
   "prompt_generation",
   "export",
+  "image_generation",
+  "video_generation",
 ]);
 
 const DEFAULT_FEATURE_CREDIT_COST: Record<FeaturePriceKey, number> = {
@@ -12,11 +14,11 @@ const DEFAULT_FEATURE_CREDIT_COST: Record<FeaturePriceKey, number> = {
   scene_generation: 0,
   prompt_generation: 0,
   veo_render: 5,
-  image_to_video: 5,
-  transition_video: 5,
+  image_to_video: 6,
+  transition_video: 7,
   export: 0,
-  image_generation: 2,
-  video_generation: 5,
+  image_generation: 0,
+  video_generation: 0,
 };
 
 export function isFreeFeature(featureKey: FeaturePriceKey) {

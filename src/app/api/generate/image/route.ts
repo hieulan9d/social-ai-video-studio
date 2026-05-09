@@ -83,7 +83,11 @@ export async function POST(request: NextRequest) {
           : null,
     });
 
-    return NextResponse.json({ ok: true, result });
+    return NextResponse.json({
+      ok: true,
+      result,
+      credits: "credits" in result ? result.credits : undefined,
+    });
   } catch (error) {
     return errorResponse(error);
   }

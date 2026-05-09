@@ -1,23 +1,29 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useState } from "react";
 import { LoaderCircle } from "lucide-react";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import {
   loginWithPassword,
   registerWithPassword,
   type AuthActionState,
 } from "@/lib/auth/actions";
-import { createClient } from "@/lib/supabase/client";
-import { getSiteUrl } from "@/lib/env";
 
 const initialState: AuthActionState = {
   error: null,
   success: null,
 };
 
-export function AuthForm({ next }: { next?: string }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [isGooglePending, startGoogleTransition] = useTransition();
+export function AuthForm({
+  next,
+  initialMode = "login",
+  errorMessage,
+}: {
+  next?: string;
+  initialMode?: "login" | "register";
+  errorMessage?: string | null;
+}) {
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [loginState, loginAction, loginPending] = useActionState(
     loginWithPassword,
     initialState,
@@ -30,27 +36,7 @@ export function AuthForm({ next }: { next?: string }) {
   const state = mode === "login" ? loginState : registerState;
   const formAction = mode === "login" ? loginAction : registerAction;
   const pending = mode === "login" ? loginPending : registerPending;
-
   const title = mode === "login" ? "Đăng nhập" : "Đăng ký";
-
-  const signInWithGoogle = () => {
-    startGoogleTransition(async () => {
-      const supabase = createClient();
-      const redirectTo = new URL("/auth/callback", getSiteUrl());
-      redirectTo.searchParams.set("next", next || "/dashboard");
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectTo.toString(),
-        },
-      });
-
-      if (error) {
-        console.error(error);
-      }
-    });
-  };
 
   return (
     <div className="rounded-[32px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-soft)]">
@@ -81,7 +67,20 @@ export function AuthForm({ next }: { next?: string }) {
         </button>
       </div>
 
-      <form action={formAction} className="mt-6 space-y-4">
+      <div className="mt-6">
+        <GoogleLoginButton
+          next={next || "/dashboard"}
+          label={mode === "login" ? "Đăng nhập bằng Google" : "Đăng ký bằng Google"}
+        />
+      </div>
+
+      <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
+        <span className="h-px flex-1 bg-[var(--border)]" />
+        hoặc
+        <span className="h-px flex-1 bg-[var(--border)]" />
+      </div>
+
+      <form action={formAction} className="space-y-4">
         <input type="hidden" name="next" value={next || "/dashboard"} />
 
         <div>
@@ -131,6 +130,12 @@ export function AuthForm({ next }: { next?: string }) {
           </>
         ) : null}
 
+        {errorMessage ? (
+          <p className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            {errorMessage}
+          </p>
+        ) : null}
+
         {state.error ? (
           <p className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
             {state.error}
@@ -152,22 +157,6 @@ export function AuthForm({ next }: { next?: string }) {
           {title}
         </button>
       </form>
-
-      <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
-        <span className="h-px flex-1 bg-[var(--border)]" />
-        Hoặc tiếp tục với
-        <span className="h-px flex-1 bg-[var(--border)]" />
-      </div>
-
-      <button
-        type="button"
-        disabled={isGooglePending}
-        onClick={signInWithGoogle}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm font-medium disabled:opacity-60"
-      >
-        {isGooglePending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-        Tiếp tục với Google
-      </button>
     </div>
   );
 }

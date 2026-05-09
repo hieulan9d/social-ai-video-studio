@@ -29,6 +29,7 @@ export function formatMoneyVnd(amount: number, currency?: string | null) {
   }).format(toDisplayVndAmount(amount, currency));
 }
 
-export function getDisplayCurrencyLabel(_currency?: string | null) {
+export function getDisplayCurrencyLabel(currency?: string | null) {
+  void currency;
   return "VND";
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "@/lib/ai/text";
 import type { AITask } from "@/lib/ai/model-router";
+import { requireUser } from "@/lib/auth/get-current-user";
 
 const VALID_TASKS: AITask[] = [
   "chat",
@@ -12,24 +13,33 @@ const VALID_TASKS: AITask[] = [
 ];
 
 export async function POST(req: NextRequest) {
+  try {
+    await requireUser();
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Bạn cần đăng nhập để sử dụng chức năng này." },
+      { status: 401 },
+    );
+  }
+
   let body: unknown;
 
   try {
     body = await req.json();
   } catch {
     return NextResponse.json(
-      { success: false, error: "Request body không hợp lệ (phải là JSON)." },
-      { status: 400 }
+      { success: false, error: "Request body không hợp lệ, phải là JSON." },
+      { status: 400 },
     );
   }
 
-  const { task, prompt, systemPrompt, temperature, maxTokens } =
+  const { task, prompt, systemPrompt, temperature, maxTokens, imageDataUrls } =
     body as Record<string, unknown>;
 
   if (!task || typeof task !== "string") {
     return NextResponse.json(
       { success: false, error: 'Thiếu trường "task".' },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -39,14 +49,14 @@ export async function POST(req: NextRequest) {
         success: false,
         error: `Task "${task}" không hợp lệ. Các task hợp lệ: ${VALID_TASKS.join(", ")}`,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
     return NextResponse.json(
       { success: false, error: 'Thiếu trường "prompt".' },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -57,13 +67,21 @@ export async function POST(req: NextRequest) {
       systemPrompt: typeof systemPrompt === "string" ? systemPrompt : undefined,
       temperature: typeof temperature === "number" ? temperature : undefined,
       maxTokens: typeof maxTokens === "number" ? maxTokens : undefined,
+      imageDataUrls: Array.isArray(imageDataUrls)
+        ? imageDataUrls.filter((item): item is string => typeof item === "string")
+        : undefined,
     });
 
     if (!result.success) {
       return NextResponse.json(result, { status: 502 });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      credits: {
+        cost: 0,
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Lỗi không xác định";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

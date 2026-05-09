@@ -9,7 +9,7 @@ export default async function QuickVideoPage() {
   const [projects, videoCreditCost, imageToVideoCreditCost, transitionVideoCreditCost] =
     await Promise.all([
       getProjects(user.id),
-      getFeatureCreditCost("video_generation"),
+      getFeatureCreditCost("veo_render"),
       getFeatureCreditCost("image_to_video"),
       getFeatureCreditCost("transition_video"),
     ]);

@@ -4,3 +4,5 @@ import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/env";
 export function createClient() {
   return createBrowserClient(getSupabaseUrl(), getSupabasePublishableKey());
 }
+
+export const createClientSupabase = createClient;

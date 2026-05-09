@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
-import { Check, Copy, History, Sparkles } from "lucide-react";
-
+import { Check, Copy, History, ImageIcon, Sparkles, Trash2, Upload } from "lucide-react";
 import type { QuickGenerationRecord } from "@/lib/ai/quick-generations";
 import {
   PROMPT_STUDIO_IMAGE_TEMPLATE,
@@ -11,15 +11,8 @@ import {
 } from "@/lib/prompt-studio/knowledge";
 
 type PromptMode = "video" | "image";
-
 type DurationOption = "15s" | "30s" | "45s" | "60s";
-type PlatformOption =
-  | "TikTok"
-  | "Reels"
-  | "Shorts"
-  | "Facebook"
-  | "Shopee"
-  | "Website";
+type PlatformOption = "TikTok" | "Reels" | "Shorts" | "Facebook" | "Shopee" | "Website";
 
 const durationOptions: DurationOption[] = ["15s", "30s", "45s", "60s"];
 const platformOptions: PlatformOption[] = [
@@ -60,6 +53,8 @@ function buildImageSystemPrompt() {
     "You are Prompt Studio, an expert AI prompt engineer for commercial image generation.",
     "Your job is to transform a rough user idea into a sharp, production-ready image prompt package.",
     "Use the knowledge base below as operating rules.",
+    "When reference images are provided, inspect them carefully and use them to infer composition, product shape, color palette, styling, framing, lighting, materials, and visual hierarchy.",
+    "Never mention that you cannot see the image unless the image is missing or unreadable.",
     "",
     "KNOWLEDGE BASE",
     PROMPT_STUDIO_KNOWLEDGE,
@@ -108,6 +103,7 @@ function buildImageUserPrompt(input: {
   platform: PlatformOption;
   language: string;
   consistency: string;
+  referenceImageName: string;
 }) {
   return [
     "Hãy phân tích ý tưởng sau và tạo prompt ảnh hoàn chỉnh.",
@@ -116,6 +112,9 @@ function buildImageUserPrompt(input: {
     `Phong cách mong muốn: ${input.style || "Chưa chỉ định"}`,
     `Ngôn ngữ mô tả: ${input.language}`,
     `Yêu cầu consistency: ${input.consistency || "Ưu tiên giữ đồng nhất nhân vật, sản phẩm, background khi hợp lý."}`,
+    input.referenceImageName
+      ? `Ảnh tham chiếu đã được gửi kèm: ${input.referenceImageName}. Hãy phân tích kỹ bố cục, hình dáng, tông màu, chất liệu, typo/packaging nếu có, và đưa vào prompt một cách hữu ích.`
+      : "Không có ảnh tham chiếu.",
     "Mục tiêu đầu ra:",
     "- Làm rõ concept và hướng visual.",
     "- Tối ưu bố cục, góc máy, ánh sáng, chất liệu hình ảnh.",
@@ -149,6 +148,8 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
   const [model, setModel] = useState("");
   const [history, setHistory] = useState(initialHistory);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [referenceImageDataUrl, setReferenceImageDataUrl] = useState<string | null>(null);
+  const [referenceImageName, setReferenceImageName] = useState("");
 
   function flashCopied(key: string) {
     setCopiedKey(key);
@@ -176,6 +177,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
           style,
           language,
           consistency,
+          reference_image_name: mode === "image" ? referenceImageName || null : null,
         },
       }),
     });
@@ -183,7 +185,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
     const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      throw new Error(payload.error ?? "Không thể lưu lịch sử prompt AI.");
+      throw new Error(payload.error ?? "Khong the luu lich su prompt AI.");
     }
 
     if (payload.warning) {
@@ -218,8 +220,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
         },
         body: JSON.stringify({
           task: mode === "video" ? "reasoning" : "prompt",
-          systemPrompt:
-            mode === "video" ? buildVideoSystemPrompt() : buildImageSystemPrompt(),
+          systemPrompt: mode === "video" ? buildVideoSystemPrompt() : buildImageSystemPrompt(),
           prompt:
             mode === "video"
               ? buildVideoUserPrompt({
@@ -236,7 +237,10 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                   platform,
                   language,
                   consistency,
+                  referenceImageName,
                 }),
+          imageDataUrls:
+            mode === "image" && referenceImageDataUrl ? [referenceImageDataUrl] : undefined,
           temperature: mode === "video" ? 0.7 : 0.8,
           maxTokens: mode === "video" ? 2600 : 1800,
         }),
@@ -260,7 +264,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
         setWarning(
           historyError instanceof Error
             ? historyError.message
-            : "Không thể lưu lịch sử prompt AI.",
+            : "Khong the luu lich su prompt AI.",
         );
       }
     } catch (caught) {
@@ -306,6 +310,28 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
     setStyle(typeof metadata.style === "string" ? metadata.style : "");
     setLanguage(typeof metadata.language === "string" ? metadata.language : "Vietnamese");
     setConsistency(typeof metadata.consistency === "string" ? metadata.consistency : "");
+    setReferenceImageDataUrl(null);
+    setReferenceImageName(
+      typeof metadata.reference_image_name === "string" ? metadata.reference_image_name : "",
+    );
+    setError("");
+  }
+
+  async function handleReferenceImageChange(file: File | null) {
+    if (!file) {
+      setReferenceImageDataUrl(null);
+      setReferenceImageName("");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Ảnh tham chiếu phải là file hình ảnh hợp lệ.");
+      return;
+    }
+
+    const dataUrl = await readFileAsDataUrl(file);
+    setReferenceImageDataUrl(dataUrl);
+    setReferenceImageName(file.name);
     setError("");
   }
 
@@ -369,7 +395,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
 
               {mode === "video" ? (
                 <Select
-                  label="Thời lượng"
+                  label="Thoi luong"
                   value={duration}
                   onChange={(value) => setDuration(value as DurationOption)}
                 >
@@ -401,6 +427,67 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
               />
             </label>
 
+            {mode === "image" ? (
+              <label className="block">
+                <span className="text-sm font-medium">Ảnh tham chiếu</span>
+                <div className="mt-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+                  <div className="flex flex-col gap-4">
+                    <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--border)] px-4 py-4 text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+                      <Upload className="h-4 w-4" />
+                      {referenceImageDataUrl ? "Đổi ảnh tham chiếu" : "Thêm ảnh để AI tham chiếu"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) =>
+                          void handleReferenceImageChange(event.target.files?.[0] ?? null)
+                        }
+                        className="hidden"
+                      />
+                    </label>
+
+                    {referenceImageDataUrl ? (
+                      <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
+                        <div className="relative aspect-[4/3] w-full bg-[var(--surface)]">
+                          <Image
+                            src={referenceImageDataUrl}
+                            alt={referenceImageName || "Anh tham chieu"}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm text-[var(--foreground)]">
+                              {referenceImageName}
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                              AI sẽ xem ảnh này để viết prompt sát hơn với bố cục, concept và chi tiết thị giác.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReferenceImageDataUrl(null);
+                              setReferenceImageName("");
+                            }}
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4 text-sm text-[var(--muted-foreground)]">
+                        <ImageIcon className="h-4 w-4" />
+                        Chưa có ảnh tham chiếu. Bạn có thể thêm ảnh sản phẩm, poster, bố cục mẫu hoặc visual mẫu để AI viết prompt tốt hơn.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </label>
+            ) : null}
+
             <label className="block">
               <span className="text-sm font-medium">Ghi chú consistency</span>
               <textarea
@@ -419,7 +506,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                   value={language}
                   onChange={(event) => setLanguage(event.target.value)}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-sm outline-none"
-                placeholder="Ví dụ: Vietnamese"
+                  placeholder="Ví dụ: Vietnamese"
                 />
               </label>
             ) : null}
@@ -467,11 +554,7 @@ export function PromptStudio({ initialHistory, historyAvailable }: PromptStudioP
                   : "border-[var(--border)] text-[var(--muted-foreground)]",
               ].join(" ")}
             >
-              {copiedKey === "result" ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
+              {copiedKey === "result" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copiedKey === "result" ? "Đã copy" : "Sao chép"}
             </button>
           </div>
@@ -666,4 +749,13 @@ function Select({
       </select>
     </label>
   );
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Khong the doc anh tham chieu."));
+    reader.readAsDataURL(file);
+  });
 }

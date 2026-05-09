@@ -7,6 +7,7 @@ export interface GenerateTextParams {
   systemPrompt?: string;
   temperature?: number;
   maxTokens?: number;
+  imageDataUrls?: string[];
 }
 
 export interface GenerateTextResult {
@@ -23,7 +24,7 @@ export type GenerateTextError = {
 export async function generateText(
   params: GenerateTextParams,
 ): Promise<GenerateTextResult | GenerateTextError> {
-  const { task, prompt, systemPrompt, temperature, maxTokens } = params;
+  const { task, prompt, systemPrompt, temperature, maxTokens, imageDataUrls } = params;
 
   const supportedTextTasks: AITask[] = [
     "chat",
@@ -41,13 +42,33 @@ export async function generateText(
     };
   }
 
-  const messages: Array<{ role: "system" | "user"; content: string }> = [];
+  const messages: Array<{
+    role: "system" | "user";
+    content:
+      | string
+      | Array<
+          | { type: "text"; text: string }
+          | { type: "image_url"; image_url: { url: string } }
+        >;
+  }> = [];
 
   if (systemPrompt) {
     messages.push({ role: "system", content: systemPrompt });
   }
-
-  messages.push({ role: "user", content: prompt });
+  if (imageDataUrls && imageDataUrls.length > 0) {
+    messages.push({
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
+        ...imageDataUrls.map((url) => ({
+          type: "image_url" as const,
+          image_url: { url },
+        })),
+      ],
+    });
+  } else {
+    messages.push({ role: "user", content: prompt });
+  }
 
   try {
     const { models, settings } = await getModelCandidatesByTask(task);

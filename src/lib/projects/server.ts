@@ -143,6 +143,47 @@ export const getProjects = cache(async (userId: string) => {
   return data.map(mapProject);
 });
 
+export const getProjectCount = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("projects")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    if (isCancelledQueryError(error)) {
+      return 0;
+    }
+
+    throw error;
+  }
+
+  return count ?? 0;
+});
+
+export const getRecentProjects = cache(async (userId: string, limit = 3) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select(
+      "id, user_id, title, platform, video_type, duration, style, language, status, brief, created_at, updated_at",
+    )
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(limit)
+    .returns<ProjectRecord[]>();
+
+  if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return data.map(mapProject);
+});
+
 export const searchProjects = cache(async ({
   userId,
   query,

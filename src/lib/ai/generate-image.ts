@@ -95,7 +95,7 @@ export async function generateImage({
   const candidateModels = settings.autoFallbackOnError ? models : models.slice(0, 1);
   const primaryModel = candidateModels[0] ?? model;
 
-  await deductCredits({
+  const creditTransaction = creditCost > 0 ? await deductCredits({
     userId,
     amount: creditCost,
     reason: projectId ? "Tạo ảnh trong dự án" : "Tạo ảnh nhanh",
@@ -108,7 +108,10 @@ export async function generateImage({
       quantity: normalizedQuantity,
       camera_angle: cameraAngle ?? null,
     },
-  });
+  }) : null;
+  const creditBalance = Array.isArray(creditTransaction)
+    ? undefined
+    : creditTransaction?.balanceCredit;
 
   try {
     let result:
@@ -159,7 +162,15 @@ export async function generateImage({
         ),
       );
 
-      return { type: "project" as const, assets, outputUrls: result.outputUrls };
+      return {
+        type: "project" as const,
+        assets,
+        outputUrls: result.outputUrls,
+        credits: {
+          cost: creditCost,
+          balance: creditBalance,
+        },
+      };
     }
 
     const supabase = await createClient();
@@ -195,6 +206,10 @@ export async function generateImage({
             model: resolvedModel,
           })),
           outputUrls: result.outputUrls,
+          credits: {
+            cost: creditCost,
+            balance: creditBalance,
+          },
           warning:
             "Bảng quick_generations chưa tồn tại. Output đã được tạo nhưng chưa lưu vào lịch sử nhanh.",
         };
@@ -203,7 +218,15 @@ export async function generateImage({
       throw error;
     }
 
-    return { type: "quick" as const, generations: data, outputUrls: result.outputUrls };
+    return {
+      type: "quick" as const,
+      generations: data,
+      outputUrls: result.outputUrls,
+      credits: {
+        cost: creditCost,
+        balance: creditBalance,
+      },
+    };
   } catch (error) {
     if (!projectId) {
       const supabase = await createClient();
@@ -228,7 +251,8 @@ export async function generateImage({
       }
     }
 
-    await refundCredits({
+    if (creditCost > 0) {
+      await refundCredits({
       userId,
       amount: creditCost,
       reason: "Hoàn tín dụng do tạo ảnh thất bại",
@@ -239,7 +263,8 @@ export async function generateImage({
         model: primaryModel,
         camera_angle: cameraAngle ?? null,
       },
-    });
+      });
+    }
 
     throw error;
   }

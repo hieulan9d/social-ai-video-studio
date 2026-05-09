@@ -2,8 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/env";
 
-const protectedRoutes = ["/dashboard", "/projects", "/wallet", "/settings"];
-const authRoutes = ["/auth"];
+const protectedRoutes = [
+  "/admin",
+  "/analytics",
+  "/credits",
+  "/dashboard",
+  "/projects",
+  "/quick-ai",
+  "/quick-create",
+  "/render-history",
+  "/settings",
+  "/wallet",
+];
+const authRoutes = ["/auth", "/login", "/register"];
 
 function isProtectedRoute(pathname: string) {
   return protectedRoutes.some(
@@ -12,6 +23,10 @@ function isProtectedRoute(pathname: string) {
 }
 
 function isAuthRoute(pathname: string) {
+  if (pathname === "/auth/callback") {
+    return false;
+  }
+
   return authRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
@@ -50,7 +65,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!claims && isProtectedRoute(pathname)) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/auth";
+    redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("next", `${pathname}${search}`);
 
     return NextResponse.redirect(redirectUrl);

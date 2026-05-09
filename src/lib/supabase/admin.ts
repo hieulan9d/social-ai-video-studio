@@ -1,23 +1,19 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseUrl } from "@/lib/env";
-
-function getServiceRoleKey() {
-  const value = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!value) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY.");
-  }
-
-  return value;
-}
+import { getSupabaseServiceRoleKey, getSupabaseUrl } from "@/lib/env";
 
 export function createAdminClient() {
-  return createClient(getSupabaseUrl(), getServiceRoleKey(), {
+  if (typeof window !== "undefined") {
+    throw new Error("Supabase admin client không được import ở client.");
+  }
+
+  return createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
     },
   });
 }
+
+export const createAdminSupabase = createAdminClient;

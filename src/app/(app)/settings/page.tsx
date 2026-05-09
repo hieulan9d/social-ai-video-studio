@@ -44,7 +44,7 @@ const featureMappings = [
     process.env.AI_IMAGE_MODEL || "gemini/gemini-3.1-flash-image-preview",
     "Hoạt động",
     "Mặc định",
-    "2 credits",
+    "0 credits",
   ],
   [
     "Tạo video",
@@ -84,7 +84,7 @@ const featureMappings = [
     process.env.GOOGLE_VEO_FAST_MODEL || "veo-3.1-fast-generate-preview",
     "Hoạt động",
     "Fallback",
-    "5 credits",
+    "6 credits",
   ],
   [
     "Start/End Image to Video",
@@ -92,7 +92,7 @@ const featureMappings = [
     process.env.GOOGLE_VEO_MODEL || "veo-3.1-fast-generate-preview",
     "Hoạt động",
     "Mặc định",
-    "5 credits",
+    "7 credits",
   ],
 ];
 

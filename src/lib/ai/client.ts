@@ -8,6 +8,15 @@ export interface AIClientConfig {
   apiKey: string;
 }
 
+type ChatMessageContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
+type ChatMessage = {
+  role: "system" | "user" | "assistant";
+  content: string | ChatMessageContentPart[];
+};
+
 function getClientConfig(): AIClientConfig {
   const baseURL = process.env.AI_BASE_URL;
   const apiKey = process.env.AI_API_KEY;
@@ -32,7 +41,7 @@ function getClientConfig(): AIClientConfig {
 /** Gọi Chat Completions endpoint (OpenAI-compatible) */
 export async function chatCompletion(params: {
   model: string;
-  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>;
+  messages: ChatMessage[];
   temperature?: number;
   max_tokens?: number;
 }): Promise<{ content: string; model: string }> {

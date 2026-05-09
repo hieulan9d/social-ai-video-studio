@@ -25,7 +25,7 @@ export function AppShell({
         <div className="mx-auto flex min-h-screen max-w-[1680px]">
           <AppSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
           <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-            <AppTopbar credits={credits} onOpenSidebar={() => setMobileOpen(true)} />
+            <AppTopbar onOpenSidebar={() => setMobileOpen(true)} />
             <main className="flex-1 px-4 py-6 sm:px-6 lg:px-6">
               <div className="space-y-5">{children}</div>
             </main>

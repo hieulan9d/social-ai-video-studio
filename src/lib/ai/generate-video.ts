@@ -374,7 +374,13 @@ export async function generateVideo({
       : referenceAsset
         ? "image-to-video"
         : "text-to-video");
-  const creditCost = await getFeatureCreditCost("video_generation");
+  const creditFeature =
+    resolvedVideoMode === "image-to-video"
+      ? "image_to_video"
+      : resolvedVideoMode === "start-end-image-to-video"
+        ? "transition_video"
+        : "veo_render";
+  const creditCost = await getFeatureCreditCost(creditFeature);
   const referenceId = `${projectId ?? "quick"}:video:${Date.now()}`;
   const { models, settings } = await getRoutedModelCandidates({
     task: model === "veo-3-fast" ? "video_fast" : "video",
@@ -383,11 +389,11 @@ export async function generateVideo({
   const candidateModels = settings.autoFallbackOnError ? models : models.slice(0, 1);
   const primaryModel = candidateModels[0] ?? model;
 
-  await deductCredits({
+  const creditTransaction = creditCost > 0 ? await deductCredits({
     userId,
     amount: creditCost,
     reason: projectId ? "Tạo video trong dự án" : "Tạo video nhanh",
-    referenceType: "video_generation",
+    referenceType: creditFeature,
     referenceId,
     metadata: {
       project_id: projectId ?? null,
@@ -398,7 +404,10 @@ export async function generateVideo({
       camera_angle: cameraAngle ?? null,
       camera_motion: cameraMotion ?? null,
     },
-  });
+  }) : null;
+  const creditBalance = Array.isArray(creditTransaction)
+    ? undefined
+    : creditTransaction?.balanceCredit;
 
   try {
     let generationResult:
@@ -471,7 +480,15 @@ export async function generateVideo({
         metadata,
       });
 
-      return { type: "project" as const, asset, outputUrl: uploaded.signedUrl };
+      return {
+        type: "project" as const,
+        asset,
+        outputUrl: uploaded.signedUrl,
+        credits: {
+          cost: creditCost,
+          balance: creditBalance,
+        },
+      };
     }
 
     const supabase = await createClient();
@@ -505,6 +522,10 @@ export async function generateVideo({
             model: generationResult.provider.model,
           },
           outputUrl: uploaded.signedUrl,
+          credits: {
+            cost: creditCost,
+            balance: creditBalance,
+          },
           warning:
             "Bảng quick_generations chưa tồn tại. Output đã được tạo nhưng chưa lưu vào lịch sử nhanh.",
         };
@@ -513,7 +534,15 @@ export async function generateVideo({
       throw error;
     }
 
-    return { type: "quick" as const, generation: data, outputUrl: uploaded.signedUrl };
+    return {
+      type: "quick" as const,
+      generation: data,
+      outputUrl: uploaded.signedUrl,
+      credits: {
+        cost: creditCost,
+        balance: creditBalance,
+      },
+    };
   } catch (error) {
     if (!projectId) {
       const supabase = await createClient();
@@ -544,11 +573,12 @@ export async function generateVideo({
       }
     }
 
-    await refundCredits({
+    if (creditCost > 0) {
+      await refundCredits({
       userId,
       amount: creditCost,
       reason: "Hoàn tín dụng do tạo video thất bại",
-      referenceType: "video_generation_refund",
+        referenceType: `${creditFeature}_refund`,
       referenceId,
       metadata: {
         project_id: projectId ?? null,
@@ -556,7 +586,8 @@ export async function generateVideo({
         camera_angle: cameraAngle ?? null,
         camera_motion: cameraMotion ?? null,
       },
-    });
+      });
+    }
 
     throw error;
   }

@@ -192,10 +192,10 @@ export default function QuickAIDashboard({
         : activeMode === "text-to-image" || activeMode === "image-to-image"
           ? featureCosts.image_generation
           : activeMode === "image-to-video"
-            ? featureCosts.image_to_video || featureCosts.video_generation
+            ? featureCosts.image_to_video
             : activeMode === "start-end-image-to-video"
-              ? featureCosts.transition_video || featureCosts.video_generation
-              : featureCosts.video_generation,
+              ? featureCosts.transition_video
+              : featureCosts.veo_render,
   );
 
   return (

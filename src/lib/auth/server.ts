@@ -34,6 +34,7 @@ async function mapProfile(profile: ProfileRecord): Promise<AuthUserProfile> {
     avatarUrl: profile.avatar_url,
     workspaceName: profile.workspace_name,
     role,
+    plan: profile.plan ?? "free",
     accountStatus: profile.account_status ?? "active",
     onboardingCompletedAt: profile.onboarding_completed_at ?? null,
     onboardingMetadata: profile.onboarding_metadata ?? {},

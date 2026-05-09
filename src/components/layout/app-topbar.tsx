@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { Bell, Coins, Menu, Plus, Search } from "lucide-react";
+import { Bell, Menu, Plus, Search } from "lucide-react";
+import { CreditBalance } from "@/components/credits/CreditBalance";
 import { useAuth } from "@/hooks/use-auth";
 
 type SearchProjectResult = {
@@ -58,7 +59,7 @@ function getPageMeta(pathname: string) {
     };
   }
 
-  if (pathname.startsWith("/wallet")) {
+  if (pathname.startsWith("/wallet") || pathname.startsWith("/credits")) {
     return {
       title: "Credits",
       subtitle: "Theo dõi số dư, gói nạp và lịch sử sử dụng theo tính năng.",
@@ -86,10 +87,8 @@ function getPageMeta(pathname: string) {
 }
 
 export function AppTopbar({
-  credits,
   onOpenSidebar,
 }: {
-  credits: number;
   onOpenSidebar: () => void;
 }) {
   const pathname = usePathname();
@@ -185,9 +184,8 @@ export function AppTopbar({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-full border border-[rgba(251,191,36,0.22)] bg-[color:color-mix(in_srgb,#111c35_78%,rgba(251,191,36,0.22)_22%)] px-4 py-2 text-[12px] text-[var(--foreground)] sm:flex">
-              <Coins className="h-4 w-4 text-[#fbbf24]" />
-              <span>{credits.toLocaleString("en-US")} credits</span>
+            <div className="hidden sm:block">
+              <CreditBalance />
             </div>
             <button className="rounded-[8px] border border-[rgba(96,165,250,0.16)] bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--accent-soft)_10%)] p-2.5 text-[var(--muted-foreground)]">
               <Bell className="h-4 w-4" />
