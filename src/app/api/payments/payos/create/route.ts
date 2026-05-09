@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth/get-current-user";
 import { getSiteUrl } from "@/lib/env";
@@ -12,18 +11,14 @@ type CreditPackageRow = {
   id: string;
   name: string;
   credits: number;
-  price_vnd: number | null;
   price_amount: number;
   bonus_credits: number | null;
-  is_active: boolean;
 };
 
 type PaymentOrderRow = {
   id: string;
-  order_id: string;
   order_code: number;
   amount_vnd: number;
-  amount: number | null;
   credits: number;
   bonus_credits: number;
   total_credits: number;
@@ -34,13 +29,13 @@ function createOrderCode() {
   return Date.now() * 1000 + Math.floor(Math.random() * 1000);
 }
 
-function buildResultUrl(orderId: string, result: "return" | "cancel") {
+function buildResultUrl(orderCode: number, result: "return" | "cancel") {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? getSiteUrl();
   const configuredUrl =
     result === "return" ? process.env.PAYOS_RETURN_URL : process.env.PAYOS_CANCEL_URL;
   const url = new URL(configuredUrl ?? "/credits/payment-result", appUrl);
   url.searchParams.set("provider", "payos");
-  url.searchParams.set("orderId", orderId);
+  url.searchParams.set("orderId", String(orderCode));
   url.searchParams.set("result", result);
   return url.toString();
 }
@@ -57,22 +52,28 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient();
     const { data: creditPackage, error: packageError } = await admin
       .from("credit_packages")
-      .select("id, name, credits, price_vnd, price_amount, bonus_credits, is_active")
+      .select("id, name, credits, price_amount, bonus_credits")
       .eq("id", body.packageId)
       .eq("is_active", true)
       .maybeSingle<CreditPackageRow>();
 
-    if (packageError) throw packageError;
-    if (!creditPackage) throw new AppError("Không tìm thấy gói credit.", 404);
+    if (packageError) {
+      console.error("PayOS create package lookup failed:", packageError);
+      throw packageError;
+    }
 
-    const amountVnd = Math.trunc(
-      creditPackage.price_vnd ?? Number(creditPackage.price_amount),
-    );
+    if (!creditPackage) {
+      throw new AppError("Không tìm thấy gói credit.", 404);
+    }
+
+    const amountVnd = Math.trunc(Number(creditPackage.price_amount));
+    if (!Number.isInteger(amountVnd) || amountVnd <= 0) {
+      throw new AppError("Giá gói credit không hợp lệ.", 400);
+    }
+
     const bonusCredits = Math.max(0, Math.trunc(creditPackage.bonus_credits ?? 0));
     const totalCredits = creditPackage.credits + bonusCredits;
     const orderCode = createOrderCode();
-    const orderId = `PAYOS_${orderCode}`;
-    const requestId = `PAYOS_REQ_${randomUUID().slice(0, 8)}_${orderCode}`;
 
     const { data: order, error: insertError } = await admin
       .from("payment_orders")
@@ -80,27 +81,27 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         package_id: creditPackage.id,
         provider: "payos",
-        order_id: orderId,
         order_code: orderCode,
-        request_id: requestId,
         amount_vnd: amountVnd,
-        amount: amountVnd,
         credits: creditPackage.credits,
         bonus_credits: bonusCredits,
         total_credits: totalCredits,
         status: "pending",
       })
-      .select("id, order_id, order_code, amount_vnd, amount, credits, bonus_credits, total_credits, status")
+      .select("id, order_code, amount_vnd, credits, bonus_credits, total_credits, status")
       .single<PaymentOrderRow>();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error("PayOS create insert payment_orders failed:", insertError);
+      throw insertError;
+    }
 
     const paymentLink = await createPayosPaymentLink({
       orderCode,
       amount: amountVnd,
       description: `Nap ${totalCredits} credit`,
-      returnUrl: buildResultUrl(orderId, "return"),
-      cancelUrl: buildResultUrl(orderId, "cancel"),
+      returnUrl: buildResultUrl(orderCode, "return"),
+      cancelUrl: buildResultUrl(orderCode, "cancel"),
       items: [
         {
           name: creditPackage.name,
@@ -115,17 +116,18 @@ export async function POST(request: NextRequest) {
       .update({
         checkout_url: paymentLink.checkoutUrl,
         qr_code: paymentLink.qrCode,
-        pay_url: paymentLink.checkoutUrl,
-        qr_code_url: paymentLink.qrCode,
-        raw_create_response: paymentLink,
-        message: paymentLink.status,
+        payment_link_id: paymentLink.paymentLinkId,
+        raw_payload: paymentLink,
         status: paymentLink.status === "PENDING" ? "pending" : "failed",
       })
       .eq("id", order.id)
-      .select("id, order_id, order_code, amount_vnd, amount, credits, bonus_credits, total_credits, status")
+      .select("id, order_code, amount_vnd, credits, bonus_credits, total_credits, status")
       .single<PaymentOrderRow>();
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("PayOS create update payment_orders failed:", updateError);
+      throw updateError;
+    }
 
     if (paymentLink.status !== "PENDING") {
       throw new AppError("PayOS chưa tạo được giao dịch thanh toán.", 400);
@@ -134,7 +136,7 @@ export async function POST(request: NextRequest) {
     return apiSuccessResponse({
       order: {
         id: updatedOrder.id,
-        orderId: updatedOrder.order_id,
+        orderId: String(updatedOrder.order_code),
         orderCode: updatedOrder.order_code,
         amountVnd: updatedOrder.amount_vnd,
         credits: updatedOrder.credits,
@@ -148,6 +150,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.error("PayOS create payment failed:", error);
     return apiErrorResponse(error);
   }
 }

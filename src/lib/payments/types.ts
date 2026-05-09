@@ -4,6 +4,8 @@ export type PaymentStatus =
   | "pending"
   | "processing"
   | "success"
+  | "paid"
+  | "credited"
   | "failed"
   | "refunded"
   | "cancelled";

@@ -19,12 +19,10 @@ type PayosWebhookPayload = {
 type PaymentOrderRow = {
   id: string;
   user_id: string;
-  order_id: string;
   order_code: number;
   amount_vnd: number;
-  amount: number | null;
   total_credits: number;
-  status: "pending" | "paid" | "failed" | "expired" | "cancelled" | "credited";
+  status: "pending" | "paid" | "failed" | "cancelled" | "credited";
   credit_transaction_id: string | null;
 };
 
@@ -69,13 +67,13 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient();
   const { data: order, error: fetchError } = await admin
     .from("payment_orders")
-    .select("id, user_id, order_id, order_code, amount_vnd, amount, total_credits, status, credit_transaction_id")
+    .select("id, user_id, order_code, amount_vnd, total_credits, status, credit_transaction_id")
     .eq("provider", "payos")
     .eq("order_code", orderCode)
     .maybeSingle<PaymentOrderRow>();
 
   if (fetchError) {
-    console.error("PayOS webhook fetch order failed:", fetchError);
+    console.error("PayOS webhook fetch payment_orders failed:", fetchError);
     return payosErrorResponse("Order lookup failed", 500);
   }
 
@@ -87,15 +85,13 @@ export async function POST(request: NextRequest) {
     return payosSuccessResponse();
   }
 
-  const expectedAmount = order.amount ?? order.amount_vnd;
-  if (amount !== expectedAmount) {
+  if (amount !== order.amount_vnd) {
     await admin
       .from("payment_orders")
       .update({
         status: "failed",
         transaction_id: transactionId,
-        message: "Sai số tiền thanh toán.",
-        raw_ipn_payload: payload,
+        raw_payload: payload,
       })
       .eq("id", order.id);
 
@@ -108,8 +104,7 @@ export async function POST(request: NextRequest) {
       .update({
         status: "failed",
         transaction_id: transactionId,
-        message: webhookData.desc ?? payload.desc ?? "PayOS báo thanh toán chưa thành công.",
-        raw_ipn_payload: payload,
+        raw_payload: payload,
       })
       .eq("id", order.id);
 
@@ -123,8 +118,7 @@ export async function POST(request: NextRequest) {
       status: "paid",
       paid_at: paidAt,
       transaction_id: transactionId,
-      message: webhookData.desc ?? "PAID",
-      raw_ipn_payload: payload,
+      raw_payload: payload,
     })
     .eq("id", order.id)
     .is("credit_transaction_id", null);
@@ -143,7 +137,6 @@ export async function POST(request: NextRequest) {
       p_reference_id: order.id,
       p_metadata: {
         provider: "payos",
-        orderId: order.order_id,
         orderCode,
         transactionId,
         amountVnd: amount,
@@ -172,8 +165,7 @@ export async function POST(request: NextRequest) {
       credited_at: new Date().toISOString(),
       credit_transaction_id: creditResult.transaction_id,
       transaction_id: transactionId,
-      raw_ipn_payload: payload,
-      message: webhookData.desc ?? "CREDITED",
+      raw_payload: payload,
     })
     .eq("id", order.id)
     .is("credit_transaction_id", null);

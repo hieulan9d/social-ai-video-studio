@@ -25,6 +25,22 @@ import {
 } from "@/lib/pricing/types";
 import type { WalletMutationResultRecord } from "@/lib/wallet/types";
 
+type AdminPaymentOrderRecord = {
+  id: string;
+  user_id: string;
+  provider: string;
+  amount_vnd: number;
+  status: PaymentStatus;
+  total_credits: number;
+  transaction_id: string | null;
+  raw_payload: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    email: string;
+  } | null;
+};
+
 export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   await requireAdminProfile();
 
@@ -49,13 +65,13 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
       .limit(50)
       .returns<AdminUserRecord[]>(),
     admin
-      .from("payments")
+      .from("payment_orders")
       .select(
-        "id, user_id, provider, amount, currency, status, credits_purchased, failure_reason, provider_payment_id, created_at, updated_at, profiles(email)",
+        "id, user_id, provider, amount_vnd, status, total_credits, transaction_id, raw_payload, created_at, updated_at",
       )
       .order("created_at", { ascending: false })
       .limit(50)
-      .returns<AdminPaymentRecord[]>(),
+      .returns<AdminPaymentOrderRecord[]>(),
     admin
       .from("wallets")
       .select("id, user_id, balance_credit, updated_at, profiles(email, full_name)")
@@ -122,7 +138,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
 
   return {
     users: usersResult.data,
-    payments: paymentsResult.data,
+    payments: paymentsResult.data.map(mapAdminPaymentOrder),
     wallets: walletsResult.data,
     failedRenders: renderJobsResult.data,
     failedExports: exportJobsResult.data,
@@ -145,6 +161,26 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
         (event) => event.event_name === "page_view",
       ).length,
     },
+  };
+}
+
+function mapAdminPaymentOrder(order: AdminPaymentOrderRecord): AdminPaymentRecord {
+  return {
+    id: order.id,
+    user_id: order.user_id,
+    provider: order.provider,
+    amount: order.amount_vnd,
+    currency: "VND",
+    status: order.status,
+    credits_purchased: order.total_credits,
+    failure_reason:
+      typeof order.raw_payload?.failure_reason === "string"
+        ? order.raw_payload.failure_reason
+        : null,
+    provider_payment_id: order.transaction_id,
+    created_at: order.created_at,
+    updated_at: order.updated_at,
+    profiles: order.profiles ?? null,
   };
 }
 
@@ -229,16 +265,16 @@ export async function manuallyRefundCredits(input: {
 async function getPaymentMetadata(paymentId: string) {
   const admin = createAdminClient();
   const { data, error } = await admin
-    .from("payments")
-    .select("metadata")
+    .from("payment_orders")
+    .select("raw_payload")
     .eq("id", paymentId)
-    .single<{ metadata: Record<string, unknown> }>();
+    .single<{ raw_payload: Record<string, unknown> }>();
 
   if (error) {
     throw error;
   }
 
-  return data.metadata ?? {};
+  return data.raw_payload ?? {};
 }
 
 export async function updateAdminPayment(input: {
@@ -251,12 +287,12 @@ export async function updateAdminPayment(input: {
   const admin = createAdminClient();
   const metadata = await getPaymentMetadata(input.paymentId);
   const { error } = await admin
-    .from("payments")
+    .from("payment_orders")
     .update({
       status: input.status,
-      failure_reason: input.failureReason ?? null,
-      metadata: {
+      raw_payload: {
         ...metadata,
+        failure_reason: input.failureReason ?? null,
         admin_updated: true,
         admin_updated_at: new Date().toISOString(),
       },

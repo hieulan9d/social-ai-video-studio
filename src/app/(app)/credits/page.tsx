@@ -25,21 +25,8 @@ type CreditPackageRow = {
   id: string;
   name: string;
   credits: number;
-  price_vnd: number | null;
   price_amount: number;
   bonus_credits: number | null;
-};
-
-type LegacyCreditPackageRow = {
-  id: string;
-  name: string;
-  credits: number;
-  price_amount: number;
-};
-
-type SupabaseLikeError = {
-  code?: string;
-  message?: string;
 };
 
 export default async function CreditsPage() {
@@ -150,16 +137,12 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("credit_packages")
-    .select("id, name, credits, price_vnd, price_amount, bonus_credits")
+    .select("id, name, credits, price_amount, bonus_credits")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .returns<CreditPackageRow[]>();
 
   if (error) {
-    if (isMissingSchemaError(error)) {
-      return getLegacyCreditPackages();
-    }
-
     throw error;
   }
 
@@ -171,47 +154,9 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
       credits: item.credits,
       bonusCredits,
       totalCredits: item.credits + bonusCredits,
-      priceVnd: Math.trunc(item.price_vnd ?? Number(item.price_amount)),
+      priceVnd: Math.trunc(Number(item.price_amount)),
     };
   });
-}
-
-async function getLegacyCreditPackages(): Promise<PayosCreditPackage[]> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("credit_packages")
-    .select("id, name, credits, price_amount")
-    .eq("is_active", true)
-    .order("name", { ascending: true })
-    .returns<LegacyCreditPackageRow[]>();
-
-  if (error) {
-    if (isMissingSchemaError(error)) {
-      return [];
-    }
-
-    throw error;
-  }
-
-  return data.map((item) => ({
-    id: item.id,
-    name: item.name,
-    credits: item.credits,
-    bonusCredits: 0,
-    totalCredits: item.credits,
-    priceVnd: Math.trunc(Number(item.price_amount)),
-  }));
-}
-
-function isMissingSchemaError(error: SupabaseLikeError) {
-  const message = error.message?.toLowerCase() ?? "";
-  return (
-    error.code === "42703" ||
-    error.code === "42P01" ||
-    error.code === "PGRST204" ||
-    message.includes("column") ||
-    message.includes("credit_packages")
-  );
 }
 
 function MetricCard({

@@ -47,13 +47,6 @@ function asOptionalString(value: unknown) {
 
 export const getCurrentUserProfile = cache(async () => {
   const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const claims = claimsData?.claims;
-
-  if (!claims?.sub) {
-    return null;
-  }
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
