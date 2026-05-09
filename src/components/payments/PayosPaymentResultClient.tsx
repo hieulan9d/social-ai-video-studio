@@ -25,7 +25,7 @@ export function PayosPaymentResultClient({ orderId }: { orderId: string | null }
       attempts += 1;
 
       try {
-        const response = await fetch(`/api/payments/payos/status/${orderId}`, {
+        const response = await fetch(`/api/billing/payos/status/${orderId}`, {
           cache: "no-store",
         });
         const payload = await response.json();

@@ -70,7 +70,7 @@ export function PayosPaymentModal({
   useEffect(() => {
     const timer = window.setInterval(async () => {
       try {
-        const response = await fetch(`/api/payments/payos/status/${order.orderId}`, {
+        const response = await fetch(`/api/billing/payos/status/${order.orderId}`, {
           cache: "no-store",
         });
         const payload = await response.json();

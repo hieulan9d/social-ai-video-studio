@@ -29,7 +29,7 @@ export function PayosTopUpSection({ packages }: { packages: PayosCreditPackage[]
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/payments/payos/create", {
+      const response = await fetch("/api/billing/payos/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ packageId }),
