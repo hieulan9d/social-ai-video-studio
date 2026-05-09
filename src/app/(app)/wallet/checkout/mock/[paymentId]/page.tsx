@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { completeMockCheckout } from "@/lib/payments/actions";
 import { formatMoneyVnd } from "@/lib/payments/format";
 import { getPaymentForUser } from "@/lib/payments/server";
@@ -10,16 +12,29 @@ export default async function MockCheckoutPage({
 }: {
   params: Promise<{ paymentId: string }>;
 }) {
-  const user = await requireUserProfile();
-  const { paymentId } = await params;
-
-  let payment;
+  let pageData;
 
   try {
-    payment = await getPaymentForUser(paymentId, user.id);
-  } catch {
-    notFound();
+    const user = await requireUserProfile();
+    const { paymentId } = await params;
+
+    let payment;
+
+    try {
+      payment = await getPaymentForUser(paymentId, user.id);
+    } catch (error) {
+      rethrowNextServerError(error);
+      notFound();
+    }
+
+    pageData = { payment };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Mock checkout page load failed:", error);
+    return <ServerDataFallback />;
   }
+
+  const { payment } = pageData;
 
   return (
     <div className="space-y-8">

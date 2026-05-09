@@ -1,24 +1,37 @@
 import { Coins, CreditCard, History, LineChart } from "lucide-react";
 import { CreditPackageCard } from "@/components/wallet/credit-package-card";
 import { PageHeader } from "@/components/ui/page-header";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { getUserCredits } from "@/lib/credits/credit-service";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { formatMoneyVnd } from "@/lib/payments/format";
 import { getPaymentHistory } from "@/lib/payments/server";
 import {
   getCreditPackages,
-  getUserWallet,
   getWalletTransactions,
 } from "@/lib/wallet/server";
 
 export default async function WalletPage() {
-  const user = await requireUserProfile();
-  const [wallet, transactions, packages, payments] = await Promise.all([
-    getUserWallet(user.id),
-    getWalletTransactions(user.id, 12),
-    getCreditPackages(),
-    getPaymentHistory(user.id, 8),
-  ]);
+  let pageData;
+
+  try {
+    const user = await requireUserProfile();
+    const [credits, transactions, packages, payments] = await Promise.all([
+      getUserCredits(user.id),
+      getWalletTransactions(user.id, 12),
+      getCreditPackages(),
+      getPaymentHistory(user.id, 8),
+    ]);
+    pageData = { credits, transactions, packages, payments };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Wallet page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { credits, transactions, packages, payments } = pageData;
 
   const imageUsage = sumFeatureUsage(transactions, ["image_generation"]);
   const videoUsage = sumFeatureUsage(transactions, ["video_generation", "veo_render", "image_to_video", "transition_video"]);
@@ -41,13 +54,13 @@ export default async function WalletPage() {
                 Credits còn lại
               </p>
               <p className="mt-3 text-4xl font-medium text-[var(--heading)]">
-                {wallet.balanceCredit.toLocaleString("en-US")}
+                {credits.balance.toLocaleString("en-US")}
               </p>
             </div>
             <div className="rounded-full border border-[#1e3a6a] bg-[#111c35] px-4 py-2 text-[12px] text-[var(--foreground)]">
               <div className="flex items-center gap-2">
                 <Coins className="h-4 w-4 text-[#fbbf24]" />
-                <span>{wallet.balanceCredit.toLocaleString("en-US")} credits</span>
+                <span>{credits.balance.toLocaleString("en-US")} credits</span>
               </div>
             </div>
           </div>

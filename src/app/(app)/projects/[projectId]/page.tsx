@@ -22,8 +22,10 @@ import { PromptEditor } from "@/components/projects/prompt-editor";
 import { RenderPanel } from "@/components/projects/render-panel";
 import { SceneTimelineEditor } from "@/components/projects/scene-timeline-editor";
 import { ScriptEditor } from "@/components/projects/script-editor";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import {
   getProjectById,
@@ -47,6 +49,22 @@ import {
 } from "@/lib/projects/types";
 
 export default async function ProjectDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  try {
+    return await ProjectDetailPageContent({ params, searchParams });
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Project detail page load failed:", error);
+    return <ServerDataFallback />;
+  }
+}
+
+async function ProjectDetailPageContent({
   params,
   searchParams,
 }: {

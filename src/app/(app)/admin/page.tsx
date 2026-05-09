@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import {
   manualRefundCreditsAction,
@@ -22,6 +23,7 @@ import {
   upsertPromptTemplateAction,
 } from "@/lib/admin/actions";
 import { getAdminDashboardData } from "@/lib/admin/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import type {
   AdminCreditPackageRecord,
   AdminAnalyticsEventRecord,
@@ -58,7 +60,15 @@ const paymentStatusLabels: Record<PaymentStatus, string> = {
 };
 
 export default async function AdminDashboardPage() {
-  const data = await getAdminDashboardData();
+  let data;
+
+  try {
+    data = await getAdminDashboardData();
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Admin dashboard page load failed:", error);
+    return <ServerDataFallback />;
+  }
 
   return (
     <div className="space-y-8">

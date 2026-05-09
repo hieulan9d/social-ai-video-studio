@@ -8,9 +8,11 @@ import {
 } from "lucide-react";
 import { SmartRoutingSettingsCard } from "@/components/settings/smart-routing-settings";
 import { PageHeader } from "@/components/ui/page-header";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { getSmartRoutingSettings } from "@/lib/ai/smart-routing";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 
 const providerCards = [
   {
@@ -97,8 +99,19 @@ const featureMappings = [
 ];
 
 export default async function SettingsPage() {
-  const profile = await requireUserProfile();
-  const smartRoutingSettings = await getSmartRoutingSettings();
+  let pageData;
+
+  try {
+    const profile = await requireUserProfile();
+    const smartRoutingSettings = await getSmartRoutingSettings();
+    pageData = { profile, smartRoutingSettings };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Settings page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { profile, smartRoutingSettings } = pageData;
   const canEdit = profile.role === "admin";
 
   return (

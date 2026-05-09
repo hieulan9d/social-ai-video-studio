@@ -3,7 +3,7 @@ import "server-only";
 import { env } from "@/lib/env";
 import { AppError, INSUFFICIENT_CREDIT_MESSAGE } from "@/lib/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getUserWallet, getWalletTransactions } from "@/lib/wallet/server";
+import { getWalletTransactions } from "@/lib/wallet/server";
 import type { CreditTransactionType, UserCredits } from "@/types/user";
 
 export type CreditActionType =
@@ -34,6 +34,16 @@ type RpcCreditResult = {
   balance?: number;
   transaction_id?: string;
   error?: string;
+};
+
+type UserCreditsRow = {
+  id: string;
+  user_id: string;
+  balance: number;
+  total_added: number;
+  total_used: number;
+  created_at: string;
+  updated_at: string;
 };
 
 export function getCreditCost(actionType: CreditActionType, customAmount?: number): number {
@@ -72,23 +82,38 @@ export function getVideoCreditCost(durationSeconds: number) {
 }
 
 export async function getUserCredits(userId: string): Promise<UserCredits> {
-  const wallet = await getUserWallet(userId);
-  const transactions = await getWalletTransactions(userId, 500);
-  const totalAdded = transactions
-    .filter((item) => item.amountCredit > 0)
-    .reduce((total, item) => total + item.amountCredit, 0);
-  const totalUsed = transactions
-    .filter((item) => item.amountCredit < 0)
-    .reduce((total, item) => total + Math.abs(item.amountCredit), 0);
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("user_credits")
+    .select("id, user_id, balance, total_added, total_used, created_at, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle<UserCreditsRow>();
+
+  if (error) {
+    console.error("getUserCredits user_credits query failed:", error);
+    throw error;
+  }
+
+  if (!data) {
+    return {
+      id: "",
+      user_id: userId,
+      balance: 0,
+      total_added: 0,
+      total_used: 0,
+      created_at: "",
+      updated_at: "",
+    };
+  }
 
   return {
-    id: wallet.id,
-    user_id: userId,
-    balance: wallet.balanceCredit,
-    total_added: totalAdded,
-    total_used: totalUsed,
-    created_at: wallet.createdAt,
-    updated_at: wallet.updatedAt,
+    id: data.id,
+    user_id: data.user_id,
+    balance: data.balance,
+    total_added: data.total_added,
+    total_used: data.total_used,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
   };
 }
 

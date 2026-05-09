@@ -1,18 +1,31 @@
 import Link from "next/link";
 import { RenderHistory } from "@/components/projects/render-panel";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import {
   listGeneratedVideosForUser,
   listRenderHistory,
 } from "@/lib/render/server";
 
 export default async function RenderHistoryPage() {
-  const user = await requireUserProfile();
-  const [renderJobs, generatedVideos] = await Promise.all([
-    listRenderHistory(user.id),
-    listGeneratedVideosForUser(user.id),
-  ]);
+  let pageData;
+
+  try {
+    const user = await requireUserProfile();
+    const [renderJobs, generatedVideos] = await Promise.all([
+      listRenderHistory(user.id),
+      listGeneratedVideosForUser(user.id),
+    ]);
+    pageData = { renderJobs, generatedVideos };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Render history page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { renderJobs, generatedVideos } = pageData;
 
   return (
     <div className="space-y-8">

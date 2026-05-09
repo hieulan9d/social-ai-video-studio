@@ -1,15 +1,28 @@
 import { QuickImageStudio } from "@/components/quick-create/quick-image-studio";
 import { QuickStudioNav } from "@/components/quick-create/quick-studio-nav";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { getProjects } from "@/lib/projects/server";
 
 export default async function QuickImagePage() {
-  const user = await requireUserProfile();
-  const [projects, imageCreditCost] = await Promise.all([
-    getProjects(user.id),
-    getFeatureCreditCost("image_generation"),
-  ]);
+  let pageData;
+
+  try {
+    const user = await requireUserProfile();
+    const [projects, imageCreditCost] = await Promise.all([
+      getProjects(user.id),
+      getFeatureCreditCost("image_generation"),
+    ]);
+    pageData = { projects, imageCreditCost };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Quick image page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { projects, imageCreditCost } = pageData;
 
   return (
     <div className="space-y-8">

@@ -1,5 +1,7 @@
 import { requireAdmin } from "@/lib/auth/get-current-user";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 
 type PaymentOrderAdminRow = {
   id: string;
@@ -24,9 +26,17 @@ export default async function AdminPaymentsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  await requireAdmin();
-  const { status } = await searchParams;
-  const orders = await getPaymentOrders(status);
+  let orders: PaymentOrderAdminRow[] = [];
+
+  try {
+    await requireAdmin();
+    const { status } = await searchParams;
+    orders = await getPaymentOrders(status);
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Admin payments page load failed:", error);
+    return <ServerDataFallback />;
+  }
 
   return (
     <div className="space-y-5">
@@ -112,7 +122,7 @@ async function getPaymentOrders(status?: string) {
     throw error;
   }
 
-  return data;
+  return data ?? [];
 }
 
 function formatDate(value: string | null) {

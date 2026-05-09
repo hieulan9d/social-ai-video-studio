@@ -28,7 +28,11 @@ export async function GET() {
         role: profile.role,
         plan: profile.plan,
       },
-      credits,
+      credits: {
+        balance: credits.balance,
+        total_added: credits.total_added,
+        total_used: credits.total_used,
+      },
     });
   } catch (error) {
     return apiErrorResponse(error);

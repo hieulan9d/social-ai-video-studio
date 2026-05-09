@@ -1,9 +1,10 @@
 import "server-only";
 
+import { getUserCredits } from "@/lib/credits/credit-service";
 import { getPaymentHistory } from "@/lib/payments/server";
 import { getProjects } from "@/lib/projects/server";
 import { createClient } from "@/lib/supabase/server";
-import { getUserWallet, getWalletTransactions } from "@/lib/wallet/server";
+import { getWalletTransactions } from "@/lib/wallet/server";
 import { listQuickGenerations, type QuickGenerationRecord } from "@/lib/ai/quick-generations";
 
 type RenderAnalyticsRecord = {
@@ -87,8 +88,8 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
   sinceDate.setDate(sinceDate.getDate() - DAY_WINDOW);
   const sinceIso = sinceDate.toISOString();
 
-  const [wallet, projects, quickGenerations, transactions, payments, renderJobs] = await Promise.all([
-    getUserWallet(userId),
+  const [credits, projects, quickGenerations, transactions, payments, renderJobs] = await Promise.all([
+    getUserCredits(userId),
     getProjects(userId),
     listQuickGenerations({ userId, limit: 120 }),
     getWalletTransactions(userId, 160),
@@ -113,7 +114,7 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
     .reduce((total, item) => total + item.amountCredit, 0);
 
   return {
-    walletBalance: wallet.balanceCredit,
+    walletBalance: credits.balance,
     projectCount: projects.length,
     windowLabel: `30 ngày gần đây`,
     stats: [
@@ -135,7 +136,7 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
       {
         label: "Credits đã dùng",
         value: creditsUsed.toLocaleString("vi-VN"),
-        note: `${wallet.balanceCredit.toLocaleString("vi-VN")} credits còn lại`,
+        note: `${credits.balance.toLocaleString("vi-VN")} credits còn lại`,
       },
     ],
     usageByFeature: [

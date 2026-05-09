@@ -1,21 +1,34 @@
 import { PromptStudio } from "@/components/quick-create/prompt-studio";
 import { QuickStudioNav } from "@/components/quick-create/quick-studio-nav";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import {
   isQuickGenerationHistoryAvailable,
   listQuickGenerations,
 } from "@/lib/ai/quick-generations";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 
 export default async function PromptStudioPage() {
-  const user = await requireUserProfile();
-  const historyAvailable = await isQuickGenerationHistoryAvailable();
-  const history = historyAvailable
-    ? await listQuickGenerations({
-        userId: user.id,
-        type: "prompt",
-        limit: 12,
-      })
-    : [];
+  let pageData;
+
+  try {
+    const user = await requireUserProfile();
+    const historyAvailable = await isQuickGenerationHistoryAvailable();
+    const history = historyAvailable
+      ? await listQuickGenerations({
+          userId: user.id,
+          type: "prompt",
+          limit: 12,
+        })
+      : [];
+    pageData = { history, historyAvailable };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Prompt studio page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { history, historyAvailable } = pageData;
 
   return (
     <div className="space-y-8">

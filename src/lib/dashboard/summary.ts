@@ -2,11 +2,12 @@ import "server-only";
 
 import { cache } from "react";
 import { listQuickGenerations, type QuickGenerationRecord } from "@/lib/ai/quick-generations";
+import { getUserCredits } from "@/lib/credits/credit-service";
 import { getFeaturePricing } from "@/lib/pricing/server";
 import { buildFeatureCostMap, formatCreditRangeEstimate } from "@/lib/pricing/ui";
 import { getProjectCount, getRecentProjects } from "@/lib/projects/server";
 import type { Project } from "@/lib/projects/types";
-import { getUserWallet, getWalletTransactions } from "@/lib/wallet/server";
+import { getWalletTransactions } from "@/lib/wallet/server";
 
 export type DashboardActivityItem = {
   id: string;
@@ -32,9 +33,9 @@ export type DashboardSummary = {
 };
 
 export const getDashboardSummary = cache(async (userId: string): Promise<DashboardSummary> => {
-  const [wallet, projectCount, recentProjects, outputs, transactions, featurePricing] =
+  const [credits, projectCount, recentProjects, outputs, transactions, featurePricing] =
     await Promise.all([
-      getUserWallet(userId),
+      getUserCredits(userId),
       getProjectCount(userId),
       getRecentProjects(userId, 3),
       listQuickGenerations({ userId, limit: 12 }),
@@ -59,9 +60,7 @@ export const getDashboardSummary = cache(async (userId: string): Promise<Dashboa
   const imageCount = outputs.filter((item) => item.type === "image").length;
   const videoCount = outputs.filter((item) => item.type === "video").length;
   const promptCount = outputs.filter((item) => item.type === "prompt").length;
-  const creditsUsed = transactions
-    .filter((item) => item.amountCredit < 0)
-    .reduce((total, item) => total + Math.abs(item.amountCredit), 0);
+  const creditsUsed = credits.total_used;
 
   const activity = [
     ...outputs.slice(0, 6).map((item) => ({
@@ -83,7 +82,7 @@ export const getDashboardSummary = cache(async (userId: string): Promise<Dashboa
   ].slice(0, 8);
 
   return {
-    walletBalance: wallet.balanceCredit,
+    walletBalance: credits.balance,
     projectCount,
     workflowEstimate,
     stats: [
@@ -108,7 +107,7 @@ export const getDashboardSummary = cache(async (userId: string): Promise<Dashboa
       {
         label: "Credits đã dùng",
         value: creditsUsed.toString(),
-        note: `${wallet.balanceCredit} còn lại`,
+        note: `${credits.balance} còn lại`,
         tone: "pending",
       },
     ],

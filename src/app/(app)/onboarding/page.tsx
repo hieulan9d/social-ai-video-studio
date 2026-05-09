@@ -2,8 +2,10 @@ import Link from "next/link";
 import { CheckCircle2, FolderPlus, ImageUp, PlaySquare, Sparkles } from "lucide-react";
 import { FormSubmitButton } from "@/components/ui/form-submit-button";
 import { PageHeader } from "@/components/ui/page-header";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { completeOnboardingAction } from "@/lib/onboarding/actions";
 
 const checklist = [
@@ -39,7 +41,16 @@ const goals = [
 ];
 
 export default async function OnboardingPage() {
-  const user = await requireUserProfile();
+  let user;
+
+  try {
+    user = await requireUserProfile();
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Onboarding page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
   const isComplete = Boolean(user.onboardingCompletedAt);
 
   return (

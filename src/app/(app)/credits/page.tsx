@@ -4,12 +4,14 @@ import {
   type PayosCreditPackage,
 } from "@/components/payments/PayosTopUpSection";
 import { PageHeader } from "@/components/ui/page-header";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUser } from "@/lib/auth/get-current-user";
 import {
   getUserCredits,
   getUserCreditTransactions,
 } from "@/lib/credits/credit-service";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { CreditTransactionType } from "@/types/user";
 
@@ -30,12 +32,24 @@ type CreditPackageRow = {
 };
 
 export default async function CreditsPage() {
-  const user = await requireUser();
-  const [credits, transactions, packages] = await Promise.all([
-    getUserCredits(user.id),
-    getUserCreditTransactions(user.id, { page: 1, limit: 50 }),
-    getPayosCreditPackages(),
-  ]);
+  let pageData;
+
+  try {
+    const user = await requireUser();
+    const [credits, transactions, packages] = await Promise.all([
+      getUserCredits(user.id),
+      getUserCreditTransactions(user.id, { page: 1, limit: 50 }),
+      getPayosCreditPackages(),
+    ]);
+
+    pageData = { credits, transactions, packages };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Credits page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const { credits, transactions, packages } = pageData;
 
   return (
     <div className="space-y-5">
@@ -143,10 +157,11 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
     .returns<CreditPackageRow[]>();
 
   if (error) {
+    console.error("PayOS credit packages query failed:", error);
     throw error;
   }
 
-  return data.map((item) => {
+  return (data ?? []).map((item) => {
     const bonusCredits = Math.max(0, item.bonus_credits ?? 0);
     return {
       id: item.id,

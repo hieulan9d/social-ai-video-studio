@@ -7,7 +7,13 @@ export async function GET() {
     const user = await requireUser();
     const credits = await getUserCredits(user.id);
 
-    return apiSuccessResponse({ credits });
+    return apiSuccessResponse({
+      credits: {
+        balance: credits.balance,
+        total_added: credits.total_added,
+        total_used: credits.total_used,
+      },
+    });
   } catch (error) {
     return apiErrorResponse(error);
   }

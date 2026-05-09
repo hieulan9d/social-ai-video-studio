@@ -1,18 +1,41 @@
 import { QuickStudioNav } from "@/components/quick-create/quick-studio-nav";
 import { QuickVideoStudio } from "@/components/quick-create/quick-video-studio";
+import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { requireUserProfile } from "@/lib/auth/server";
+import { rethrowNextServerError } from "@/lib/next-server-errors";
 import { getFeatureCreditCost } from "@/lib/pricing/server";
 import { getProjects } from "@/lib/projects/server";
 
 export default async function QuickVideoPage() {
-  const user = await requireUserProfile();
-  const [projects, videoCreditCost, imageToVideoCreditCost, transitionVideoCreditCost] =
-    await Promise.all([
-      getProjects(user.id),
-      getFeatureCreditCost("veo_render"),
-      getFeatureCreditCost("image_to_video"),
-      getFeatureCreditCost("transition_video"),
-    ]);
+  let pageData;
+
+  try {
+    const user = await requireUserProfile();
+    const [projects, videoCreditCost, imageToVideoCreditCost, transitionVideoCreditCost] =
+      await Promise.all([
+        getProjects(user.id),
+        getFeatureCreditCost("veo_render"),
+        getFeatureCreditCost("image_to_video"),
+        getFeatureCreditCost("transition_video"),
+      ]);
+    pageData = {
+      projects,
+      videoCreditCost,
+      imageToVideoCreditCost,
+      transitionVideoCreditCost,
+    };
+  } catch (error) {
+    rethrowNextServerError(error);
+    console.error("Quick video page load failed:", error);
+    return <ServerDataFallback />;
+  }
+
+  const {
+    projects,
+    videoCreditCost,
+    imageToVideoCreditCost,
+    transitionVideoCreditCost,
+  } = pageData;
 
   return (
     <div className="space-y-8">
