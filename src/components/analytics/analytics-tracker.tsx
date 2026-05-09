@@ -16,12 +16,12 @@ export function AnalyticsTracker() {
     });
 
     const sent = navigator.sendBeacon?.(
-      "/api/analytics/event",
+      "/api/events/collect",
       new Blob([payload], { type: "application/json" }),
     );
 
     if (!sent) {
-      fetch("/api/analytics/event", {
+      fetch("/api/events/collect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payload,

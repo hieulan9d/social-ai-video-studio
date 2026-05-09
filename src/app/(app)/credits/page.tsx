@@ -30,6 +30,18 @@ type CreditPackageRow = {
   bonus_credits: number | null;
 };
 
+type LegacyCreditPackageRow = {
+  id: string;
+  name: string;
+  credits: number;
+  price_amount: number;
+};
+
+type SupabaseLikeError = {
+  code?: string;
+  message?: string;
+};
+
 export default async function CreditsPage() {
   const user = await requireUser();
   const [credits, transactions, packages] = await Promise.all([
@@ -144,6 +156,10 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
     .returns<CreditPackageRow[]>();
 
   if (error) {
+    if (isMissingSchemaError(error)) {
+      return getLegacyCreditPackages();
+    }
+
     throw error;
   }
 
@@ -158,6 +174,44 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
       priceVnd: Math.trunc(item.price_vnd ?? Number(item.price_amount)),
     };
   });
+}
+
+async function getLegacyCreditPackages(): Promise<PayosCreditPackage[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("credit_packages")
+    .select("id, name, credits, price_amount")
+    .eq("is_active", true)
+    .order("name", { ascending: true })
+    .returns<LegacyCreditPackageRow[]>();
+
+  if (error) {
+    if (isMissingSchemaError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return data.map((item) => ({
+    id: item.id,
+    name: item.name,
+    credits: item.credits,
+    bonusCredits: 0,
+    totalCredits: item.credits,
+    priceVnd: Math.trunc(Number(item.price_amount)),
+  }));
+}
+
+function isMissingSchemaError(error: SupabaseLikeError) {
+  const message = error.message?.toLowerCase() ?? "";
+  return (
+    error.code === "42703" ||
+    error.code === "42P01" ||
+    error.code === "PGRST204" ||
+    message.includes("column") ||
+    message.includes("credit_packages")
+  );
 }
 
 function MetricCard({
