@@ -1,6 +1,7 @@
 import {
   ChartColumn,
   Coins,
+  Database,
   FileText,
   FolderKanban,
   HelpCircle,
@@ -12,6 +13,7 @@ import {
   Settings2,
   ShieldCheck,
   Sparkles,
+  Users,
   WandSparkles,
   Video,
 } from "lucide-react";
@@ -55,6 +57,17 @@ export const navigationSections: NavSection[] = [
       { href: "/wallet", label: "Credits", icon: Coins },
       { href: "/settings", label: "Cài đặt AI", icon: Settings2 },
       { href: "/admin", label: "Admin", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "AI KOL System",
+    items: [
+      { href: "/kol-admin", label: "KOL Dashboard", icon: Users, badge: "Beta" },
+      { href: "/kol-admin/kols", label: "KOLs", icon: Users },
+      { href: "/kol-admin/kols/new", label: "Tạo KOL", icon: Sparkles },
+      { href: "/kol-admin/workspaces", label: "Workspaces", icon: FolderKanban },
+      { href: "/kol-admin/campaigns", label: "Campaigns", icon: Video },
+      { href: "/kol-admin/system-test", label: "System Test", icon: Database },
     ],
   },
 ];
