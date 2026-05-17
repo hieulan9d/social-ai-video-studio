@@ -100,7 +100,7 @@ export class ScriptEngine {
         platform: input.platform,
         contentType: input.contentType,
         generatedAt: new Date().toISOString(),
-        injectionsApplied: processedScenes[0]?.sceneData?.injections || [],
+        injectionsApplied: (processedScenes[0]?.sceneData?.injections as unknown[]) || [],
       },
     };
   }
