@@ -1,4 +1,4 @@
-import type { BaseRecord, JsonData } from './common.types';
+import type { BaseRecord, JsonData, JsonArray } from './common.types';
 
 /**
  * Avatar Generation System Types
@@ -134,9 +134,9 @@ export type IdentityLockRecord = BaseRecord & {
   visual_anchor: JsonData;
   consistency_rules: JsonData;
   face_lock: JsonData;
-  reference_images: JsonData;
-  prompt_history: JsonData;
-  generation_history: JsonData;
+  reference_images: JsonData | JsonArray;
+  prompt_history: JsonData | JsonArray;
+  generation_history: JsonData | JsonArray;
   is_locked: boolean;
   version: number;
   metadata: JsonData;
@@ -156,9 +156,9 @@ export type IdentityLock = {
   visualAnchor: JsonData;
   consistencyRules: JsonData;
   faceLock: JsonData;
-  referenceImages: JsonData;
-  promptHistory: JsonData;
-  generationHistory: JsonData;
+  referenceImages: JsonData | JsonArray;
+  promptHistory: JsonData | JsonArray;
+  generationHistory: JsonData | JsonArray;
   isLocked: boolean;
   version: number;
   metadata: JsonData;

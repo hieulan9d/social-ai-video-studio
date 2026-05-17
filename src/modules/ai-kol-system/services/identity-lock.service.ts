@@ -81,14 +81,14 @@ export class IdentityLockService {
     const allGenerations = await this.avatarRepo.listGenerations(input.session_id);
     const allReferences = await this.avatarRepo.listReferenceImages(input.session_id);
 
-    const promptHistory: Record<string, unknown>[] = allGenerations.map((g) => ({
+    const promptHistory = allGenerations.map((g) => ({
       version: g.version,
       prompt: g.prompt,
       enhanced_prompt: g.enhanced_prompt,
       created_at: g.created_at,
     }));
 
-    const generationHistory: Record<string, unknown>[] = allGenerations.map((g) => ({
+    const generationHistory = allGenerations.map((g) => ({
       id: g.id,
       version: g.version,
       parent_id: g.parent_generation_id,
@@ -98,7 +98,7 @@ export class IdentityLockService {
       created_at: g.created_at,
     }));
 
-    const referenceImages: Record<string, unknown>[] = allReferences.map((r) => ({
+    const referenceImages = allReferences.map((r) => ({
       id: r.id,
       role: r.role,
       url: r.file_url,

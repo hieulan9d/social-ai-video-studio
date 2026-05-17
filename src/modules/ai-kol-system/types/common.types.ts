@@ -20,8 +20,10 @@ export type Versioned = {
   is_active: boolean;
 };
 
-/** Generic JSON data container */
+/** Generic JSON data container — supports objects, arrays, and primitives */
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 export type JsonData = Record<string, unknown>;
+export type JsonArray = Record<string, unknown>[];
 
 /** Structured generation settings — never store as plain text */
 export type StructuredSettings = Record<string, unknown>;
