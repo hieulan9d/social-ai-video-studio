@@ -21,6 +21,7 @@ export default async function CampaignDetailPage({
   let scripts: Awaited<ReturnType<CampaignService["getScripts"]>> = [];
   let scenes: Awaited<ReturnType<CampaignService["getScenes"]>> = [];
   let prompts: Awaited<ReturnType<CampaignService["getPrompts"]>> = [];
+  let campaignAssets: { id: string; file_url: string | null; name: string; asset_type: string }[] = [];
   let loadError: FormattedError | null = null;
 
   try {
@@ -54,6 +55,17 @@ export default async function CampaignDetailPage({
     scripts = await campaignService.getScripts(campaignId);
     scenes = await campaignService.getScenes(campaignId);
     prompts = await campaignService.getPrompts(campaignId);
+
+    // Load campaign assets for scene reference picker
+    try {
+      const allAssets = await campaignService.getAssets(campaignId);
+      campaignAssets = allAssets.map((a) => ({
+        id: a.id,
+        file_url: a.file_url,
+        name: a.name,
+        asset_type: a.asset_type,
+      }));
+    } catch { /* ignore */ }
   } catch (error) {
     loadError = formatError(error);
   }
@@ -77,7 +89,7 @@ export default async function CampaignDetailPage({
     <div className="p-6 space-y-6">
       <div>
         <Link href="/kol-admin/campaigns" className="text-xs text-gray-400 hover:text-white">
-          ← Back to Campaigns
+          ← Quay lại
         </Link>
         <h1 className="text-2xl font-bold mt-1">{campaign.name}</h1>
         <p className="text-sm text-gray-500">
@@ -89,11 +101,11 @@ export default async function CampaignDetailPage({
       <div className="grid grid-cols-4 gap-3">
         <div className="border border-white/10 rounded-lg p-3">
           <div className="text-xl font-bold">{scripts.length}</div>
-          <div className="text-xs text-gray-400">Scripts</div>
+          <div className="text-xs text-gray-400">Kịch bản</div>
         </div>
         <div className="border border-white/10 rounded-lg p-3">
           <div className="text-xl font-bold">{scenes.length}</div>
-          <div className="text-xs text-gray-400">Scenes</div>
+          <div className="text-xs text-gray-400">Phân cảnh</div>
         </div>
         <div className="border border-white/10 rounded-lg p-3">
           <div className="text-xl font-bold">{prompts.length}</div>
@@ -101,7 +113,7 @@ export default async function CampaignDetailPage({
         </div>
         <div className="border border-white/10 rounded-lg p-3">
           <div className="text-xl font-bold">{campaign.status}</div>
-          <div className="text-xs text-gray-400">Status</div>
+          <div className="text-xs text-gray-400">Trạng thái</div>
         </div>
       </div>
 
@@ -120,6 +132,7 @@ export default async function CampaignDetailPage({
         contentType={campaign.contentType || "commercial"}
         existingScript={activeScript || null}
         existingScenes={scenes}
+        campaignAssets={campaignAssets}
       />
     </div>
   );

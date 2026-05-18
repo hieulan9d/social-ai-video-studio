@@ -58,6 +58,46 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
     }
   };
 
+  // ── Delete asset ─────────────────────────────────────────
+
+  const handleDeleteAsset = async (assetId: string) => {
+    if (!confirm("Xóa ảnh này?")) return;
+    try {
+      const res = await fetch(`/api/kol-admin/campaign/assets/${assetId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      setAssets((prev) => prev.filter((a) => a.id !== assetId));
+      if (selectedVariant) {
+        const deleted = assets.find((a) => a.id === assetId);
+        if (deleted?.file_url === selectedVariant) setSelectedVariant(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  // ── Generate product reference sheet ────────────────────
+
+  const [generatingProductSheet, setGeneratingProductSheet] = useState(false);
+
+  const handleGenerateProductSheet = async (productImageUrl: string) => {
+    setGeneratingProductSheet(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/kol-admin/campaign/generate-product-sheet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaignId, kolId, productImageUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      await loadAssets();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setGeneratingProductSheet(false);
+    }
+  };
+
   // ── Generate KOL variant ────────────────────────────────
 
   const handleGenerateVariant = async () => {
@@ -166,7 +206,13 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
             </label>
             <div className="grid grid-cols-3 gap-1.5">
               {productImages.map((a) => (
-                <div key={a.id} className="relative group">
+                <div
+                  key={a.id}
+                  className={`relative group cursor-pointer rounded overflow-hidden ${
+                    selectedVariant === a.file_url ? "ring-2 ring-blue-400" : ""
+                  }`}
+                  onClick={() => a.file_url && setSelectedVariant(a.file_url)}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={a.file_url || ""}
@@ -176,9 +222,39 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[9px] text-center py-0.5 truncate px-1">
                     {a.name}
                   </div>
+                  {/* Delete + Generate buttons */}
+                  <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => a.file_url && handleGenerateProductSheet(a.file_url)}
+                      disabled={generatingProductSheet}
+                      className="w-5 h-5 bg-green-600 rounded text-[8px] flex items-center justify-center"
+                      title="Tạo ảnh sản phẩm 8 góc"
+                    >
+                      📐
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAsset(a.id)}
+                      className="w-5 h-5 bg-red-600 rounded text-[8px] flex items-center justify-center"
+                      title="Xóa"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
+            {productImages.length > 0 && (
+              <button
+                onClick={() => {
+                  const first = productImages.find((a) => a.file_url);
+                  if (first?.file_url) handleGenerateProductSheet(first.file_url);
+                }}
+                disabled={generatingProductSheet}
+                className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-xs font-medium"
+              >
+                {generatingProductSheet ? "Đang tạo..." : "📐 Tạo ảnh sản phẩm 8 góc"}
+              </button>
+            )}
           </div>
 
           {/* KOL Avatar */}
@@ -202,13 +278,25 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
                 {referenceImages.map((a) => (
                   <div
                     key={a.id}
-                    className={`relative cursor-pointer rounded overflow-hidden ${
+                    className={`relative cursor-pointer rounded overflow-hidden group ${
                       selectedVariant === a.file_url ? "ring-2 ring-blue-400" : ""
                     }`}
                     onClick={() => a.file_url && setSelectedVariant(a.file_url)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={a.file_url || ""} alt={a.name} className="aspect-square object-cover" />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteAsset(a.id); }}
+                      className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-600 rounded text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Xóa"
+                    >
+                      ✕
+                    </button>
+                    {a.name && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center py-0.5 truncate px-1">
+                        {a.name}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -219,7 +307,7 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
         {/* CENTER: Preview */}
         <div className="col-span-4 space-y-3">
           <div className="border border-white/10 rounded-lg p-3">
-            <div className="font-semibold text-sm mb-2">Preview</div>
+            <div className="font-semibold text-sm mb-2">Xem trước</div>
             <div className="aspect-square bg-black/40 border border-white/10 rounded flex items-center justify-center overflow-hidden">
               {selectedVariant ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -229,7 +317,7 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
                 <img src={kolAvatarUrl} alt="KOL" className="w-full h-full object-contain" />
               ) : (
                 <div className="text-gray-500 text-xs text-center p-4">
-                  Upload ảnh sản phẩm và generate variant để xem preview
+                  Upload ảnh sản phẩm và tạo ảnh KOL để xem trước
                 </div>
               )}
             </div>
@@ -311,7 +399,7 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
               disabled={generatingVariant || !variantPrompt.trim()}
               className="w-full py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 rounded text-sm font-medium"
             >
-              {generatingVariant ? "Đang tạo..." : "⚡ Generate KOL Variant"}
+              {generatingVariant ? "Đang tạo..." : "⚡ Tạo ảnh KOL"}
             </button>
           </div>
 
@@ -327,7 +415,7 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
               disabled={generatingSheet || (!selectedVariant && !kolAvatarUrl)}
               className="w-full py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded text-sm font-medium"
             >
-              {generatingSheet ? "Đang tạo reference sheet..." : "📐 Generate 8-Panel Reference Sheet"}
+              {generatingSheet ? "Đang tạo reference sheet..." : "📐 Tạo ảnh tham chiếu 8 góc"}
             </button>
             <div className="text-[10px] text-gray-500">
               Sử dụng: {selectedVariant ? "Variant đã chọn" : kolAvatarUrl ? "Avatar gốc" : "Chưa có ảnh"}

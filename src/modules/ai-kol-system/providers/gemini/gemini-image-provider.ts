@@ -41,7 +41,7 @@ export class GeminiImageProvider implements AvatarProvider {
     this.model =
       config?.model ||
       process.env.GEMINI_IMAGE_MODEL ||
-      'gemini-2.0-flash-exp-image-generation';
+      'gemini-3.1-flash-image-preview';
 
     this.timeoutMs = config?.timeoutMs ?? 120_000;
 
@@ -83,7 +83,7 @@ export class GeminiImageProvider implements AvatarProvider {
     const body = {
       contents: [{ parts }],
       generationConfig: {
-        responseModalities: ["TEXT", "IMAGE"],
+        responseModalities: ["IMAGE"],
         temperature: 0.8,
       },
     };

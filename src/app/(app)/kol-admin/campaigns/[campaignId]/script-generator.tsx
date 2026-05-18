@@ -10,6 +10,7 @@ type Props = {
   contentType: string;
   existingScript: CampaignScriptRecord | null;
   existingScenes: CampaignSceneRecord[];
+  campaignAssets?: { id: string; file_url: string | null; name: string; asset_type: string }[];
 };
 
 export function ScriptGenerator({
@@ -19,6 +20,7 @@ export function ScriptGenerator({
   contentType,
   existingScript,
   existingScenes,
+  campaignAssets = [],
 }: Props) {
   const [idea, setIdea] = useState("");
   const [product, setProduct] = useState("");
@@ -153,7 +155,7 @@ export function ScriptGenerator({
         {/* Row 4: Technical settings */}
         <div className="grid grid-cols-5 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Duration (s)</label>
+            <label className="block text-xs text-gray-400 mb-1">Thời lượng (s)</label>
             <input
               type="number"
               value={duration}
@@ -211,7 +213,7 @@ export function ScriptGenerator({
               disabled={generating}
               className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 rounded text-sm font-medium"
             >
-              {generating ? "Đang tạo..." : "⚡ Generate Script"}
+              {generating ? "Đang tạo..." : "⚡ Tạo kịch bản"}
             </button>
           </div>
         </div>
@@ -236,7 +238,7 @@ export function ScriptGenerator({
           {script.structured_content && Object.keys(script.structured_content).length > 0 && (
             <details className="text-xs">
               <summary className="cursor-pointer text-gray-400 hover:text-white">
-                Structured content (JSON)
+                Nội dung cấu trúc (JSON)
               </summary>
               <pre className="mt-2 p-2 bg-black/30 rounded overflow-x-auto text-gray-400">
                 {JSON.stringify(script.structured_content, null, 2)}
@@ -249,13 +251,15 @@ export function ScriptGenerator({
       {/* Scenes output */}
       {scenes.length > 0 && (
         <div className="border border-white/10 rounded-lg p-4 space-y-3">
-          <h2 className="font-semibold">🎞 Scenes ({scenes.length})</h2>
+          <h2 className="font-semibold">🎞 Phân cảnh ({scenes.length})</h2>
           <div className="space-y-2">
             {scenes.map((s) => (
               <SceneCard
                 key={s.id}
                 scene={s}
                 campaignId={campaignId}
+                kolId={kolId}
+                campaignAssets={campaignAssets}
               />
             ))}
           </div>
@@ -272,15 +276,23 @@ export function ScriptGenerator({
 function SceneCard({
   scene,
   campaignId,
+  kolId,
+  campaignAssets = [],
 }: {
   scene: CampaignSceneRecord;
   campaignId: string;
+  kolId: string;
+  campaignAssets: { id: string; file_url: string | null; name: string; asset_type: string }[];
 }) {
   const [rendering, setRendering] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const [editingPrompt, setEditingPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(scene.visual_prompt || "");
+  const [sceneRefImages, setSceneRefImages] = useState<string[]>([]);
+  const [showAssetPicker, setShowAssetPicker] = useState(false);
+  const [aspectRatio, setAspectRatio] = useState("9:16");
+  const [resolution, setResolution] = useState("720p");
 
   const handleRender = async () => {
     const prompt = customPrompt.trim() || scene.visual_prompt;
@@ -298,11 +310,14 @@ function SceneCard({
         body: JSON.stringify({
           campaignId,
           sceneId: scene.id,
+          kolId,
           prompt,
           duration: scene.duration_seconds || 6,
-          aspectRatio: "9:16",
+          aspectRatio,
           cameraAngle: scene.camera_angle,
           cameraMotion: scene.camera_movement,
+          // Use first reference image as start frame for image-to-video
+          referenceImageUrl: sceneRefImages.length > 0 ? sceneRefImages[0] : null,
         }),
       });
       const data = await res.json();
@@ -347,13 +362,13 @@ function SceneCard({
               onClick={() => setEditingPrompt(false)}
               className="px-2 py-0.5 text-[10px] bg-blue-600 rounded"
             >
-              Done
+              Xong
             </button>
             <button
               onClick={() => { setCustomPrompt(scene.visual_prompt || ""); setEditingPrompt(false); }}
               className="px-2 py-0.5 text-[10px] border border-white/10 rounded"
             >
-              Reset
+              Đặt lại
             </button>
           </div>
         </div>
@@ -361,9 +376,9 @@ function SceneCard({
         <div
           className="text-gray-300 text-xs cursor-pointer hover:text-white"
           onClick={() => setEditingPrompt(true)}
-          title="Click to edit prompt"
+          title="Click để sửa prompt"
         >
-          {customPrompt || scene.visual_prompt || "No visual prompt"}
+          {customPrompt || scene.visual_prompt || "Chưa có visual prompt"}
         </div>
       )}
 
@@ -377,21 +392,163 @@ function SceneCard({
         {scene.transition && <span>↔ {scene.transition}</span>}
       </div>
 
+      {/* V3.2 scene data details */}
+      {scene.scene_data && typeof scene.scene_data === "object" && (
+        <details className="text-[10px] text-gray-500">
+          <summary className="cursor-pointer hover:text-white">Chi tiết V3.2</summary>
+          <div className="mt-1 space-y-0.5 pl-2 border-l border-white/10">
+            {(scene.scene_data as Record<string, unknown>).shot_type && (
+              <div>Góc quay: {String((scene.scene_data as Record<string, unknown>).shot_type)}</div>
+            )}
+            {(scene.scene_data as Record<string, unknown>).facial_expression && (
+              <div>Biểu cảm: {String((scene.scene_data as Record<string, unknown>).facial_expression)}</div>
+            )}
+            {(scene.scene_data as Record<string, unknown>).outfit_lock && (
+              <div>Trang phục: {String((scene.scene_data as Record<string, unknown>).outfit_lock).slice(0, 80)}</div>
+            )}
+            {(scene.scene_data as Record<string, unknown>).background_lock && (
+              <div>Bối cảnh: {String((scene.scene_data as Record<string, unknown>).background_lock).slice(0, 80)}</div>
+            )}
+            {(scene.scene_data as Record<string, unknown>).product_visibility && (
+              <div>Sản phẩm: {String((scene.scene_data as Record<string, unknown>).product_visibility)}</div>
+            )}
+          </div>
+        </details>
+      )}
+
       {/* Render controls */}
-      <div className="flex items-center gap-2 pt-1 border-t border-white/5">
-        <button
-          onClick={handleRender}
-          disabled={rendering}
-          className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded text-xs font-medium"
-        >
-          {rendering ? "⏳ Rendering..." : "🎬 Render Video"}
-        </button>
-        <button
-          onClick={() => setEditingPrompt(true)}
-          className="px-2 py-1 border border-white/10 rounded text-[10px] hover:bg-white/5"
-        >
-          ✏️ Edit Prompt
-        </button>
+      <div className="space-y-2 pt-1 border-t border-white/5">
+        {/* Reference images for this scene */}
+        <div>
+          <div className="text-[10px] text-gray-400 mb-1">📎 Ảnh tham chiếu cho scene (KOL 8 góc, sản phẩm, KOL cầm SP...)</div>
+          <div className="flex gap-1 flex-wrap">
+            {sceneRefImages.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <div key={i} className="relative group">
+                <img src={url} alt="" className="w-10 h-10 object-cover rounded border border-white/10" />
+                <button
+                  onClick={() => setSceneRefImages((prev) => prev.filter((_, idx) => idx !== i))}
+                  className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-600 rounded-full text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <label className="w-10 h-10 border border-dashed border-white/20 rounded flex items-center justify-center text-[10px] text-gray-500 cursor-pointer hover:border-white/40">
+              +
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  files.forEach((f) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      if (reader.result) {
+                        setSceneRefImages((prev) => [...prev, reader.result as string]);
+                      }
+                    };
+                    reader.readAsDataURL(f);
+                  });
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          {/* Quick select from campaign assets */}
+          <button
+            onClick={() => setShowAssetPicker(!showAssetPicker)}
+            className="text-[10px] text-blue-400 hover:text-blue-300 mt-1"
+          >
+            {showAssetPicker ? "Ẩn ▲" : `Chọn từ ảnh campaign (${campaignAssets.filter((a) => a.file_url).length}) ▼`}
+          </button>
+          {showAssetPicker && (
+            <div className="mt-1 p-2 border border-white/10 rounded bg-white/5 max-h-40 overflow-y-auto">
+              <div className="text-[9px] text-gray-500 mb-1.5">Click ảnh để chọn (có thể chọn nhiều)</div>
+              {campaignAssets.filter((a) => a.file_url).length === 0 && (
+                <div className="text-[9px] text-gray-500 italic">Chưa có ảnh. Upload ảnh sản phẩm hoặc tạo ảnh KOL ở Campaign Studio.</div>
+              )}
+              <div className="flex gap-1.5 flex-wrap">
+                {campaignAssets
+                  .filter((a) => a.file_url)
+                  .map((a) => {
+                    const isSelected = sceneRefImages.includes(a.file_url!);
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <div
+                        key={a.id}
+                        className={`relative cursor-pointer rounded overflow-hidden ${
+                          isSelected ? "ring-2 ring-green-400" : "hover:ring-1 hover:ring-white/30"
+                        }`}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSceneRefImages((prev) => prev.filter((url) => url !== a.file_url));
+                          } else {
+                            setSceneRefImages((prev) => [...prev, a.file_url!]);
+                          }
+                        }}
+                      >
+                        <img
+                          src={a.file_url!}
+                          alt={a.name}
+                          className="w-12 h-12 object-cover"
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                            <span className="text-green-400 text-sm">✓</span>
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-[7px] text-center py-0.5 truncate px-0.5">
+                          {a.asset_type === "product_image" ? "📦" : "🎨"} {a.name.slice(0, 12)}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={aspectRatio}
+            onChange={(e) => setAspectRatio(e.target.value)}
+            className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px]"
+          >
+            <option value="9:16" className="bg-gray-900">9:16 (Dọc)</option>
+            <option value="16:9" className="bg-gray-900">16:9 (Ngang)</option>
+            <option value="1:1" className="bg-gray-900">1:1 (Vuông)</option>
+          </select>
+          <select
+            value={resolution}
+            onChange={(e) => setResolution(e.target.value)}
+            className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px]"
+          >
+            <option value="480p" className="bg-gray-900">480p</option>
+            <option value="720p" className="bg-gray-900">720p</option>
+            <option value="1080p" className="bg-gray-900">1080p</option>
+          </select>
+          <button
+            onClick={handleRender}
+            disabled={rendering}
+            className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded text-xs font-medium"
+          >
+            {rendering ? "⏳ Đang tạo video..." : "🎬 Tạo Video"}
+          </button>
+          <button
+            onClick={() => setEditingPrompt(true)}
+            className="px-2 py-1 border border-white/10 rounded text-[10px] hover:bg-white/5"
+          >
+            ✏️ Sửa Prompt
+          </button>
+          {sceneRefImages.length > 0 && (
+            <span className="text-[10px] text-green-400">
+              {sceneRefImages.length} ảnh tham chiếu
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Render error */}
@@ -415,7 +572,7 @@ function SceneCard({
             rel="noopener noreferrer"
             className="text-[10px] text-blue-400 hover:underline mt-1 block"
           >
-            Open in new tab ↗
+            Mở tab mới ↗
           </a>
         </div>
       )}

@@ -5,6 +5,7 @@ import type { FormattedError } from "@/modules/ai-kol-system";
 import { requireUserProfile } from "@/lib/auth/server";
 import type { KolMaster } from "@/modules/ai-kol-system";
 import { DeleteKolButton } from "./delete-kol-button";
+import { VoicePresetSelector } from "./voice-preset-selector";
 
 export default async function KolsListPage() {
   const user = await requireUserProfile();
@@ -96,6 +97,12 @@ export default async function KolsListPage() {
                   <div className="text-sm text-gray-400">
                     Status: <span className="font-mono">{k.status}</span>
                     {k.slug && <span className="ml-3">Slug: <span className="font-mono">{k.slug}</span></span>}
+                  </div>
+                  <div className="mt-1">
+                    <VoicePresetSelector
+                      kolId={k.id}
+                      currentPreset={(k.settings as Record<string, unknown>)?.voice_preset as string | null}
+                    />
                   </div>
                   <div className="text-xs text-gray-500 mt-1 font-mono truncate">{k.id}</div>
                 </div>
