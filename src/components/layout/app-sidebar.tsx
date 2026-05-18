@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Clapperboard, MoreHorizontal, X } from "lucide-react";
+import { ChevronDown, Clapperboard, MoreHorizontal, X } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { useAuth } from "@/hooks/use-auth";
 import { navigationSections, secondaryNavigation } from "@/lib/navigation";
@@ -25,6 +25,20 @@ export function AppSidebar({
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
+
+  // Determine which section is active based on current path
+  const activeSectionIndex = navigationSections.findIndex((section) =>
+    section.items.some((item) => {
+      const normalizedHref = item.href.split("?")[0];
+      return pathname === normalizedHref || pathname.startsWith(`${normalizedHref}/`);
+    })
+  );
+
+  const [openSection, setOpenSection] = useState<number>(activeSectionIndex >= 0 ? activeSectionIndex : 0);
+
+  const handleSectionClick = (index: number) => {
+    setOpenSection(openSection === index ? -1 : index);
+  };
 
   return (
     <>
@@ -65,32 +79,60 @@ export function AppSidebar({
             </button>
           </div>
 
-          <div className="mt-8 flex-1 space-y-6 overflow-y-auto">
-            {navigationSections.map((section) => (
-              <div key={section.label}>
-                <p className="px-2 text-[10px] font-medium uppercase tracking-[0.28em] text-[var(--muted)]">
-                  {section.label}
-                </p>
-                <div className="mt-3 space-y-1.5">
-                  {section.items.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={onClose}
-                      className={getNavClass(pathname, item.href)}
-                    >
-                      <item.icon className="h-[15px] w-[15px] shrink-0" />
-                      <span className="truncate text-[12px]">{item.label}</span>
-                      {item.badge ? (
-                        <span className="ml-auto rounded-full border border-[rgba(96,165,250,0.28)] bg-[color:color-mix(in_srgb,var(--accent-soft)_76%,var(--highlight-violet)_24%)] px-2 py-0.5 text-[10px] text-[var(--heading)]">
-                          {item.badge}
-                        </span>
-                      ) : null}
-                    </Link>
-                  ))}
+          <div className="mt-8 flex-1 space-y-2 overflow-y-auto">
+            {navigationSections.map((section, sectionIndex) => {
+              const isOpen = openSection === sectionIndex;
+              const hasActiveItem = section.items.some((item) => {
+                const normalizedHref = item.href.split("?")[0];
+                return pathname === normalizedHref || pathname.startsWith(`${normalizedHref}/`);
+              });
+
+              return (
+                <div key={section.label}>
+                  <button
+                    type="button"
+                    onClick={() => handleSectionClick(sectionIndex)}
+                    className={[
+                      "flex w-full items-center justify-between rounded-[8px] px-3 py-2.5 text-left transition-colors",
+                      hasActiveItem
+                        ? "bg-[color:color-mix(in_srgb,var(--accent-soft)_60%,var(--highlight-violet)_20%)] text-[var(--heading)]"
+                        : "text-[var(--muted-foreground)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]",
+                    ].join(" ")}
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">
+                      {section.label}
+                    </span>
+                    <ChevronDown
+                      className={[
+                        "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+                        isOpen ? "rotate-180" : "",
+                      ].join(" ")}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="mt-1.5 space-y-1 pl-1">
+                      {section.items.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={onClose}
+                          className={getNavClass(pathname, item.href)}
+                        >
+                          <item.icon className="h-[15px] w-[15px] shrink-0" />
+                          <span className="truncate text-[12px]">{item.label}</span>
+                          {item.badge ? (
+                            <span className="ml-auto rounded-full border border-[rgba(96,165,250,0.28)] bg-[color:color-mix(in_srgb,var(--accent-soft)_76%,var(--highlight-violet)_24%)] px-2 py-0.5 text-[10px] text-[var(--heading)]">
+                              {item.badge}
+                            </span>
+                          ) : null}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-6 rounded-[12px] border bg-[color:color-mix(in_srgb,var(--surface-muted)_82%,var(--accent-soft)_18%)] p-3">

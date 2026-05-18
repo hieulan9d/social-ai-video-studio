@@ -70,6 +70,12 @@ export const navigationSections: NavSection[] = [
       { href: "/kol-admin/system-test", label: "System Test", icon: Database },
     ],
   },
+  {
+    label: "Công cụ sáng tạo",
+    items: [
+      { href: "/kol-admin/styles", label: "Phong cách ảnh", icon: ImageIcon, badge: "Mới" },
+    ],
+  },
 ];
 
 export const appNavigation: NavLink[] = navigationSections.flatMap((section) => section.items);

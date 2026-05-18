@@ -39,6 +39,19 @@ export async function POST(req: NextRequest) {
       referenceImageUrl = stored.publicUrl;
     }
 
+    // If no reference image provided, auto-use KOL locked avatar
+    if (!referenceImageUrl && body.kolId) {
+      try {
+        const { IdentityLockService } = await import("@/modules/ai-kol-system");
+        const supabase = await createClient();
+        const lockService = new IdentityLockService(supabase);
+        const lock = await lockService.getLock(body.kolId);
+        if (lock?.official_avatar_url && lock.is_locked) {
+          referenceImageUrl = lock.official_avatar_url;
+        }
+      } catch { /* ignore if not available */ }
+    }
+
     // Get KOL voice preset if kolId provided
     let voicePreset: string | null = null;
     if (body.kolId) {
