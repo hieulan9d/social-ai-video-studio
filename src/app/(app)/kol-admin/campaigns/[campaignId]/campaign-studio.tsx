@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { CampaignAssetRecord } from "@/modules/ai-kol-system";
+import { compressImage } from "@/lib/utils/compress-image";
 
 type Props = {
   campaignId: string;
@@ -36,12 +37,15 @@ export function CampaignStudio({ campaignId, kolId, kolAvatarUrl }: Props) {
     setUploading(true);
     setError(null);
     try {
+      // Compress image before upload
+      const compressed = await compressImage(file);
+
       const formData = new FormData();
       formData.append("campaignId", campaignId);
       formData.append("kolId", kolId);
       formData.append("assetType", assetType);
       formData.append("name", file.name);
-      formData.append("file", file);
+      formData.append("file", compressed);
 
       const res = await fetch("/api/kol-admin/campaign/assets", {
         method: "POST",

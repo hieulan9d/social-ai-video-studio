@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 
 const VOICE_PRESETS = [
   { id: "Kestrel", label: "Kestrel (Nữ, trẻ, năng động)" },
@@ -23,9 +23,9 @@ export function VoicePresetSelector({
   const [preset, setPreset] = useState(currentPreset || "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSave = async (value: string) => {
-    setPreset(value);
+  const savePreset = useCallback(async (value: string) => {
     setSaving(true);
     setSaved(false);
     try {
@@ -41,13 +41,20 @@ export function VoicePresetSelector({
     } finally {
       setSaving(false);
     }
+  }, [kolId]);
+
+  const handleChange = (value: string) => {
+    setPreset(value);
+    // Debounce: cancel previous timer, wait 500ms before saving
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => savePreset(value), 500);
   };
 
   return (
     <div className="flex items-center gap-2">
       <select
         value={preset}
-        onChange={(e) => handleSave(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         disabled={saving}
         className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px]"
       >

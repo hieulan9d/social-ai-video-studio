@@ -79,3 +79,14 @@ export { mapWorkspace, mapKolMaster, mapCampaign } from './utils/mappers';
 export { validateRequired, validateUUID, validateSlug, createSlug } from './utils/validation';
 export { formatError } from './utils/errors';
 export type { FormattedError } from './utils/errors';
+
+// Cached accessors (React server cache — deduplicates within same request)
+export {
+  getCachedWorkspaces,
+  getCachedKol,
+  getCachedWorkspaceKols,
+  getCachedKolCampaigns,
+  getCachedCampaign,
+  getCachedIdentityLock,
+  getCachedDnaProfile,
+} from './services/cached';

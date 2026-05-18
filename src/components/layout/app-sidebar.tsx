@@ -116,6 +116,7 @@ export function AppSidebar({
                         <Link
                           key={item.href}
                           href={item.href}
+                          prefetch={true}
                           onClick={onClose}
                           className={getNavClass(pathname, item.href)}
                         >

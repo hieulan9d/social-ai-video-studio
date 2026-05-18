@@ -18,6 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning className="h-full antialiased">
+      <head>
+        <link rel="dns-prefetch" href="https://ggeduhkvxukjyowfdacs.supabase.co" />
+        <link rel="preconnect" href="https://ggeduhkvxukjyowfdacs.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://generativelanguage.googleapis.com" />
+        <link rel="preconnect" href="https://generativelanguage.googleapis.com" crossOrigin="anonymous" />
+      </head>
       <body suppressHydrationWarning className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <Suspense fallback={null}>
           <AnalyticsTracker />
