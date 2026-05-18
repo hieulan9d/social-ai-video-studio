@@ -4,8 +4,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { AvatarRepository } from '../repositories';
 import { AvatarStorageService } from './avatar-storage.service';
 import { kolEventBus } from '../events';
-import { getDefaultAvatarProvider } from '../providers';
-import type { AvatarProvider } from '../providers';
+import { GeminiImageProvider } from '../providers/gemini';
+import type { AvatarProvider } from '../providers/avatar-provider';
 import type {
   AvatarGenerationRecord,
   AvatarReferenceImageRecord,
@@ -31,7 +31,7 @@ export class AvatarGenerationService {
   constructor(private db: SupabaseClient, provider?: AvatarProvider) {
     this.repo = new AvatarRepository(db);
     this.storage = new AvatarStorageService();
-    this.provider = provider ?? getDefaultAvatarProvider();
+    this.provider = provider ?? new GeminiImageProvider();
   }
 
   // ── Session lifecycle ───────────────────────────────────

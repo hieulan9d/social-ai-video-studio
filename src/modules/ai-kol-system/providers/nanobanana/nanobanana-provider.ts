@@ -40,18 +40,20 @@ export class NanoBananaProvider implements AvatarProvider {
       process.env.NANOBANANA_API_KEY ||
       process.env.NINE_ROUTER_API_KEY ||
       process.env["9ROUTER_API_KEY"] ||
+      process.env.GEMINI_API_KEY ||
       '';
 
     this.model =
       config?.model ||
       process.env.NANOBANANA_MODEL ||
+      process.env.AI_IMAGE_MODEL ||
       'nanobanana';
 
     this.timeoutMs = config?.timeoutMs ?? 180_000;
 
     if (!this.apiKey) {
       throw new Error(
-        'NanoBanana provider missing API key. Set NANOBANANA_API_KEY or NINE_ROUTER_API_KEY.'
+        'NanoBanana provider missing API key. Set NANOBANANA_API_KEY, NINE_ROUTER_API_KEY, or GEMINI_API_KEY.'
       );
     }
   }

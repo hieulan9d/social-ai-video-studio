@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserProfile } from "@/lib/auth/server";
 import { IdentityLockService, CampaignService, AvatarStorageService } from "@/modules/ai-kol-system";
-import { getDefaultAvatarProvider } from "@/modules/ai-kol-system";
+import { GeminiImageProvider } from "@/modules/ai-kol-system";
 
 /**
  * POST /api/kol-admin/campaign/generate-variant
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const enhancedPrompt = buildVariantPrompt(prompt, lock);
 
     // Call provider
-    const provider = getDefaultAvatarProvider();
+    const provider = new GeminiImageProvider();
     const result = await provider.generate({
       prompt: enhancedPrompt,
       candidateCount: body.candidateCount || 2,

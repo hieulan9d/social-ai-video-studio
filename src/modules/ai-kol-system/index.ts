@@ -28,7 +28,7 @@ export { KolDnaService } from './services/kol-dna.service';
 export type { KolDnaProfile } from './services/kol-dna.service';
 
 // Avatar providers
-export { NanoBananaProvider, getDefaultAvatarProvider } from './providers';
+export { NanoBananaProvider, GeminiImageProvider, getDefaultAvatarProvider } from './providers';
 export type { AvatarProvider } from './providers';
 
 // Engines (Phase 4-10)
