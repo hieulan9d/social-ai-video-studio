@@ -7,7 +7,9 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await requireUserProfile();
+  // Parallel fetch — don't await sequentially
+  const userPromise = requireUserProfile();
+  const user = await userPromise;
   const wallet = await getUserWallet(user.id);
 
   return (

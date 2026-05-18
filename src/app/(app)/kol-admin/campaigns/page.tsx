@@ -23,13 +23,21 @@ export default async function CampaignsListPage() {
     const campaignService = new CampaignService(supabase);
 
     const workspaces = await wsService.getUserWorkspaces(user.id);
-    for (const ws of workspaces) {
-      const kols = await kolService.getWorkspaceKols(ws.id);
-      for (const kol of kols) {
-        const campaigns = await campaignService.getKolCampaigns(kol.id);
-        kolsWithCampaigns.push({ kol, campaigns });
-      }
-    }
+
+    // Fetch all KOLs in parallel across workspaces
+    const kolArrays = await Promise.all(
+      workspaces.map((ws) => kolService.getWorkspaceKols(ws.id))
+    );
+    const allKols = kolArrays.flat();
+
+    // Fetch all campaigns in parallel across KOLs
+    const campaignArrays = await Promise.all(
+      allKols.map((kol) => campaignService.getKolCampaigns(kol.id))
+    );
+
+    allKols.forEach((kol, i) => {
+      kolsWithCampaigns.push({ kol, campaigns: campaignArrays[i] });
+    });
   } catch (error) {
     loadError = formatError(error);
   }

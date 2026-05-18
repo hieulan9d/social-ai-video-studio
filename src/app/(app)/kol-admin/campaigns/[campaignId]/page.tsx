@@ -38,34 +38,32 @@ export default async function CampaignDetailPage({
       );
     }
 
+    // Parallel fetch — all independent queries at once
     const kolService = new KolService(supabase);
-    const kol = await kolService.getKol(campaign.kolId);
+    const [kol, scriptsResult, scenesResult, promptsResult, assetsResult, lockResult] = await Promise.all([
+      kolService.getKol(campaign.kolId),
+      campaignService.getScripts(campaignId),
+      campaignService.getScenes(campaignId),
+      campaignService.getPrompts(campaignId),
+      campaignService.getAssets(campaignId).catch(() => []),
+      new IdentityLockService(supabase).getLock(campaign.kolId).catch(() => null),
+    ]);
+
     kolName = kol?.name || "Unknown KOL";
     kolAvatarUrl = kol?.avatarUrl || null;
+    if (lockResult?.official_avatar_url) {
+      kolAvatarUrl = lockResult.official_avatar_url;
+    }
 
-    // Try to get locked avatar URL
-    try {
-      const lockService = new IdentityLockService(supabase);
-      const lock = await lockService.getLock(campaign.kolId);
-      if (lock?.official_avatar_url) {
-        kolAvatarUrl = lock.official_avatar_url;
-      }
-    } catch { /* ignore if table doesn't exist */ }
-
-    scripts = await campaignService.getScripts(campaignId);
-    scenes = await campaignService.getScenes(campaignId);
-    prompts = await campaignService.getPrompts(campaignId);
-
-    // Load campaign assets for scene reference picker
-    try {
-      const allAssets = await campaignService.getAssets(campaignId);
-      campaignAssets = allAssets.map((a) => ({
-        id: a.id,
-        file_url: a.file_url,
-        name: a.name,
-        asset_type: a.asset_type,
-      }));
-    } catch { /* ignore */ }
+    scripts = scriptsResult;
+    scenes = scenesResult;
+    prompts = promptsResult;
+    campaignAssets = assetsResult.map((a) => ({
+      id: a.id,
+      file_url: a.file_url,
+      name: a.name,
+      asset_type: a.asset_type,
+    }));
   } catch (error) {
     loadError = formatError(error);
   }
