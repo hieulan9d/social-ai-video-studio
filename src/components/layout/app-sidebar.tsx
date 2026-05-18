@@ -51,22 +51,22 @@ export function AppSidebar({
       />
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-40 flex w-[220px] flex-col border-r bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--surface-tint)_10%)] lg:sticky lg:top-0 lg:flex",
+          "fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col border-r border-white/[0.06] bg-[#0c0c0f]/80 backdrop-blur-xl lg:sticky lg:top-0 lg:flex",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         ].join(" ")}
       >
         <div className="flex h-full flex-col px-4 py-5">
           <div className="flex items-center justify-between gap-3">
             <Link href="/dashboard" className="flex min-w-0 items-center gap-3" onClick={onClose}>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-[rgba(96,165,250,0.32)] bg-[color:color-mix(in_srgb,var(--accent)_74%,var(--highlight-teal)_26%)] text-[var(--accent-foreground)]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
                 <Clapperboard className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-[var(--heading)]">
-                  Social AI Video Studio
+                <p className="truncate text-sm font-semibold text-white">
+                  AI Video Studio
                 </p>
-                <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                  AI creative studio
+                <p className="truncate text-[10px] text-zinc-500">
+                  Creative platform
                 </p>
               </div>
             </Link>
@@ -93,13 +93,13 @@ export function AppSidebar({
                     type="button"
                     onClick={() => handleSectionClick(sectionIndex)}
                     className={[
-                      "flex w-full items-center justify-between rounded-[8px] px-3 py-2.5 text-left transition-colors",
+                      "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all",
                       hasActiveItem
-                        ? "bg-[color:color-mix(in_srgb,var(--accent-soft)_60%,var(--highlight-violet)_20%)] text-[var(--heading)]"
-                        : "text-[var(--muted-foreground)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]",
+                        ? "bg-indigo-500/10 text-white"
+                        : "text-zinc-500 hover:bg-white/[0.03] hover:text-zinc-300",
                     ].join(" ")}
                   >
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">
+                    <span className="text-[11px] font-semibold uppercase tracking-widest">
                       {section.label}
                     </span>
                     <ChevronDown
@@ -136,30 +136,30 @@ export function AppSidebar({
             })}
           </div>
 
-          <div className="mt-6 rounded-[12px] border bg-[color:color-mix(in_srgb,var(--surface-muted)_82%,var(--accent-soft)_18%)] p-3">
+          <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(96,165,250,0.28)] bg-[color:color-mix(in_srgb,var(--accent-soft)_72%,var(--highlight-teal)_28%)] text-xs font-medium text-[var(--heading)]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-xs font-medium text-indigo-300">
                 {initials || "AI"}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-medium text-[var(--heading)]">
+                <p className="truncate text-[12px] font-medium text-white">
                   {userLabel}
                 </p>
-                <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                  Gói workspace
+                <p className="truncate text-[10px] text-zinc-500">
+                  Workspace
                 </p>
               </div>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setMenuOpen((current) => !current)}
-                  className="rounded-[8px] border border-[var(--border)] p-2 text-[var(--muted-foreground)]"
+                  className="rounded-lg border border-white/[0.06] p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.03]"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
 
                 {menuOpen ? (
-                  <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-20 w-44 overflow-hidden rounded-[12px] border border-[rgba(96,165,250,0.16)] bg-[color:color-mix(in_srgb,var(--surface)_90%,var(--surface-tint)_10%)] p-1.5">
+                  <div className="absolute bottom-[calc(100%+0.5rem)] right-0 z-20 w-44 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-900/95 backdrop-blur-xl p-1.5 shadow-xl">
                     {secondaryNavigation.map((item) => (
                       <Link
                         key={item.href}
@@ -168,7 +168,7 @@ export function AppSidebar({
                           setMenuOpen(false);
                           onClose?.();
                         }}
-                        className="flex items-center gap-3 rounded-[8px] px-3 py-2.5 text-[12px] text-[var(--muted-foreground)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-[12px] text-zinc-400 hover:bg-white/[0.05] hover:text-white"
                       >
                         <item.icon className="h-[14px] w-[14px] shrink-0" />
                         <span className="truncate">{item.label}</span>
@@ -195,9 +195,9 @@ function getNavClass(pathname: string, href: string) {
     (normalizedHref !== "/dashboard" && pathname.startsWith(`${normalizedHref}/`));
 
   return [
-    "flex items-center gap-3 rounded-[8px] border px-3 py-2.5",
+    "flex items-center gap-3 rounded-lg border px-3 py-2",
     isActive
-      ? "border-[rgba(96,165,250,0.24)] bg-[color:color-mix(in_srgb,var(--accent)_76%,var(--highlight-teal)_24%)] text-[var(--heading)]"
-      : "border-transparent text-[var(--muted-foreground)] hover:border-[rgba(96,165,250,0.14)] hover:bg-[color:color-mix(in_srgb,var(--surface-muted)_88%,var(--accent-soft)_12%)] hover:text-[var(--foreground)]",
+      ? "border-indigo-500/20 bg-indigo-500/10 text-white shadow-sm shadow-indigo-500/5"
+      : "border-transparent text-zinc-400 hover:border-white/[0.06] hover:bg-white/[0.03] hover:text-zinc-200",
   ].join(" ");
 }

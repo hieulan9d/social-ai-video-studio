@@ -1,40 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0f1a;
-  --foreground: #e2e8f0;
-  --heading: #c8deff;
-  --muted-foreground: #8ba4c8;
-  --muted: #4a6fa5;
-  --surface: #0d1525;
-  --surface-elevated: #111c31;
-  --surface-muted: #0f1728;
-  --surface-tint: #12213b;
-  --border: #1e2d45;
-  --border-strong: #28466e;
-  --accent: #1a4fa3;
-  --accent-foreground: #c8deff;
-  --accent-soft: #10284f;
-  --highlight: #60a5fa;
+  /* ── Core palette ─────────────────────────────────── */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --heading: #ffffff;
+  --muted-foreground: #a1a1aa;
+  --muted: #52525b;
+  --surface: #0c0c0f;
+  --surface-elevated: #18181b;
+  --surface-muted: #111113;
+  --surface-tint: #1a1a1f;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --accent: #6366f1;
+  --accent-foreground: #ffffff;
+  --accent-soft: #1e1b4b;
+  --highlight: #818cf8;
   --highlight-teal: #2dd4bf;
   --highlight-violet: #a78bfa;
   --highlight-amber: #fbbf24;
   --success: #22c55e;
-  --processing: #3b82f6;
+  --processing: #6366f1;
   --pending: #f59e0b;
-  --danger: #f87171;
+  --danger: #ef4444;
+
+  /* ── Radius ───────────────────────────────────────── */
   --radius-item: 8px;
-  --radius-card: 12px;
-  --radius-shell: 20px;
+  --radius-card: 16px;
+  --radius-shell: 24px;
+
+  /* ── Shadows ──────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+
+  /* ── Legacy compat (used by existing pages) ─────────── */
+  --surface-elevated: #18181b;
+  --surface-muted: #111113;
+  --surface-tint: #1a1a1f;
+  --border-strong: #3f3f46;
+  --accent-foreground: #ffffff;
+  --accent-soft: #1e1b4b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans:
-    "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono:
-    "SFMono-Regular", ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+    "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Code", monospace;
 }
 
 * {
@@ -49,25 +66,35 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(96, 165, 250, 0.1), transparent 24%),
-    radial-gradient(circle at 85% 18%, rgba(45, 212, 191, 0.08), transparent 18%),
-    radial-gradient(circle at bottom right, rgba(26, 79, 163, 0.14), transparent 28%),
-    radial-gradient(circle at 12% 88%, rgba(167, 139, 250, 0.06), transparent 20%),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(45, 212, 191, 0.06), transparent),
+    radial-gradient(ellipse 50% 50% at 0% 100%, rgba(167, 139, 250, 0.05), transparent),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Typography ─────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading);
+  letter-spacing: -0.02em;
+}
+
+/* ── Transitions ────────────────────────────────────── */
 a,
 button,
 input,
 select,
 textarea {
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease,
-    opacity 160ms ease;
+    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 button,
@@ -82,11 +109,69 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-  outline: 2px solid rgba(96, 165, 250, 0.4);
+  outline: 2px solid rgba(99, 102, 241, 0.5);
   outline-offset: 2px;
 }
 
+/* ── Selection ──────────────────────────────────────── */
 ::selection {
-  background: rgba(96, 165, 250, 0.24);
+  background: rgba(99, 102, 241, 0.3);
   color: var(--foreground);
+}
+
+/* ── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* ── Glass effect utility ───────────────────────────── */
+.glass {
+  background: rgba(12, 12, 15, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-subtle {
+  background: rgba(18, 18, 21, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Glow effects ───────────────────────────────────── */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15), 0 0 60px rgba(99, 102, 241, 0.05);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+}
+
+/* ── Gradient text ──────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-accent {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

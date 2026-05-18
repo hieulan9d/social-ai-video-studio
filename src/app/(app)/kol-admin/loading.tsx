@@ -1,11 +1,19 @@
 export default function KolAdminLoading() {
   return (
-    <div className="p-6 space-y-4">
-      <div className="h-8 w-48 animate-pulse rounded bg-white/10" />
-      <div className="h-4 w-72 animate-pulse rounded bg-white/5" />
-      <div className="grid grid-cols-3 gap-4 mt-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+        <span className="text-sm text-zinc-500">Đang tải...</span>
+      </div>
+      <div className="h-40 animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.02]" />
+      <div className="grid grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-lg border border-white/10 bg-white/5" />
+          <div key={i} className="h-32 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
         ))}
       </div>
     </div>

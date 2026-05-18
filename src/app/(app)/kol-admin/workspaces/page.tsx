@@ -4,6 +4,7 @@ import { WorkspaceService, formatError } from "@/modules/ai-kol-system";
 import type { FormattedError } from "@/modules/ai-kol-system";
 import { requireUserProfile } from "@/lib/auth/server";
 import { createWorkspaceAction } from "./actions";
+import { FolderKanban, Plus } from "lucide-react";
 
 export default async function WorkspacesPage() {
   const user = await requireUserProfile();
@@ -21,84 +22,75 @@ export default async function WorkspacesPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Workspaces</h1>
-          <p className="text-sm text-gray-500">Quản lý workspace cho KOL system</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Workspaces</h1>
+        <p className="text-sm text-zinc-500 mt-0.5">Quản lý workspace cho KOL system</p>
       </div>
 
-      <form action={createWorkspaceAction} className="border border-white/10 rounded-lg p-4 space-y-3">
-        <h2 className="font-semibold">Tạo workspace mới</h2>
+      {/* Create form */}
+      <form action={createWorkspaceAction} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+            <Plus className="h-4 w-4 text-indigo-400" />
+          </div>
+          <h2 className="font-semibold">Tạo workspace mới</h2>
+        </div>
         <input
           name="name"
           required
           placeholder="Tên workspace"
-          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-sm"
+          className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm placeholder:text-zinc-600 focus:border-indigo-500/30 focus:bg-white/[0.05]"
         />
         <textarea
           name="description"
           placeholder="Mô tả (tùy chọn)"
           rows={2}
-          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-sm"
+          className="w-full px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-sm placeholder:text-zinc-600 focus:border-indigo-500/30 focus:bg-white/[0.05] resize-none"
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium"
+          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium shadow-lg shadow-indigo-500/20 transition-all"
         >
           Tạo workspace
         </button>
       </form>
 
+      {/* Error */}
       {loadError && (
-        <div className="border border-red-500/30 bg-red-500/10 rounded-lg p-4">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
           <div className="font-medium text-red-400">
-            {loadError.isMissingTable ? "Database chưa được khởi tạo" : "Lỗi tải workspaces"}
+            {loadError.isMissingTable ? "Database chưa được khởi tạo" : "Lỗi"}
           </div>
-          <div className="text-sm text-gray-400 mt-1">{loadError.message}</div>
-          {loadError.code && (
-            <div className="text-xs text-gray-500 mt-1 font-mono">Code: {loadError.code}</div>
-          )}
-          {loadError.hint && (
-            <div className="text-xs text-gray-500 mt-1">Hint: {loadError.hint}</div>
-          )}
+          <div className="text-sm text-zinc-400 mt-1">{loadError.message}</div>
           {loadError.isMissingTable && (
-            <div className="text-xs text-yellow-400 mt-3 p-2 border border-yellow-500/30 bg-yellow-500/10 rounded">
-              <div className="font-medium">⚠ Cần chạy SQL migration</div>
-              <div className="mt-1">
-                Mở file{" "}
-                <code className="text-xs">
-                  src/modules/ai-kol-system/database/migrations/001_core_foundation.sql
-                </code>
-                {" "}và chạy nội dung trong Supabase SQL Editor.
-              </div>
-              <Link href="/kol-admin/system-test" className="underline block mt-2">
-                → Mở System Test để xem chi tiết
-              </Link>
-            </div>
+            <Link href="/kol-admin/system-test" className="text-xs underline text-amber-400 mt-2 block">
+              → Chạy migration tại System Test
+            </Link>
           )}
         </div>
       )}
 
-      <div className="space-y-2">
-        <h2 className="font-semibold">Danh sách ({workspaces.length})</h2>
+      {/* List */}
+      <div className="space-y-3">
+        <h2 className="font-semibold text-zinc-300">Danh sách ({workspaces.length})</h2>
         {workspaces.length === 0 && !loadError && (
-          <div className="text-sm text-gray-500 p-4 border border-white/10 rounded-lg">
-            Chưa có workspace nào. Tạo workspace đầu tiên ở trên.
+          <div className="text-center py-10 rounded-xl border border-dashed border-white/[0.08]">
+            <FolderKanban className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
+            <p className="text-sm text-zinc-500">Chưa có workspace nào. Tạo workspace đầu tiên ở trên.</p>
           </div>
         )}
         {workspaces.map((w) => (
-          <div key={w.id} className="border border-white/10 rounded-lg p-3">
+          <div key={w.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 hover:border-indigo-500/20 transition-colors">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">{w.name}</div>
                 {w.description && (
-                  <div className="text-sm text-gray-400">{w.description}</div>
+                  <div className="text-sm text-zinc-500 mt-0.5">{w.description}</div>
                 )}
-                <div className="text-xs text-gray-500 mt-1 font-mono">{w.id}</div>
+                <div className="text-[10px] text-zinc-600 mt-1 font-mono">{w.id}</div>
               </div>
-              <div className="text-xs text-gray-500">
-                {new Date(w.createdAt).toLocaleDateString()}
+              <div className="text-xs text-zinc-600">
+                {new Date(w.createdAt).toLocaleDateString("vi-VN")}
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { CampaignService, KolService, IdentityLockService, formatError } from "@
 import type { FormattedError } from "@/modules/ai-kol-system";
 import { ScriptGenerator } from "./script-generator";
 import { CampaignStudio } from "./campaign-studio";
+import { ArrowLeft, FileText, Film, Wand2, Activity } from "lucide-react";
 
 export default async function CampaignDetailPage({
   params,
@@ -31,14 +32,13 @@ export default async function CampaignDetailPage({
     if (!campaign) {
       return (
         <div className="p-6">
-          <div className="border border-red-500/30 bg-red-500/10 rounded-lg p-4">
-            Campaign not found.
+          <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+            Campaign không tồn tại.
           </div>
         </div>
       );
     }
 
-    // Parallel fetch — all independent queries at once
     const kolService = new KolService(supabase);
     const [kol, scriptsResult, scenesResult, promptsResult, assetsResult, lockResult] = await Promise.all([
       kolService.getKol(campaign.kolId),
@@ -71,9 +71,9 @@ export default async function CampaignDetailPage({
   if (loadError) {
     return (
       <div className="p-6">
-        <div className="border border-red-500/30 bg-red-500/10 rounded-lg p-4">
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
           <div className="font-medium text-red-400">Lỗi</div>
-          <div className="text-sm text-gray-400 mt-1">{loadError.message}</div>
+          <div className="text-sm text-zinc-400 mt-1">{loadError.message}</div>
         </div>
       </div>
     );
@@ -82,40 +82,44 @@ export default async function CampaignDetailPage({
   if (!campaign) return null;
 
   const activeScript = scripts.find((s) => s.is_active) || scripts[0];
+  const statusColor = {
+    draft: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20",
+    planning: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    in_production: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    review: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    completed: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    archived: "text-zinc-500 bg-zinc-500/10 border-zinc-500/20",
+  }[campaign.status] || "text-zinc-400 bg-zinc-500/10 border-zinc-500/20";
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div>
-        <Link href="/kol-admin/campaigns" className="text-xs text-gray-400 hover:text-white">
-          ← Quay lại
+        <Link href="/kol-admin/campaigns" className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <ArrowLeft className="h-3 w-3" />
+          Quay lại
         </Link>
-        <h1 className="text-2xl font-bold mt-1">{campaign.name}</h1>
-        <p className="text-sm text-gray-500">
-          KOL: {kolName} · Platform: {campaign.platform || "N/A"} · Status: {campaign.status}
+        <div className="flex items-center gap-3 mt-2">
+          <h1 className="text-2xl font-bold tracking-tight">{campaign.name}</h1>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium border ${statusColor}`}>
+            {campaign.status}
+          </span>
+        </div>
+        <p className="text-sm text-zinc-500 mt-1">
+          KOL: <span className="text-zinc-300">{kolName}</span>
+          {campaign.platform && <> · Platform: <span className="text-zinc-300">{campaign.platform}</span></>}
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
-        <div className="border border-white/10 rounded-lg p-3">
-          <div className="text-xl font-bold">{scripts.length}</div>
-          <div className="text-xs text-gray-400">Kịch bản</div>
-        </div>
-        <div className="border border-white/10 rounded-lg p-3">
-          <div className="text-xl font-bold">{scenes.length}</div>
-          <div className="text-xs text-gray-400">Phân cảnh</div>
-        </div>
-        <div className="border border-white/10 rounded-lg p-3">
-          <div className="text-xl font-bold">{prompts.length}</div>
-          <div className="text-xs text-gray-400">Prompts</div>
-        </div>
-        <div className="border border-white/10 rounded-lg p-3">
-          <div className="text-xl font-bold">{campaign.status}</div>
-          <div className="text-xs text-gray-400">Trạng thái</div>
-        </div>
+        <StatCard icon={<FileText className="h-4 w-4" />} value={scripts.length} label="Kịch bản" />
+        <StatCard icon={<Film className="h-4 w-4" />} value={scenes.length} label="Phân cảnh" />
+        <StatCard icon={<Wand2 className="h-4 w-4" />} value={prompts.length} label="Prompts" />
+        <StatCard icon={<Activity className="h-4 w-4" />} value={campaignAssets.length} label="Assets" />
       </div>
 
-      {/* Campaign Studio: Images, Variants, Reference Sheets */}
+      {/* Campaign Studio */}
       <CampaignStudio
         campaignId={campaignId}
         kolId={campaign.kolId}
@@ -132,6 +136,18 @@ export default async function CampaignDetailPage({
         existingScenes={scenes}
         campaignAssets={campaignAssets}
       />
+    </div>
+  );
+}
+
+function StatCard({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-zinc-500">{icon}</div>
+        <div className="text-xl font-bold">{value}</div>
+      </div>
+      <div className="text-[11px] text-zinc-500 mt-1.5">{label}</div>
     </div>
   );
 }

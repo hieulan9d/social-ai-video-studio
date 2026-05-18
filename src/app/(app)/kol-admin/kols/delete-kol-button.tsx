@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { deleteKolAction } from "./actions";
 
 export function DeleteKolButton({ kolId, kolName }: { kolId: string; kolName: string }) {
@@ -25,10 +26,10 @@ export function DeleteKolButton({ kolId, kolName }: { kolId: string; kolName: st
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded text-xs font-medium text-red-400 whitespace-nowrap disabled:opacity-50"
+      className="p-2 rounded-lg border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
       title="Xóa KOL"
     >
-      {deleting ? "..." : "🗑 Xóa"}
+      <Trash2 className="h-3.5 w-3.5" />
     </button>
   );
 }
