@@ -35,7 +35,6 @@ type StoryboardScene = {
 
 function buildStoryboard(scenes: SceneRecord[], prompts: PromptRecord[]): StoryboardScene[] {
   let currentTime = 0;
-
   return scenes
     .sort((a, b) => a.scene_order - b.scene_order)
     .map((scene) => {
@@ -43,9 +42,7 @@ function buildStoryboard(scenes: SceneRecord[], prompts: PromptRecord[]): Storyb
       const timeStart = currentTime;
       const timeEnd = currentTime + duration;
       currentTime = timeEnd;
-
       const matchingPrompt = prompts.find((p) => p.scene_id === scene.id);
-
       return {
         id: scene.id,
         sceneNumber: scene.scene_order,
@@ -91,7 +88,6 @@ export function StoryboardPreview({
     () => storyboard.reduce((sum, s) => sum + s.duration, 0),
     [storyboard],
   );
-
   const selectedItem = storyboard.find((s) => s.id === selectedScene);
 
   if (scenes.length === 0) {
@@ -106,7 +102,7 @@ export function StoryboardPreview({
         <div className="rounded-2xl border border-dashed border-[var(--border)] p-12 text-center">
           <Film className="mx-auto h-10 w-10 text-[var(--muted)]" />
           <p className="mt-4 text-sm text-[var(--muted-foreground)]">
-            Chưa có cảnh nào. Hãy vào tab Overview để tạo cảnh từ kịch bản.
+            Chưa có cảnh nào. Hãy vào tab Tổng quan để tạo cảnh từ kịch bản.
           </p>
         </div>
       </div>
@@ -172,46 +168,20 @@ export function StoryboardPreview({
         <div className="mt-3 flex h-8 overflow-hidden rounded-lg">
           {storyboard.map((scene, index) => {
             const widthPercent = (scene.duration / totalDuration) * 100;
-            const colors = [
-              "bg-indigo-500/80",
-              "bg-cyan-500/80",
-              "bg-emerald-500/80",
-              "bg-amber-500/80",
-              "bg-rose-500/80",
-              "bg-purple-500/80",
-              "bg-teal-500/80",
-              "bg-orange-500/80",
-            ];
+            const colors = ["bg-indigo-500/80","bg-cyan-500/80","bg-emerald-500/80","bg-amber-500/80","bg-rose-500/80","bg-purple-500/80","bg-teal-500/80","bg-orange-500/80"];
             const color = colors[index % colors.length];
             const isSelected = selectedScene === scene.id;
-
             return (
               <button
                 key={scene.id}
                 type="button"
                 onClick={() => setSelectedScene(scene.id === selectedScene ? null : scene.id)}
-                className={`relative flex items-center justify-center text-[10px] font-medium text-white transition-all ${color} ${
-                  isSelected ? "ring-2 ring-white ring-offset-1 ring-offset-[var(--background)]" : ""
-                } ${index > 0 ? "border-l border-black/20" : ""}`}
+                className={`relative flex items-center justify-center text-[10px] font-medium text-white transition-all ${color} ${isSelected ? "ring-2 ring-white ring-offset-1 ring-offset-[var(--background)]" : ""} ${index > 0 ? "border-l border-black/20" : ""}`}
                 style={{ width: `${widthPercent}%` }}
                 title={`Cảnh ${scene.sceneNumber} · ${scene.duration}s`}
               >
                 {widthPercent > 8 && <span>{scene.sceneNumber}</span>}
               </button>
-            );
-          })}
-        </div>
-        <div className="mt-2 flex gap-1">
-          {storyboard.map((scene) => {
-            const widthPercent = (scene.duration / totalDuration) * 100;
-            return (
-              <div
-                key={scene.id}
-                className="text-center text-[9px] text-[var(--muted)]"
-                style={{ width: `${widthPercent}%` }}
-              >
-                {scene.duration}s
-              </div>
             );
           })}
         </div>
@@ -221,25 +191,13 @@ export function StoryboardPreview({
       {viewMode === "timeline" ? (
         <div className="space-y-3">
           {storyboard.map((scene, index) => (
-            <SceneCard
-              key={scene.id}
-              scene={scene}
-              index={index}
-              isSelected={selectedScene === scene.id}
-              onSelect={() => setSelectedScene(scene.id === selectedScene ? null : scene.id)}
-            />
+            <SceneCard key={scene.id} scene={scene} index={index} isSelected={selectedScene === scene.id} onSelect={() => setSelectedScene(scene.id === selectedScene ? null : scene.id)} />
           ))}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {storyboard.map((scene, index) => (
-            <SceneCardCompact
-              key={scene.id}
-              scene={scene}
-              index={index}
-              isSelected={selectedScene === scene.id}
-              onSelect={() => setSelectedScene(scene.id === selectedScene ? null : scene.id)}
-            />
+            <SceneCardCompact key={scene.id} scene={scene} index={index} isSelected={selectedScene === scene.id} onSelect={() => setSelectedScene(scene.id === selectedScene ? null : scene.id)} />
           ))}
         </div>
       )}
@@ -248,14 +206,11 @@ export function StoryboardPreview({
       {selectedItem && (
         <div className="rounded-2xl border border-[var(--accent)]/30 bg-[var(--surface-elevated)] p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[var(--heading)]">
-              Chi tiết cảnh {selectedItem.sceneNumber}
-            </h3>
+            <h3 className="text-lg font-semibold text-[var(--heading)]">Chi tiết cảnh {selectedItem.sceneNumber}</h3>
             <span className="rounded-full bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-[var(--accent)]">
               {formatTime(selectedItem.timeStart)} – {formatTime(selectedItem.timeEnd)}
             </span>
           </div>
-
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <DetailField icon={Eye} label="Mô tả hình ảnh" value={selectedItem.visualDescription} />
             <DetailField icon={MessageSquare} label="Lời thoại" value={selectedItem.voiceover} />
@@ -266,22 +221,11 @@ export function StoryboardPreview({
             <DetailField icon={Type} label="Chữ trên màn hình" value={selectedItem.onScreenText} />
             <DetailField icon={Film} label="Bối cảnh" value={selectedItem.background} />
           </div>
-
           {selectedItem.prompt && (
             <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
-                Veo Prompt (English)
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">
-                {selectedItem.prompt}
-              </p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">Veo Prompt (English)</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{selectedItem.prompt}</p>
             </div>
-          )}
-
-          {selectedItem.notes && (
-            <p className="mt-4 text-xs text-[var(--muted-foreground)]">
-              Ghi chú: {selectedItem.notes}
-            </p>
           )}
         </div>
       )}
@@ -291,17 +235,11 @@ export function StoryboardPreview({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-[var(--heading)]">Ước tính render</p>
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              {storyboard.length} cảnh × chi phí render mỗi cảnh
-            </p>
+            <p className="mt-1 text-xs text-[var(--muted-foreground)]">{storyboard.length} cảnh × chi phí render mỗi cảnh</p>
           </div>
           <div className="text-right">
-            <p className="text-lg font-semibold text-[var(--heading)]">
-              ~{storyboard.length * 5} credits
-            </p>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Ước tính · có thể thay đổi theo mode
-            </p>
+            <p className="text-lg font-semibold text-[var(--heading)]">~{storyboard.length * 5} credits</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Ước tính · có thể thay đổi theo mode</p>
           </div>
         </div>
       </div>
@@ -309,43 +247,15 @@ export function StoryboardPreview({
   );
 }
 
-function SceneCard({
-  scene,
-  index,
-  isSelected,
-  onSelect,
-}: {
-  scene: StoryboardScene;
-  index: number;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const colors = [
-    "border-l-indigo-500",
-    "border-l-cyan-500",
-    "border-l-emerald-500",
-    "border-l-amber-500",
-    "border-l-rose-500",
-    "border-l-purple-500",
-    "border-l-teal-500",
-    "border-l-orange-500",
-  ];
+function SceneCard({ scene, index, isSelected, onSelect }: { scene: StoryboardScene; index: number; isSelected: boolean; onSelect: () => void }) {
+  const colors = ["border-l-indigo-500","border-l-cyan-500","border-l-emerald-500","border-l-amber-500","border-l-rose-500","border-l-purple-500","border-l-teal-500","border-l-orange-500"];
   const borderColor = colors[index % colors.length];
-
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`w-full rounded-xl border-l-4 ${borderColor} border border-[var(--border)] bg-[var(--surface-elevated)] p-4 text-left transition hover:bg-[var(--surface-muted)] ${
-        isSelected ? "ring-1 ring-[var(--accent)]" : ""
-      }`}
-    >
+    <button type="button" onClick={onSelect} className={`w-full rounded-xl border-l-4 ${borderColor} border border-[var(--border)] bg-[var(--surface-elevated)] p-4 text-left transition hover:bg-[var(--surface-muted)] ${isSelected ? "ring-1 ring-[var(--accent)]" : ""}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-xs font-semibold text-[var(--heading)]">
-              {scene.sceneNumber}
-            </span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-xs font-semibold text-[var(--heading)]">{scene.sceneNumber}</span>
             <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
               <Clock className="h-3 w-3" />
               <span>{scene.duration}s</span>
@@ -353,14 +263,8 @@ function SceneCard({
               <span>{formatTime(scene.timeStart)} – {formatTime(scene.timeEnd)}</span>
             </div>
           </div>
-          <p className="mt-2 line-clamp-2 text-sm text-[var(--foreground)]">
-            {scene.visualDescription || "Chưa có mô tả hình ảnh"}
-          </p>
-          {scene.voiceover && (
-            <p className="mt-1 line-clamp-1 text-xs text-[var(--muted-foreground)]">
-              🎙️ {scene.voiceover}
-            </p>
-          )}
+          <p className="mt-2 line-clamp-2 text-sm text-[var(--foreground)]">{scene.visualDescription || "Chưa có mô tả hình ảnh"}</p>
+          {scene.voiceover && <p className="mt-1 line-clamp-1 text-xs text-[var(--muted-foreground)]">🎙️ {scene.voiceover}</p>}
         </div>
         <div className="flex flex-col items-end gap-1 text-[10px] text-[var(--muted)]">
           {scene.cameraAngle && <span>📷 {scene.cameraAngle}</span>}
@@ -371,37 +275,11 @@ function SceneCard({
   );
 }
 
-function SceneCardCompact({
-  scene,
-  index,
-  isSelected,
-  onSelect,
-}: {
-  scene: StoryboardScene;
-  index: number;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const bgColors = [
-    "from-indigo-500/20",
-    "from-cyan-500/20",
-    "from-emerald-500/20",
-    "from-amber-500/20",
-    "from-rose-500/20",
-    "from-purple-500/20",
-    "from-teal-500/20",
-    "from-orange-500/20",
-  ];
+function SceneCardCompact({ scene, index, isSelected, onSelect }: { scene: StoryboardScene; index: number; isSelected: boolean; onSelect: () => void }) {
+  const bgColors = ["from-indigo-500/20","from-cyan-500/20","from-emerald-500/20","from-amber-500/20","from-rose-500/20","from-purple-500/20","from-teal-500/20","from-orange-500/20"];
   const bgColor = bgColors[index % bgColors.length];
-
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] overflow-hidden text-left transition hover:bg-[var(--surface-muted)] ${
-        isSelected ? "ring-1 ring-[var(--accent)]" : ""
-      }`}
-    >
+    <button type="button" onClick={onSelect} className={`w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] overflow-hidden text-left transition hover:bg-[var(--surface-muted)] ${isSelected ? "ring-1 ring-[var(--accent)]" : ""}`}>
       <div className={`flex h-24 items-center justify-center bg-gradient-to-br ${bgColor} to-transparent`}>
         <div className="text-center">
           <Play className="mx-auto h-6 w-6 text-white/60" />
@@ -413,25 +291,14 @@ function SceneCardCompact({
           <span className="text-xs font-semibold text-[var(--heading)]">Cảnh {scene.sceneNumber}</span>
           <span className="text-[10px] text-[var(--muted)]">{formatTime(scene.timeStart)}</span>
         </div>
-        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted-foreground)]">
-          {scene.visualDescription || "Chưa có mô tả"}
-        </p>
+        <p className="mt-1 line-clamp-2 text-xs text-[var(--muted-foreground)]">{scene.visualDescription || "Chưa có mô tả"}</p>
       </div>
     </button>
   );
 }
 
-function DetailField({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
+function DetailField({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   if (!value) return null;
-
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--background)] p-3">
       <div className="flex items-center gap-2">
