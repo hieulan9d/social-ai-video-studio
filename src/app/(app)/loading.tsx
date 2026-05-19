@@ -1,20 +1,19 @@
-import { Loader2 } from "lucide-react";
-
 export default function AppLoading() {
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 text-sm text-[var(--muted-foreground)]">
-        <Loader2 className="h-4 w-4 animate-spin text-[var(--accent)]" />
-        Đang tải dữ liệu workspace...
+    <div className="space-y-6 p-6">
+      <div className="flex items-center gap-3">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+        <span className="text-sm text-zinc-400">Đang tải...</span>
       </div>
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-3">
         {[1, 2, 3].map((item) => (
           <div
             key={item}
-            className="h-36 animate-pulse rounded-[28px] border border-[var(--border)] bg-[var(--surface)]"
+            className="h-32 animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.02]"
           />
         ))}
       </div>
+      <div className="h-48 animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.02]" />
     </div>
   );
 }

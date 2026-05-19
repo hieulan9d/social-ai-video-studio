@@ -27,7 +27,7 @@ type CreditPackageRow = {
   id: string;
   name: string;
   credits: number;
-  price_amount: number;
+  price_vnd: number;
   bonus_credits: number | null;
 };
 
@@ -151,7 +151,7 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("credit_packages")
-    .select("id, name, credits, price_amount, bonus_credits")
+    .select("id, name, credits, price_vnd, bonus_credits")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .returns<CreditPackageRow[]>();
@@ -169,7 +169,7 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
       credits: item.credits,
       bonusCredits,
       totalCredits: item.credits + bonusCredits,
-      priceVnd: Math.trunc(Number(item.price_amount)),
+      priceVnd: Math.trunc(Number(item.price_vnd)),
     };
   });
 }

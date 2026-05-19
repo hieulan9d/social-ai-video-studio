@@ -9,7 +9,7 @@ export function SurfaceCard({
     <section
       {...props}
       className={[
-        "rounded-[var(--radius-card)] border bg-[color:color-mix(in_srgb,var(--surface)_88%,var(--surface-tint)_12%)] p-5 sm:p-6",
+        "rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6",
         className,
       ].join(" ")}
     >

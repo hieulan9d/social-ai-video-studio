@@ -3,7 +3,6 @@ import "server-only";
 import { env } from "@/lib/env";
 import { AppError, INSUFFICIENT_CREDIT_MESSAGE } from "@/lib/errors";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getWalletTransactions } from "@/lib/wallet/server";
 import type { CreditTransactionType, UserCredits } from "@/types/user";
 
 export type CreditActionType =
@@ -127,20 +126,36 @@ export async function getUserCreditTransactions(
 ) {
   const page = Math.max(1, Math.trunc(options.page ?? 1));
   const limit = Math.min(100, Math.max(1, Math.trunc(options.limit ?? 20)));
-  const transactions = await getWalletTransactions(userId, page * limit);
-  const filtered = options.type
-    ? transactions.filter((item) => mapTransactionType(item.transactionType) === options.type)
-    : transactions;
+  const offset = (page - 1) * limit;
 
-  return filtered.slice((page - 1) * limit, page * limit).map((item) => ({
+  const admin = createAdminClient();
+  let query = admin
+    .from("credit_transactions")
+    .select("id, user_id, type, amount, balance_after, reason, metadata, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (options.type) {
+    query = query.eq("type", options.type);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("getUserCreditTransactions query failed:", error);
+    throw error;
+  }
+
+  return (data ?? []).map((item: { id: string; user_id: string; type: string; amount: number; balance_after: number; reason: string | null; metadata: Record<string, unknown>; created_at: string }) => ({
     id: item.id,
-    user_id: item.userId,
-    type: mapTransactionType(item.transactionType),
-    amount: item.amountCredit,
-    balance_after: item.balanceAfter,
+    user_id: item.user_id,
+    type: item.type as CreditTransactionType,
+    amount: item.amount,
+    balance_after: item.balance_after,
     reason: item.reason,
     metadata: item.metadata,
-    created_at: item.createdAt,
+    created_at: item.created_at,
   }));
 }
 
@@ -227,16 +242,4 @@ function normalizeRpcResult(data: unknown): CreditResult {
   };
 }
 
-function mapTransactionType(value: string): CreditTransactionType {
-  const map: Record<string, CreditTransactionType> = {
-    signup_bonus: "bonus",
-    purchase: "add",
-    deduction: "use",
-    refund: "refund",
-    adjustment: "adjust",
-    admin_bypass_debit: "use",
-    admin_bypass_refund: "refund",
-  };
 
-  return map[value] ?? "adjust";
-}
