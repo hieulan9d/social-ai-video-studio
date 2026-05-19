@@ -30,30 +30,59 @@ export function CinemaTakesStep({
   const handleRenderAllTakes = async () => {
     setIsRendering(true);
 
-    // Simulate rendering takes for all scenes
-    await new Promise((r) => setTimeout(r, 3000));
-
     const newTakes: CinemaTake[] = [];
+
     for (const scene of scenes) {
       for (let t = 1; t <= project.settings.takesPerScene; t++) {
-        newTakes.push({
-          id: crypto.randomUUID(),
+        const takeId = crypto.randomUUID();
+        const takePrompt = `${scene.visualDescription}. ${selectedStyle?.promptModifier || ""}. ${scene.cameraAngle}, ${scene.cameraMovement}, ${scene.lighting}. Take variation ${t}, cinematic quality, ultra realistic.`;
+
+        const take: CinemaTake = {
+          id: takeId,
           sceneId: scene.id,
           projectId: project.id,
           takeNumber: t,
-          prompt: `${scene.visualDescription}. ${selectedStyle?.promptModifier || ""}. ${scene.cameraAngle}, ${scene.cameraMovement}, ${scene.lighting}. Take variation ${t}.`,
-          status: "completed",
-          outputUrl: null, // In real app, this would be the rendered video URL
+          prompt: takePrompt,
+          status: "rendering",
+          outputUrl: null,
           thumbnailUrl: null,
           creditCost: project.settings.quality === "4k" ? 15 : project.settings.quality === "high" ? 8 : 5,
           providerJobId: null,
           errorMessage: null,
           createdAt: new Date().toISOString(),
-        });
+        };
+        newTakes.push(take);
+        onTakesUpdated([...newTakes]);
+
+        try {
+          const res = await fetch("/api/cinema/render-take", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: takePrompt,
+              duration: scene.durationSeconds,
+              aspectRatio: project.settings.aspectRatio || "16:9",
+              quality: project.settings.quality,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            take.status = "failed";
+            take.errorMessage = data.error || "Render thất bại";
+          } else {
+            take.status = "completed";
+            take.outputUrl = data.outputUrl;
+          }
+        } catch (err) {
+          take.status = "failed";
+          take.errorMessage = err instanceof Error ? err.message : "Lỗi kết nối";
+        }
+
+        onTakesUpdated([...newTakes]);
       }
     }
 
-    onTakesUpdated(newTakes);
     setIsRendering(false);
   };
 
@@ -166,12 +195,21 @@ export function CinemaTakesStep({
                             : "border-[var(--border)] hover:border-[var(--accent)]/50"
                         }`}
                       >
-                        {/* Video preview placeholder */}
+                        {/* Video preview */}
                         <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-transparent">
-                          {take.status === "completed" ? (
+                          {take.status === "completed" && take.outputUrl ? (
+                            <video src={take.outputUrl} controls className="h-full w-full object-cover" />
+                          ) : take.status === "completed" ? (
                             <Play className="h-8 w-8 text-white/60" />
                           ) : take.status === "rendering" ? (
-                            <Loader2 className="h-8 w-8 animate-spin text-[var(--accent)]" />
+                            <div className="text-center">
+                              <Loader2 className="mx-auto h-8 w-8 animate-spin text-[var(--accent)]" />
+                              <p className="mt-1 text-[10px] text-white/50">Đang render...</p>
+                            </div>
+                          ) : take.status === "failed" ? (
+                            <div className="text-center px-2">
+                              <p className="text-[10px] text-red-400 line-clamp-2">{take.errorMessage || "Lỗi"}</p>
+                            </div>
                           ) : (
                             <Film className="h-8 w-8 text-[var(--muted)]" />
                           )}

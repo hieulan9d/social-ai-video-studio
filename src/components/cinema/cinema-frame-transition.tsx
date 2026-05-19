@@ -139,19 +139,21 @@ export function CinemaFrameTransition() {
     setEndFrame(temp);
   };
 
-  // Upgrade 3: AI Suggest prompt
+  // Upgrade 3: AI Suggest prompt (real API)
   const handleAISuggest = async () => {
     if (!startFrame || !endFrame) return;
     setIsSuggesting(true);
-    // Simulate AI analysis of the two frames
-    await new Promise((r) => setTimeout(r, 1500));
-    const suggestions = [
-      "Smooth cinematic transition, subject gradually shifts pose",
-      "Camera slowly pushes in while lighting transitions naturally",
-      "Gentle morphing between scenes with parallax camera movement",
-    ];
-    const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
-    setPrompt(randomSuggestion);
+    try {
+      const res = await fetch("/api/cinema/suggest-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (res.ok && data.suggestion) {
+        setPrompt(data.suggestion);
+      }
+    } catch { /* ignore */ }
     setIsSuggesting(false);
   };
 
@@ -161,7 +163,7 @@ export function CinemaFrameTransition() {
     setTakes([]);
     setSelectedTakeId(null);
 
-    // Save to history (Upgrade 6)
+    // Save to history
     setHistory((prev) => [{
       id: crypto.randomUUID(),
       startFrame: startFrame,
@@ -172,15 +174,52 @@ export function CinemaFrameTransition() {
       createdAt: new Date().toISOString(),
     }, ...prev].slice(0, 10));
 
-    await new Promise((r) => setTimeout(r, 3000));
-    const newTakes: FrameTransitionTake[] = Array.from({ length: takesCount }, (_, i) => ({
-      id: crypto.randomUUID(),
-      takeNumber: i + 1,
-      status: "completed" as const,
-      outputUrl: null,
-      errorMessage: null,
-    }));
-    setTakes(newTakes);
+    // Render each take via real API
+    const newTakes: FrameTransitionTake[] = [];
+
+    for (let i = 0; i < takesCount; i++) {
+      const takeId = crypto.randomUUID();
+      const take: FrameTransitionTake = {
+        id: takeId,
+        takeNumber: i + 1,
+        status: "rendering",
+        outputUrl: null,
+        errorMessage: null,
+      };
+      newTakes.push(take);
+      setTakes([...newTakes]);
+
+      try {
+        const res = await fetch("/api/cinema/render-transition", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            startFrameUrl: startFrame,
+            endFrameUrl: endFrame,
+            prompt: finalPrompt,
+            duration,
+            aspectRatio,
+            quality,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          take.status = "failed";
+          take.errorMessage = data.error || "Render thất bại";
+        } else {
+          take.status = "completed";
+          take.outputUrl = data.outputUrl;
+        }
+      } catch (err) {
+        take.status = "failed";
+        take.errorMessage = err instanceof Error ? err.message : "Lỗi kết nối";
+      }
+
+      setTakes([...newTakes]);
+    }
+
     setIsRendering(false);
   };
 
@@ -229,6 +268,10 @@ export function CinemaFrameTransition() {
           {startFrame ? (
             <div className="relative mt-3">
               <Image src={startFrame} alt="Start frame" width={400} height={300} unoptimized className="w-full rounded-xl object-cover aspect-video" />
+              {/* Aspect ratio overlay */}
+              <div className="absolute top-2 left-2 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] text-white/80">
+                {aspectRatio}
+              </div>
               <button type="button" onClick={() => setStartFrame(null)} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition">
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -272,6 +315,10 @@ export function CinemaFrameTransition() {
           {endFrame ? (
             <div className="relative mt-3">
               <Image src={endFrame} alt="End frame" width={400} height={300} unoptimized className="w-full rounded-xl object-cover aspect-video" />
+              {/* Aspect ratio overlay */}
+              <div className="absolute top-2 left-2 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] text-white/80">
+                {aspectRatio}
+              </div>
               <button type="button" onClick={() => setEndFrame(null)} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition">
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -287,6 +334,47 @@ export function CinemaFrameTransition() {
           <input ref={endInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, setEndFrame)} />
         </div>
       </div>
+
+      {/* Preview animation between frames */}
+      {startFrame && endFrame && (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Play className="h-4 w-4 text-[var(--accent)]" />
+            <h3 className="text-sm font-semibold text-[var(--heading)]">Xem trước chuyển cảnh</h3>
+            <span className="text-[10px] text-[var(--muted)]">(crossfade preview)</span>
+          </div>
+          <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+            <Image
+              src={startFrame}
+              alt="Start"
+              fill
+              unoptimized
+              className="object-cover animate-[fadeOut_4s_ease-in-out_infinite]"
+            />
+            <Image
+              src={endFrame}
+              alt="End"
+              fill
+              unoptimized
+              className="object-cover animate-[fadeIn_4s_ease-in-out_infinite]"
+            />
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+              <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white/80">Start → End preview</span>
+              <span className="rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white/80">{duration}s</span>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn {
+              0%, 40% { opacity: 0; }
+              60%, 100% { opacity: 1; }
+            }
+            @keyframes fadeOut {
+              0%, 40% { opacity: 1; }
+              60%, 100% { opacity: 0; }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Prompt section with AI Suggest (Upgrade 3) and Auto-enhance (Upgrade 5) */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
@@ -407,7 +495,17 @@ export function CinemaFrameTransition() {
               return (
                 <div key={take.id} className={`rounded-xl border overflow-hidden transition ${isSelected ? "border-emerald-500 ring-2 ring-emerald-500/30" : "border-[var(--border)] hover:border-[var(--accent)]/50"}`}>
                   <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-[var(--accent)]/10 to-purple-500/10">
-                    {take.outputUrl ? (
+                    {take.status === "rendering" ? (
+                      <div className="text-center">
+                        <Loader2 className="mx-auto h-8 w-8 text-[var(--accent)] animate-spin" />
+                        <p className="mt-2 text-[10px] text-white/50">Đang render take {take.takeNumber}...</p>
+                      </div>
+                    ) : take.status === "failed" ? (
+                      <div className="text-center px-3">
+                        <X className="mx-auto h-6 w-6 text-red-400" />
+                        <p className="mt-1 text-[10px] text-red-400 line-clamp-2">{take.errorMessage}</p>
+                      </div>
+                    ) : take.outputUrl ? (
                       <video src={take.outputUrl} controls className="h-full w-full object-cover" />
                     ) : (
                       <div className="text-center">
@@ -424,6 +522,16 @@ export function CinemaFrameTransition() {
                     <button type="button" onClick={() => setSelectedTakeId(take.id)} className={`mt-2 w-full rounded-lg px-3 py-2 text-xs font-medium transition ${isSelected ? "bg-emerald-500 text-white" : "border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"}`}>
                       {isSelected ? "✓ Đã chọn" : "Chọn take này"}
                     </button>
+                    {take.outputUrl && (
+                      <a
+                        href={take.outputUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1.5 block w-full text-center rounded-lg border border-[var(--border)] px-3 py-1.5 text-[10px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition"
+                      >
+                        Mở video ↗
+                      </a>
+                    )}
                   </div>
                 </div>
               );
