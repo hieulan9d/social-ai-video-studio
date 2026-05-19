@@ -21,7 +21,14 @@ export async function POST(
 
     const admin = createAdminClient();
     const { error } = await admin.from("profiles").update({ plan }).eq("id", userId);
-    if (error) throw error;
+
+    if (error) {
+      // Column might not exist yet
+      if (error.code === "PGRST204" || error.message?.includes("column")) {
+        throw new AppError("Cột 'plan' chưa tồn tại trong database. Cần chạy migration thêm cột plan vào bảng profiles.", 400);
+      }
+      throw error;
+    }
 
     return apiSuccessResponse({ plan });
   } catch (error) {

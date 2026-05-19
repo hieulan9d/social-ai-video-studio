@@ -210,15 +210,15 @@ function mapCreditTypeToDbTypes(type: CreditTransactionType): string[] {
 }
 
 export async function useCredits(input: UseCreditInput) {
-  return callCreditRpc("use_user_credits", input);
+  return callWalletRpc("deduct_credits", input);
 }
 
 export async function refundCredits(input: UseCreditInput) {
-  return callCreditRpc("refund_user_credits", input);
+  return callWalletRpc("refund_credits", input);
 }
 
 export async function addCredits(input: UseCreditInput) {
-  return callCreditRpc("add_user_credits", input);
+  return callWalletRpc("add_credits", input);
 }
 
 export async function adjustCredits(input: {
@@ -226,70 +226,122 @@ export async function adjustCredits(input: {
   newBalance: number;
   reason: string;
   metadata?: Record<string, unknown>;
-}) {
+}): Promise<CreditResult> {
   if (!Number.isInteger(input.newBalance) || input.newBalance < 0) {
     throw new AppError("Số dư mới không hợp lệ.", 400);
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin.rpc("adjust_user_credits", {
-    p_user_id: input.userId,
-    p_new_balance: input.newBalance,
-    p_reason: input.reason,
-    p_metadata: input.metadata ?? {},
-  });
+  // Get current balance then add/deduct the difference
+  const credits = await getUserCredits(input.userId);
+  const diff = input.newBalance - credits.balance;
 
-  if (error) {
-    console.error("adjust_user_credits failed:", error);
-    return { success: false, error: "Không thể điều chỉnh credit." } satisfies CreditResult;
+  if (diff === 0) {
+    return { success: true, balance: credits.balance };
   }
 
-  return normalizeRpcResult(data);
+  if (diff > 0) {
+    return callWalletRpc("add_credits", {
+      userId: input.userId,
+      amount: diff,
+      reason: input.reason,
+      metadata: { ...input.metadata, adjustment: true, previous_balance: credits.balance },
+    });
+  }
+
+  return callWalletRpc("deduct_credits", {
+    userId: input.userId,
+    amount: Math.abs(diff),
+    reason: input.reason,
+    metadata: { ...input.metadata, adjustment: true, previous_balance: credits.balance },
+  });
 }
 
-async function callCreditRpc(
-  functionName: "use_user_credits" | "refund_user_credits" | "add_user_credits",
+async function callWalletRpc(
+  functionName: "add_credits" | "deduct_credits" | "refund_credits",
   input: UseCreditInput,
-) {
+): Promise<CreditResult> {
   if (!Number.isInteger(input.amount) || input.amount <= 0) {
     throw new AppError("Số credit phải là số nguyên lớn hơn 0.", 400);
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin.rpc(functionName, {
-    p_user_id: input.userId,
-    p_amount: input.amount,
-    p_reason: input.reason,
-    p_metadata: input.metadata ?? {},
-  });
 
-  if (error) {
-    console.error(`${functionName} failed:`, error);
-    return {
-      success: false,
-      error: error.message.toLowerCase().includes("insufficient")
-        ? INSUFFICIENT_CREDIT_MESSAGE
-        : "Không thể cập nhật credit.",
-    } satisfies CreditResult;
+  // Get current wallet
+  const { data: wallet, error: walletError } = await admin
+    .from("wallets")
+    .select("id, user_id, balance_credit")
+    .eq("user_id", input.userId)
+    .single();
+
+  if (walletError || !wallet) {
+    console.error(`${functionName} wallet lookup failed:`, walletError);
+    return { success: false, error: "Không tìm thấy ví credit." };
   }
 
-  return normalizeRpcResult(data);
-}
+  // Calculate new balance
+  let newBalance: number;
+  let transactionType: string;
+  let amountCredit: number;
 
-function normalizeRpcResult(data: unknown): CreditResult {
-  if (!data || typeof data !== "object") {
-    return { success: false, error: "Kết quả credit không hợp lệ." };
+  if (functionName === "add_credits") {
+    newBalance = wallet.balance_credit + input.amount;
+    transactionType = "purchase";
+    amountCredit = input.amount;
+  } else if (functionName === "deduct_credits") {
+    if (wallet.balance_credit < input.amount) {
+      return { success: false, error: INSUFFICIENT_CREDIT_MESSAGE };
+    }
+    newBalance = wallet.balance_credit - input.amount;
+    transactionType = "deduction";
+    amountCredit = -input.amount;
+  } else {
+    // refund
+    newBalance = wallet.balance_credit + input.amount;
+    transactionType = "refund";
+    amountCredit = input.amount;
   }
 
-  const result = data as RpcCreditResult;
+  // Update wallet balance
+  const { error: updateError } = await admin
+    .from("wallets")
+    .update({ balance_credit: newBalance })
+    .eq("id", wallet.id);
+
+  if (updateError) {
+    console.error(`${functionName} wallet update failed:`, updateError);
+    return { success: false, error: "Không thể cập nhật ví." };
+  }
+
+  // Insert transaction record
+  const { data: tx, error: txError } = await admin
+    .from("credit_transactions")
+    .insert({
+      wallet_id: wallet.id,
+      user_id: input.userId,
+      transaction_type: transactionType,
+      amount_credit: amountCredit,
+      balance_before: wallet.balance_credit,
+      balance_after: newBalance,
+      reason: input.reason || null,
+      reference_type: (input.metadata?.reference_type as string) || null,
+      reference_id: (input.metadata?.reference_id as string) || null,
+      metadata: input.metadata ?? {},
+    })
+    .select("id")
+    .single();
+
+  if (txError) {
+    console.error(`${functionName} transaction insert failed:`, txError);
+    // Wallet already updated, log but don't fail
+  }
 
   return {
-    success: result.success === true,
-    balance: typeof result.balance === "number" ? result.balance : undefined,
-    transactionId:
-      typeof result.transaction_id === "string" ? result.transaction_id : undefined,
-    error: typeof result.error === "string" ? result.error : undefined,
+    success: true,
+    balance: newBalance,
+    transactionId: tx?.id ?? undefined,
   };
 }
+
+
 
 
