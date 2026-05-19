@@ -27,8 +27,8 @@ type CreditPackageRow = {
   id: string;
   name: string;
   credits: number;
-  price_vnd: number;
-  bonus_credits: number | null;
+  price_amount: number;
+  bonus_credits?: number | null;
 };
 
 export default async function CreditsPage() {
@@ -37,9 +37,9 @@ export default async function CreditsPage() {
   try {
     const user = await requireUser();
     const [credits, transactions, packages] = await Promise.all([
-      getUserCredits(user.id),
-      getUserCreditTransactions(user.id, { page: 1, limit: 50 }),
-      getPayosCreditPackages(),
+      getUserCredits(user.id).catch((e) => { console.error("getUserCredits failed:", e); throw e; }),
+      getUserCreditTransactions(user.id, { page: 1, limit: 50 }).catch((e) => { console.error("getUserCreditTransactions failed:", e); throw e; }),
+      getPayosCreditPackages().catch((e) => { console.error("getPayosCreditPackages failed:", e); throw e; }),
     ]);
 
     pageData = { credits, transactions, packages };
@@ -151,9 +151,9 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("credit_packages")
-    .select("id, name, credits, price_vnd, bonus_credits")
+    .select("id, name, credits, price_amount")
     .eq("is_active", true)
-    .order("sort_order", { ascending: true })
+    .order("credits", { ascending: true })
     .returns<CreditPackageRow[]>();
 
   if (error) {
@@ -162,14 +162,13 @@ async function getPayosCreditPackages(): Promise<PayosCreditPackage[]> {
   }
 
   return (data ?? []).map((item) => {
-    const bonusCredits = Math.max(0, item.bonus_credits ?? 0);
     return {
       id: item.id,
       name: item.name,
       credits: item.credits,
-      bonusCredits,
-      totalCredits: item.credits + bonusCredits,
-      priceVnd: Math.trunc(Number(item.price_vnd)),
+      bonusCredits: 0,
+      totalCredits: item.credits,
+      priceVnd: Math.trunc(Number(item.price_amount)),
     };
   });
 }

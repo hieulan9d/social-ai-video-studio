@@ -82,18 +82,20 @@ export function getVideoCreditCost(durationSeconds: number) {
 
 export async function getUserCredits(userId: string): Promise<UserCredits> {
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("user_credits")
-    .select("id, user_id, balance, total_added, total_used, created_at, updated_at")
-    .eq("user_id", userId)
-    .maybeSingle<UserCreditsRow>();
 
-  if (error) {
-    console.error("getUserCredits user_credits query failed:", error);
-    throw error;
+  // Query wallets table (actual DB schema)
+  const { data: walletData, error: walletError } = await admin
+    .from("wallets")
+    .select("id, user_id, balance_credit, created_at, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (walletError) {
+    console.error("getUserCredits wallets query failed:", walletError);
+    throw walletError;
   }
 
-  if (!data) {
+  if (!walletData) {
     return {
       id: "",
       user_id: userId,
@@ -105,14 +107,31 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
     };
   }
 
+  // Calculate totals from credit_transactions
+  const { data: txData } = await admin
+    .from("credit_transactions")
+    .select("transaction_type, amount_credit")
+    .eq("user_id", userId);
+
+  let totalAdded = 0;
+  let totalUsed = 0;
+
+  for (const tx of txData ?? []) {
+    if (tx.amount_credit > 0) {
+      totalAdded += tx.amount_credit;
+    } else {
+      totalUsed += Math.abs(tx.amount_credit);
+    }
+  }
+
   return {
-    id: data.id,
-    user_id: data.user_id,
-    balance: data.balance,
-    total_added: data.total_added,
-    total_used: data.total_used,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
+    id: walletData.id,
+    user_id: walletData.user_id,
+    balance: walletData.balance_credit,
+    total_added: totalAdded,
+    total_used: totalUsed,
+    created_at: walletData.created_at,
+    updated_at: walletData.updated_at,
   };
 }
 
@@ -131,13 +150,18 @@ export async function getUserCreditTransactions(
   const admin = createAdminClient();
   let query = admin
     .from("credit_transactions")
-    .select("id, user_id, type, amount, balance_after, reason, metadata, created_at")
+    .select("id, user_id, transaction_type, amount_credit, balance_after, reason, metadata, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (options.type) {
-    query = query.eq("type", options.type);
+    const dbTypes = mapCreditTypeToDbTypes(options.type);
+    if (dbTypes.length === 1) {
+      query = query.eq("transaction_type", dbTypes[0]);
+    } else {
+      query = query.in("transaction_type", dbTypes);
+    }
   }
 
   const { data, error } = await query;
@@ -147,16 +171,42 @@ export async function getUserCreditTransactions(
     throw error;
   }
 
-  return (data ?? []).map((item: { id: string; user_id: string; type: string; amount: number; balance_after: number; reason: string | null; metadata: Record<string, unknown>; created_at: string }) => ({
+  return (data ?? []).map((item: { id: string; user_id: string; transaction_type: string; amount_credit: number; balance_after: number; reason: string | null; metadata: Record<string, unknown>; created_at: string }) => ({
     id: item.id,
     user_id: item.user_id,
-    type: item.type as CreditTransactionType,
-    amount: item.amount,
+    type: mapTransactionType(item.transaction_type),
+    amount: item.amount_credit,
     balance_after: item.balance_after,
     reason: item.reason,
     metadata: item.metadata,
     created_at: item.created_at,
   }));
+}
+
+function mapTransactionType(value: string): CreditTransactionType {
+  const map: Record<string, CreditTransactionType> = {
+    signup_bonus: "bonus",
+    purchase: "add",
+    deduction: "use",
+    refund: "refund",
+    adjustment: "adjust",
+    admin_bypass_debit: "use",
+    admin_bypass_refund: "refund",
+  };
+
+  return map[value] ?? "adjust";
+}
+
+function mapCreditTypeToDbTypes(type: CreditTransactionType): string[] {
+  const map: Record<CreditTransactionType, string[]> = {
+    bonus: ["signup_bonus"],
+    add: ["purchase"],
+    use: ["deduction", "admin_bypass_debit"],
+    refund: ["refund", "admin_bypass_refund"],
+    adjust: ["adjustment"],
+  };
+
+  return map[type] ?? [type];
 }
 
 export async function useCredits(input: UseCreditInput) {

@@ -4,7 +4,6 @@ import { getUserCredits } from "@/lib/credits/credit-service";
 import { getPaymentHistory } from "@/lib/payments/server";
 import { getProjects } from "@/lib/projects/server";
 import { createClient } from "@/lib/supabase/server";
-import { getWalletTransactions } from "@/lib/wallet/server";
 import { listQuickGenerations, type QuickGenerationRecord } from "@/lib/ai/quick-generations";
 
 type RenderAnalyticsRecord = {
@@ -14,6 +13,30 @@ type RenderAnalyticsRecord = {
   status: "queued" | "processing" | "completed" | "failed";
   credit_cost: number;
   created_at: string;
+};
+
+type CreditTransactionRow = {
+  id: string;
+  user_id: string;
+  transaction_type: string;
+  amount_credit: number;
+  balance_after: number;
+  reason: string | null;
+  reference_type: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+type AnalyticsTransaction = {
+  id: string;
+  userId: string;
+  type: string;
+  amount: number;
+  balanceAfter: number;
+  reason: string | null;
+  referenceType: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
 };
 
 type UsageBar = {
@@ -90,11 +113,11 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
 
   const [credits, projects, quickGenerations, transactions, payments, renderJobs] = await Promise.all([
     getUserCredits(userId),
-    getProjects(userId),
-    listQuickGenerations({ userId, limit: 120 }),
-    getWalletTransactions(userId, 160),
-    getPaymentHistory(userId, 50),
-    getRecentRenderJobs(supabase, userId, sinceIso),
+    getProjects(userId).catch(() => []),
+    listQuickGenerations({ userId, limit: 120 }).catch(() => []),
+    getAnalyticsTransactions(supabase, userId, sinceIso),
+    getPaymentHistory(userId, 50).catch(() => []),
+    getRecentRenderJobs(supabase, userId, sinceIso).catch(() => []),
   ]);
 
   const quickWithinWindow = quickGenerations.filter((item) => item.created_at >= sinceIso);
@@ -107,11 +130,11 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
   const completedRenderCount = renderJobs.filter((item) => item.status === "completed").length;
   const videoCount = quickVideoCount + completedRenderCount;
   const creditsUsed = transactionsWithinWindow
-    .filter((item) => item.amountCredit < 0)
-    .reduce((total, item) => total + Math.abs(item.amountCredit), 0);
+    .filter((item) => item.amount < 0)
+    .reduce((total, item) => total + Math.abs(item.amount), 0);
   const creditsAdded = transactionsWithinWindow
-    .filter((item) => item.amountCredit > 0)
-    .reduce((total, item) => total + item.amountCredit, 0);
+    .filter((item) => item.amount > 0)
+    .reduce((total, item) => total + item.amount, 0);
 
   return {
     walletBalance: credits.balance,
@@ -184,9 +207,9 @@ export async function getAnalyticsDashboardSummary(userId: string): Promise<Anal
       })),
       transactions: transactionsWithinWindow.map((item) => ({
         id: item.id,
-        title: item.amountCredit > 0 ? "Cộng credits" : "Trừ credits",
-        subtitle: `${item.transactionType} · ${Math.abs(item.amountCredit)} credits`,
-        status: item.amountCredit > 0 ? "completed" : "processing",
+        title: item.amount > 0 ? "Cộng credits" : "Trừ credits",
+        subtitle: `${item.type} · ${Math.abs(item.amount)} credits`,
+        status: item.amount > 0 ? "completed" : "processing",
         createdAt: item.createdAt,
       })),
     }),
@@ -218,12 +241,47 @@ async function getRecentRenderJobs(
   return data ?? [];
 }
 
+async function getAnalyticsTransactions(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  sinceIso: string,
+): Promise<AnalyticsTransaction[]> {
+  const { data, error } = await supabase
+    .from("credit_transactions")
+    .select("id, user_id, transaction_type, amount_credit, balance_after, reason, reference_type, metadata, created_at")
+    .eq("user_id", userId)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: false })
+    .limit(160)
+    .returns<CreditTransactionRow[]>();
+
+  if (error) {
+    if (isCancelledQueryError(error)) {
+      return [];
+    }
+
+    throw error;
+  }
+
+  return (data ?? []).map((item) => ({
+    id: item.id,
+    userId: item.user_id,
+    type: item.transaction_type,
+    amount: item.amount_credit,
+    balanceAfter: item.balance_after,
+    reason: item.reason,
+    referenceType: item.reference_type,
+    metadata: item.metadata,
+    createdAt: item.created_at,
+  }));
+}
+
 function sumFeatureUsage(
-  transactions: Awaited<ReturnType<typeof getWalletTransactions>>,
+  transactions: AnalyticsTransaction[],
   featureKeys: string[],
 ) {
   return transactions
-    .filter((item) => item.amountCredit < 0)
+    .filter((item) => item.amount < 0)
     .filter((item) => {
       const referenceType = item.referenceType ?? "";
       const reason = item.reason ?? "";
@@ -231,7 +289,7 @@ function sumFeatureUsage(
         (key) => referenceType.includes(key) || reason.includes(key),
       );
     })
-    .reduce((total, item) => total + Math.abs(item.amountCredit), 0);
+    .reduce((total, item) => total + Math.abs(item.amount), 0);
 }
 
 function buildOutputsByDay(

@@ -192,18 +192,20 @@ export type ProjectDetail = {
 };
 
 export type ProjectTab =
+  | "assets"
   | "overview"
-  | "images"
-  | "videos"
   | "prompts"
-  | "assets";
+  | "images"
+  | "preview"
+  | "videos";
 
 export const PROJECT_TABS: ProjectTab[] = [
-  "overview",
-  "images",
-  "videos",
-  "prompts",
   "assets",
+  "overview",
+  "prompts",
+  "images",
+  "preview",
+  "videos",
 ];
 
 export function isProjectTab(value: string): value is ProjectTab {

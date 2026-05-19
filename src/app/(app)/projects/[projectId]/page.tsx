@@ -3,17 +3,14 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
-  Download,
-  Expand,
   FolderOpen,
   Layers3,
-  ScanSearch,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { listProjectAssets } from "@/lib/assets/server";
 import { QuickImageStudio } from "@/components/quick-create/quick-image-studio";
 import { QuickVideoStudio } from "@/components/quick-create/quick-video-studio";
+import { ProjectPreviewCanvas, ClickableAssetGrid } from "@/components/projects/project-preview-canvas";
 import { ProjectAssetsSectionClient } from "@/components/projects/project-assets-section-client";
 import { ProjectDeleteButton } from "@/components/projects/project-delete-button";
 import { ProjectStatusBadge } from "@/components/projects/project-status-badge";
@@ -22,6 +19,7 @@ import { PromptEditor } from "@/components/projects/prompt-editor";
 import { RenderPanel } from "@/components/projects/render-panel";
 import { SceneTimelineEditor } from "@/components/projects/scene-timeline-editor";
 import { ScriptEditor } from "@/components/projects/script-editor";
+import { StoryboardPreview } from "@/components/projects/storyboard-preview";
 import { ServerDataFallback } from "@/components/ui/server-data-fallback";
 import { SurfaceCard } from "@/components/ui/surface-card";
 import { requireUserProfile } from "@/lib/auth/server";
@@ -99,6 +97,15 @@ async function ProjectDetailPageContent({
       getProjectScenes(projectId),
     ])) as [ScriptRecord | null, SceneRecord[]];
     [script, scenes] = overviewData;
+  }
+
+  if (activeTab === "preview") {
+    const previewData = (await Promise.all([
+      getProjectScript(projectId),
+      getProjectScenes(projectId),
+      getProjectPrompts(projectId),
+    ])) as [ScriptRecord | null, SceneRecord[], PromptRecord[]];
+    [script, scenes, prompts] = previewData;
   }
 
   if (activeTab === "images") {
@@ -281,131 +288,90 @@ async function ProjectDetailPageContent({
         </SurfaceCard>
 
         <div className="space-y-5">
-          <SurfaceCard className="rounded-[var(--radius-shell)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-medium text-[var(--heading)]">Preview canvas</h2>
-                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  Chọn asset hoặc tạo nội dung mới để xem trong canvas trung tâm.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: "Fit", icon: Expand },
-                  { label: "Zoom", icon: ScanSearch },
-                  { label: "Compare", icon: Layers3 },
-                  { label: "Download", icon: Download },
-                  { label: "Export", icon: Sparkles },
-                ].map(({ label, icon: Icon }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-[8px] border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted-foreground)]"
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <ProjectPreviewCanvas assets={assets} initialPreview={previewAsset}>
+            <SurfaceCard>
+              <div className="space-y-6">
+                {activeTab === "overview" ? (
+                  <>
+                    <SectionBlock
+                      title="Brief"
+                      description={
+                        project.brief ||
+                        "Chưa có brief cho dự án này. Hãy bổ sung sản phẩm, nhóm khách hàng, thông điệp chính và bối cảnh phân phối."
+                      }
+                    />
+                    <ScriptEditor project={project} script={script} />
+                    <SceneTimelineEditor
+                      project={project}
+                      script={script}
+                      scenes={scenes}
+                    />
+                  </>
+                ) : null}
 
-            <div className="mt-5 overflow-hidden rounded-[12px] border bg-[var(--surface-muted)]">
-              {previewAsset ? (
-                previewAsset.type === "generated_video" ? (
-                  <video src={previewAsset.url} controls className="aspect-video w-full bg-black" />
-                ) : (
-                  <Image
-                    src={previewAsset.url}
-                    alt={previewAsset.alt}
-                    width={1400}
-                    height={900}
-                    unoptimized
-                    className="aspect-video w-full object-cover"
-                  />
-                )
-              ) : (
-                <div className="flex aspect-video items-center justify-center px-6 text-center text-sm text-[var(--muted-foreground)]">
-                  {activeTab === "overview"
-                    ? "Trang tổng quan đang tải nhẹ hơn. Mở tab Ảnh, Video hoặc Assets để xem preview thật."
-                    : "Chọn asset hoặc tạo nội dung mới"}
-                </div>
-              )}
-            </div>
-          </SurfaceCard>
-
-          <SurfaceCard>
-            <div className="space-y-6">
-              {activeTab === "overview" ? (
-                <>
-                  <SectionBlock
-                    title="Brief"
-                    description={
-                      project.brief ||
-                      "Chưa có brief cho dự án này. Hãy bổ sung sản phẩm, nhóm khách hàng, thông điệp chính và bối cảnh phân phối."
-                    }
-                  />
-                  <ScriptEditor project={project} script={script} />
-                  <SceneTimelineEditor
+                {activeTab === "preview" ? (
+                  <StoryboardPreview
                     project={project}
                     script={script}
                     scenes={scenes}
+                    prompts={prompts}
                   />
-                </>
-              ) : null}
+                ) : null}
 
-              {activeTab === "images" ? (
-                <>
-                  <QuickImageStudio
-                    projects={[project]}
-                    projectId={project.id}
-                    estimatedCreditCost={imageCreditCost}
-                  />
-                  <GeneratedProjectAssets
-                    title="Ảnh đã tạo trong dự án"
-                    assets={assets.filter((asset) => asset.asset_type === "generated_image")}
-                  />
-                </>
-              ) : null}
+                {activeTab === "images" ? (
+                  <>
+                    <QuickImageStudio
+                      projects={[project]}
+                      projectId={project.id}
+                      estimatedCreditCost={imageCreditCost}
+                    />
+                    <ClickableAssetGrid
+                      title="Ảnh đã tạo trong dự án"
+                      assets={assets.filter((asset) => asset.asset_type === "generated_image")}
+                    />
+                  </>
+                ) : null}
 
-              {activeTab === "videos" ? (
-                <>
-                  <QuickVideoStudio
-                    projects={[project]}
-                    projectId={project.id}
-                    estimatedCreditCost={videoCreditCost}
-                    imageToVideoCreditCost={imageToVideoCreditCost}
-                    transitionVideoCreditCost={transitionVideoCreditCost}
-                  />
-                  <RenderPanel
+                {activeTab === "videos" ? (
+                  <>
+                    <QuickVideoStudio
+                      projects={[project]}
+                      projectId={project.id}
+                      estimatedCreditCost={videoCreditCost}
+                      imageToVideoCreditCost={imageToVideoCreditCost}
+                      transitionVideoCreditCost={transitionVideoCreditCost}
+                    />
+                    <RenderPanel
+                      project={project}
+                      scenes={scenes}
+                      prompts={prompts}
+                      assets={assets}
+                      renderJobs={renderJobs}
+                      generatedVideos={generatedVideos}
+                    />
+                    <ClickableAssetGrid
+                      title="Video đã tạo trong dự án"
+                      assets={assets.filter((asset) => asset.asset_type === "generated_video")}
+                    />
+                  </>
+                ) : null}
+
+                {activeTab === "assets" ? (
+                  <ProjectAssetsSectionClient projectId={project.id} />
+                ) : null}
+
+                {activeTab === "prompts" ? (
+                  <PromptEditor
                     project={project}
+                    script={script}
                     scenes={scenes}
                     prompts={prompts}
                     assets={assets}
-                    renderJobs={renderJobs}
-                    generatedVideos={generatedVideos}
                   />
-                  <GeneratedProjectAssets
-                    title="Video đã tạo trong dự án"
-                    assets={assets.filter((asset) => asset.asset_type === "generated_video")}
-                  />
-                </>
-              ) : null}
-
-              {activeTab === "assets" ? (
-                <ProjectAssetsSectionClient projectId={project.id} />
-              ) : null}
-
-              {activeTab === "prompts" ? (
-                <PromptEditor
-                  project={project}
-                  script={script}
-                  scenes={scenes}
-                  prompts={prompts}
-                  assets={assets}
-                />
-              ) : null}
-            </div>
-          </SurfaceCard>
+                ) : null}
+              </div>
+            </SurfaceCard>
+          </ProjectPreviewCanvas>
         </div>
 
         <SurfaceCard className="h-fit">
@@ -552,52 +518,6 @@ function SettingMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function GeneratedProjectAssets({
-  title,
-  assets,
-}: {
-  title: string;
-  assets: ProjectAssetRecord[];
-}) {
-  return (
-    <section className="rounded-[12px] border bg-[var(--surface-muted)] p-5">
-      <h2 className="text-lg font-medium text-[var(--heading)]">{title}</h2>
-      {assets.length === 0 ? (
-        <p className="mt-4 rounded-[12px] border border-dashed p-6 text-sm text-[var(--muted-foreground)]">
-          Chưa có output nào trong nhóm này.
-        </p>
-      ) : (
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {assets.map((asset) => (
-            <article key={asset.id} className="rounded-[12px] border bg-[var(--surface)] p-3">
-              {asset.asset_type === "generated_image" ? (
-                <Image
-                  src={asset.file_url ?? asset.output_url ?? ""}
-                  alt={asset.prompt ?? asset.file_name}
-                  width={768}
-                  height={768}
-                  unoptimized
-                  loading="lazy"
-                  className="aspect-square w-full rounded-[8px] object-cover"
-                />
-              ) : (
-                <video
-                  src={asset.file_url ?? asset.output_url ?? ""}
-                  controls
-                  className="aspect-video w-full rounded-[8px] bg-black"
-                />
-              )}
-              <p className="mt-3 line-clamp-2 text-sm text-[var(--muted-foreground)]">
-                {asset.prompt}
-              </p>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
 function resolvePreviewAsset(assets: ProjectAssetRecord[]) {
   const generatedVideo = assets.find(
     (asset) =>
@@ -605,7 +525,7 @@ function resolvePreviewAsset(assets: ProjectAssetRecord[]) {
   );
   if (generatedVideo) {
     return {
-      type: "generated_video" as const,
+      type: "video" as const,
       url: generatedVideo.file_url ?? generatedVideo.output_url ?? "",
       alt: generatedVideo.prompt ?? generatedVideo.file_name,
     };
@@ -617,7 +537,7 @@ function resolvePreviewAsset(assets: ProjectAssetRecord[]) {
   );
   if (generatedImage) {
     return {
-      type: "generated_image" as const,
+      type: "image" as const,
       url: generatedImage.file_url ?? generatedImage.output_url ?? "",
       alt: generatedImage.prompt ?? generatedImage.file_name,
     };

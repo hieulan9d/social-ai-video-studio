@@ -9,6 +9,14 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: "Bạn cần đăng nhập." }, { status: 401 });
   }
 
-  const summary = await getAnalyticsDashboardSummary(user.id);
-  return NextResponse.json({ ok: true, summary });
+  try {
+    const summary = await getAnalyticsDashboardSummary(user.id);
+    return NextResponse.json({ ok: true, summary });
+  } catch (error) {
+    console.error("Analytics summary failed:", error);
+    return NextResponse.json(
+      { ok: false, error: "Không thể tải dữ liệu analytics." },
+      { status: 500 },
+    );
+  }
 }
