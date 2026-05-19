@@ -78,6 +78,12 @@ export const navigationSections: NavSection[] = [
       { href: "/kol-admin/styles", label: "Phong cách ảnh", icon: ImageIcon, badge: "Mới" },
     ],
   },
+  {
+    label: "Cinema Studio",
+    items: [
+      { href: "/cinema-studio", label: "Cinema Studio", icon: Video, badge: "Mới" },
+    ],
+  },
 ];
 
 export const appNavigation: NavLink[] = navigationSections.flatMap((section) => section.items);
